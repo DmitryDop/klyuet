@@ -69,60 +69,73 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 
 .map-ctrl { position: absolute; z-index: 800; }
 
-/* правая колонка управления картой: слои, зум, геолокация */
+/* правая колонка управления картой: слои, зум, геолокация (по макету button-circle) */
 .map-side {
-  right: 16px; top: 116px;
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  right: 16px; top: calc(116px + env(safe-area-inset-top));
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
 }
-.zoomcol { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.zoomcol { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .mbtn {
   width: 40px; height: 40px; flex: 0 0 40px;
-  border-radius: 50%; border: none; background: #fff;
-  box-shadow: 0 1px 4px rgba(20,24,28,.12);
+  border-radius: 24px; border: none;
+  background: rgba(255,255,255,.81);
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: var(--text); padding: 0;
+  cursor: pointer; padding: 0;
 }
 .mbtn svg { display: block; }
 
-/* нижние правые кнопки карты: поиск и «добавить место» (над таб-баром) */
+/* нижние правые кнопки карты: поиск и «добавить место» (по макету Frame 14) */
 .map-raise {
-  right: 16px; bottom: calc(70px + env(safe-area-inset-bottom));
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  right: 16px; bottom: calc(68px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; align-items: center; gap: 24px;
 }
 .rbtn {
-  width: 44px; height: 44px;
-  border-radius: 50%; border: none; background: #fff;
-  box-shadow: 0 1px 4px rgba(20,24,28,.12);
+  width: 40px; height: 40px;
+  border-radius: 24px; border: none;
+  background: rgba(255,255,255,.81);
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: var(--text); padding: 0;
+  cursor: pointer; padding: 0;
 }
-.rbtn.dark { width: 56px; height: 56px; background: var(--text); color: #fff; }
+.rbtn.dark { background: #242424; }
 .rbtn svg { display: block; }
 
 .map-chips {
-  top: 16px; left: 16px; right: 16px;
+  top: calc(8px + env(safe-area-inset-top)); left: 16px; right: 16px;
   display: flex; gap: 6px; align-items: center;
 }
 .chip {
   height: 32px; padding: 0 12px;
   display: flex; align-items: center; gap: 6px;
-  border: 1px solid var(--line2); border-radius: 8px;
-  background: #fff; font-size: 13px; font-weight: 600; color: var(--text);
+  border: none; border-radius: 16px;
+  background: #fff; font-family: inherit;
+  font-size: 12px; font-weight: 600; color: #262626;
   cursor: pointer; white-space: nowrap;
 }
-.chip.on { background: var(--text); border-color: var(--text); color: #fff; }
+.chip.on { background: #242424; color: #fff; }
 .chip .dot {
-  width: 8px; height: 8px; border-radius: 50%; background: var(--text); display: none;
+  width: 8px; height: 8px; border-radius: 50%; background: #242424; display: none;
 }
 .chip .dot.show { display: block; }
 .chip.on .dot { background: #fff; }
 
+/* легенда точности: одна строка, стеклянная подложка (по макету) */
 .map-legend {
-  left: 16px; bottom: calc(70px + env(safe-area-inset-bottom));
-  display: flex; flex-direction: column; gap: 6px;
+  left: 16px; bottom: calc(68px + env(safe-area-inset-bottom));
+  display: flex; gap: 8px; align-items: center;
+  padding: 8px 13px; border-radius: 24px;
+  background: rgba(255,255,255,.8);
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
 }
-.legend-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text); }
-.legend-row .lg { width: 12px; height: 12px; flex: 0 0 12px; }
+.legend-entry { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #242424; }
+.legend-entry .lg { width: 16px; height: 16px; flex: 0 0 16px; }
+.legend-entry .lg svg { width: 16px; height: 16px; display: block; }
+.legend-area {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: rgba(36,36,36,.05); border: 1px dashed #808080;
+  display: block;
+}
 
 /* перекрестие выбора точки — только у «Точно» */
 .sel-cross {
@@ -140,7 +153,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 /* ---------- низ ---------- */
 /* таб-бар — стеклянная пилюля поверх карты (по макету tab_bar) */
 .tabbar {
-  position: absolute; left: 15px; right: 15px; bottom: calc(env(safe-area-inset-bottom) + 6px);
+  position: absolute; left: 15px; right: 15px; bottom: calc(env(safe-area-inset-bottom) + 4px);
   z-index: 900; height: 48px;
   display: flex; align-items: stretch;
   padding: 2px; border-radius: 32px;
