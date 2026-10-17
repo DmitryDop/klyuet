@@ -31,11 +31,13 @@ const S = {
   sheetFish: [],                         // рабочий набор в шите выбора рыбы
   fishSheetTarget: 'filter',             // filter | report | place
   fishSheetGroup: 'all',                 // группировка списка в шите
+  sheetFishGroup: 'all',                 // группировка списка в шите
   draftPlace: null,                      // черновик нового места
   reportDraft: null,                     // черновик отчёта
   lastCreatedPlaceId: null,
   lastReportRef: null,                   // {placeId, reportId}
   newPlaceNote: '',                      // текст примечания на экране «Готово»
+  jTab: 'places',                        // вкладка журнала: places | reports
 };
 
 let stack = [];                          // [{screen, params}]
@@ -67,6 +69,18 @@ function pluralZapis(n) {
   if (m10 === 1 && m100 !== 11) return 'запись';
   if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return 'записи';
   return 'записей';
+}
+/* дата в списках: свежая — относительной, старше 20 дней — абсолютной (согласовано, 17.10) */
+function rDateStr(daysAgo) { return daysAgo > 20 ? dateLong(daysAgo) : dateStr(daysAgo); }
+/* базовая вкладка — по ней работает таб-бар и возвраты из внутренних экранов */
+function baseTab() { return stack[0] && stack[0].screen === 'journal' ? 'journal' : 'map'; }
+function placeMeta(p) {
+  return (p.paid ? 'Платное место' : 'Дикое место · Бесплатно') + ' · ' +
+    (p.approx ? 'Примерные координаты' : 'Точные координаты');
+}
+function reportSub(r) {
+  return esc(r.tackle || '') + (r.tackle && r.lure ? ' · ' : '') +
+    esc(r.lure || '') + (r.photos ? ' · ' + r.photos + ' фото' : '');
 }
 function fishShort(list) {
   if (!list || !list.length) return 'Любая';
@@ -164,15 +178,31 @@ function bindCarousel(root) {
    ========================================================= */
 const SCREENS = {};
 
+/* ---------- таб-бар (Figma V2): Карта / Журнал / Профиль ---------- */
+const TAB_ICONS = {
+  map: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14M15 6v14"/></svg>',
+  journal: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5.5c2-1 4-1 6 0h4c2-1 4-1 6 0v13c-2-1-4-1-6 0h-4c-2-1-4-1-6 0z"/><path d="M10 5.5v13"/><path d="M14 5.5v13"/></svg>',
+  profile: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.2-3.2 3.7-5 7-5s5.8 1.8 7 5"/></svg>',
+  layers: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3.5 13l8.5 4.7 8.5-4.7" opacity=".55"/><path d="M3.5 17.5l8.5 3.5 8.5-3.5" opacity=".3"/></svg>',
+};
+function tabBarHtml(active) {
+  return `
+    <div class="tabbar">
+      <button class="tab-ic${active === 'map' ? ' on' : ''}" ${active !== 'map' ? 'onclick="switchTab(\'map\')" ' : ''}title="Карта">${TAB_ICONS.map}</button>
+      <button class="tab-ic${active === 'journal' ? ' on' : ''}" ${active !== 'journal' ? 'onclick="switchTab(\'journal\')" ' : ''}title="Журнал">${TAB_ICONS.journal}</button>
+      <button class="tab-ic" onclick="toast('Раздел «Профиль» не входит в сценарии прототипа')" title="Профиль">${TAB_ICONS.profile}</button>
+    </div>`;
+}
+function switchTab(tab) {
+  if (baseTab() === tab) return;
+  reset([{ screen: tab, params: {} }]);
+}
+
 /* ---------- 01 · Карта ---------- */
 SCREENS.map = function () {
   if (!$('#screen-map')) {
     $('#screens').insertAdjacentHTML('beforeend', `
       <section class="screen" id="screen-map">
-        <div class="appheader no-line">
-          <span class="h-title">Клюёт</span>
-          <button class="iconbtn" onclick="toast('Поиск не входит в сценарии прототипа')" title="Поиск">${ICON.search}</button>
-        </div>
         <div class="mapwrap">
           <div id="mainmap"></div>
           <div class="map-ctrl map-chips">
@@ -181,22 +211,31 @@ SCREENS.map = function () {
             <button class="chip" data-chip="paid" onclick="setChip('paid')">Платные</button>
             <button class="chip" id="btn-filter" onclick="openFilter()">${ICON.sliders}<span class="dot${filtersActive() ? ' show' : ''}" id="filter-indicator"></span></button>
           </div>
+          <div class="map-ctrl map-side">
+            <button class="mbtn" onclick="toast('Слои карты не входят в сценарии прототипа')" title="Слои карты">${TAB_ICONS.layers}</button>
+            <div class="zoomcol">
+              <button class="mbtn" onclick="zoomMain(1)" title="Ближе"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4v12M4 10h12"/></svg></button>
+              <button class="mbtn" onclick="zoomMain(-1)" title="Дальше"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10h12"/></svg></button>
+            </div>
+            <button class="mbtn" onclick="recenterMap()" title="Моё местоположение">${ICON.geo}</button>
+          </div>
           <div class="map-ctrl map-legend">
             <div class="legend-row"><span class="lg">${legendDot()}</span>Точно</div>
             <div class="legend-row"><span class="lg">${legendArea()}</span>Примерно</div>
           </div>
-          <button class="map-ctrl geo-btn" onclick="recenterMap()" title="Моё местоположение">${ICON.geo}</button>
+          <div class="map-ctrl map-raise">
+            <button class="rbtn" onclick="toast('Поиск не входит в сценарии прототипа')" title="Поиск">${ICON.search}</button>
+            <button class="rbtn dark" onclick="openAddPlace()" title="Добавить место"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+          </div>
         </div>
-        <div class="bottombar">
-          <button class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#14181c" stroke-width="2"><path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14M15 6v14"/></svg>Карта</button>
-          <button class="tab" onclick="openAddPlace()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6f7680" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Добавить место</button>
-        </div>
+        ${tabBarHtml('map')}
       </section>`);
   }
   initMainMap();
   renderMarkers();
   syncChips();
 };
+function zoomMain(d) { if (mainMap) mainMap.setZoom(mainMap.getZoom() + d); }
 
 function legendDot(px = 14) {
   const w = px, h = Math.round(px * 1.17);
@@ -255,6 +294,76 @@ function syncChips() {
 }
 function setChip(v) { S.chips = v; syncChips(); renderMarkers(); }
 
+/* ---------- Журнал (Figma V2, новый раздел) ----------
+   Наполнение: места, созданные пользователем (флаг mine), и отчёты
+   пользователя (автор «Вы» / id с префиксом «r-u-»). */
+function myPlaces() { return PLACES.filter(p => p.mine); }
+function myReports() {
+  const out = [];
+  PLACES.forEach(p => p.reports.forEach(r => {
+    if (r.author === 'Вы' || r.id.startsWith('r-u-')) out.push({ p, r });
+  }));
+  // свежие сверху
+  return out.sort((a, b) => a.r.daysAgo - b.r.daysAgo);
+}
+SCREENS.journal = function () {
+  if (!$('#screen-journal')) {
+    $('#screens').insertAdjacentHTML('beforeend', `
+      <section class="screen" id="screen-journal">
+        <div class="content journal-body">
+          <div class="h1">Журнал</div>
+          <div class="j-tabs">
+            <button class="j-tab" id="jt-places" onclick="setJournalTab('places')">Мои места</button>
+            <button class="j-tab" id="jt-reports" onclick="setJournalTab('reports')">Мои отчеты</button>
+          </div>
+          <div id="journal-list"></div>
+        </div>
+        ${tabBarHtml('journal')}
+      </section>`);
+  }
+  updateJournalTabs();
+  renderJournalList();
+};
+function setJournalTab(t) { S.jTab = t; updateJournalTabs(); renderJournalList(); }
+function updateJournalTabs() {
+  const a = $('#jt-places'), b = $('#jt-reports');
+  if (a) a.classList.toggle('on', S.jTab === 'places');
+  if (b) b.classList.toggle('on', S.jTab === 'reports');
+}
+function renderJournalList() {
+  const box = $('#journal-list');
+  if (!box) return;
+  if (S.jTab === 'places') {
+    const list = myPlaces();
+    box.innerHTML = list.length
+      ? list.map(p => `
+          <button class="j-card" onclick="openCard('${p.id}')">
+            <div class="j-card-t">${esc(p.name)}</div>
+            <div class="j-card-s">${esc(placeMeta(p))}</div>
+          </button>`).join('')
+      : `<div class="j-empty">
+          <div class="j-empty-title">Добавленных мест нет</div>
+          <div class="j-empty-desc">Это демонстрация успешного сценария. Запись на сервер не отправлялась.</div>
+          <button class="btn primary" onclick="journalAddPlace()">Добавить</button>
+        </div>`;
+  } else {
+    const list = myReports();
+    box.innerHTML = list.length
+      ? list.map(({ p, r }) => `
+          <button class="j-card" onclick="openReport('${p.id}','${r.id}')">
+            <div class="report-top"><span class="j-card-t">${esc(p.name)}</span>${catchBadge(r.catch)}</div>
+            ${r.fish.length ? '<div class="j-card-fish">' + esc(r.fish.join(' · ')) + '</div>' : ''}
+            <div class="report-foot"><span class="j-card-sub">${reportSub(r)}</span><span class="j-card-date">${rDateStr(r.daysAgo)}</span></div>
+          </button>`).join('')
+      : `<div class="j-empty">
+          <div class="j-empty-title">Отчетов пока нет</div>
+          <div class="j-empty-desc">Это демонстрация успешного сценария. Запись на сервер не отправлялась.</div>
+        </div>`;
+  }
+}
+/* «Добавить» в пустом журнале → карта в режиме добавления места (согласовано 17.10) */
+function journalAddPlace() { reset([{ screen: 'map', params: {} }]); openAddPlace(); }
+
 /* ---------- 02 · Карточка места ---------- */
 function openCard(placeId) { navigate('place', { placeId }); }
 function openReport(placeId, reportId) { navigate('report', { placeId, reportId }); }
@@ -262,8 +371,7 @@ function openReport(placeId, reportId) { navigate('report', { placeId, reportId 
 SCREENS.place = function (params) {
   const p = PLACES.find(x => x.id === params.placeId);
   if (!p) return;
-  const meta = (p.paid ? 'Платное место' : 'Дикое место · Бесплатно') + ' · ' +
-    (p.approx ? 'Примерные координаты' : 'Точные координаты');
+  const meta = placeMeta(p);
   const fishTop = p.fish.slice(0, 3).join(', ');
   const fishMore = p.fish.length > 3 ? ' и ещё ' + (p.fish.length - 3) + ' ' + pluralVid(p.fish.length - 3) : '';
   const fishingLabel = p.fishing === 'boat' ? 'С лодки' : (p.fishing === 'shore' ? 'С берега' : 'С берега и с лодки');
@@ -272,32 +380,34 @@ SCREENS.place = function (params) {
   if (!$('#screen-place')) {
     $('#screens').insertAdjacentHTML('beforeend', `
       <section class="screen" id="screen-place">
-        <div class="appheader">
-          <button class="iconbtn" onclick="back()" title="Назад">${ICON.back}</button>
-          <span class="h-sub">Место для рыбалки</span>
-          <span style="flex:1"></span>
-          <span id="place-hdr-right"></span>
+        <div class="cardhero">
+          <div id="cardmap"></div>
+          <div class="card-hero-actions">
+            <button class="cbtn" onclick="back()" title="Назад">${ICON.back}</button>
+            <span id="place-hdr-right"></span>
+          </div>
+          <div class="card-pill" id="card-pill"></div>
         </div>
-        <div class="content" id="place-content"></div>
+        <div class="content" id="place-content" style="padding-top:14px"></div>
       </section>`);
   }
-  const reportsHtml = preview.length
-    ? preview.map(r => `
-        <button class="report-item" onclick="openReport('${p.id}','${r.id}')">
-          <div class="report-top"><span class="author">${esc(r.author)}</span>${catchBadge(r.catch)}</div>
-          ${r.fish.length ? '<div class="report-fish">' + esc(r.fish.join(' · ')) + '</div>' : ''}
-          <div class="report-sub">${esc(r.tackle || '')}${r.tackle && r.lure ? ' · ' : ''}${esc(r.lure || '')}${r.photos ? ' · ' + r.photos + ' фото' : ''}</div>
-        </button>`).join('')
-    : '<div class="empty">Свежих отчётов пока нет</div>';
+  const previewHtml = !preview.length ? '' : preview.map(r => `
+      <button class="report-item" onclick="openReport('${p.id}','${r.id}')">
+        <div class="report-top"><span class="author">${rDateStr(r.daysAgo)} · ${esc(r.author)}</span>${catchBadge(r.catch)}</div>
+        ${r.fish.length ? '<div class="report-fish">' + esc(r.fish.join(' · ')) + '</div>' : ''}
+        <div class="report-foot"><span class="report-sub">${reportSub(r)}</span></div>
+      </button>`).join('');
+  // блок отчётов целиком скрыт, пока отчётов нет (макет 02-2; согласовано 17.10)
+  const reportsBlock = !p.reports.length ? '' : `
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:18px">
+      <div class="section-label" style="margin:0">Свежие отчёты</div>
+      <span style="font-size:12px;color:var(--text2)">${p.reports.length} ${pluralZapis(p.reports.length)}</span>
+    </div>
+    ${previewHtml}
+    <button class="btn" style="margin-top:12px;width:100%" onclick="goReports()">Все отчёты</button>`;
 
   $('#place-content').innerHTML = `
-    <div class="mapwrap" style="height:170px;flex:none;border-radius:10px;overflow:hidden;border:1px solid var(--line)">
-      <div id="cardmap"></div>
-      <div style="position:absolute;left:50%;top:58%;transform:translateX(-50%);z-index:800;
-           background:rgba(255,255,255,.92);border:1px solid var(--line2);border-radius:14px;
-           padding:4px 10px;font-size:12px;font-weight:600">${p.approx ? 'Примерное место' : 'Точная точка'}</div>
-    </div>
-    <div style="margin-top:14px">
+    <div>
       <div class="h1">${esc(p.name)}</div>
       <div class="meta">${esc(meta)}</div>
     </div>
@@ -308,7 +418,7 @@ SCREENS.place = function (params) {
         </button>`
       : `<div class="row-card">
           <span class="label">Какая рыба здесь ловилась</span>
-          <span class="value"><span>${esc(fishTop)}</span></span>
+          <span class="value"><span>${esc(fishTop || 'Не указана')}</span></span>
         </div>`}
     <div class="row-card">
       <span class="label">Доступ</span>
@@ -320,22 +430,18 @@ SCREENS.place = function (params) {
     </div>
     ${p.comment ? '<div class="section-label">Комментарий</div><div class="ph-text">' + esc(p.comment) + '</div>' : ''}
     ${p.photos ? '<div class="section-label">Фото</div>' + photoBox(p.photos) : ''}
-    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:18px">
-      <div class="section-label" style="margin:0">Свежие отчёты</div>
-      <span style="font-size:12px;color:var(--text2)">${p.reports.length} ${pluralZapis(p.reports.length)}</span>
-    </div>
-    ${reportsHtml}
-    <button class="btn" style="margin-top:12px;width:100%" onclick="goReports()">Все отчёты</button>
+    ${reportsBlock}
     <div class="cardbtns">
       <button class="btn" id="route-btn" onclick="toast('Переход во внешний навигатор (демо)')">Маршрут</button>
       <button class="btn primary" onclick="openReportForm()">Добавить отчёт</button>
     </div>`;
 
+  $('#card-pill').textContent = p.approx ? 'Примерное место' : 'Точная точка';
   $('#route-btn').textContent = p.approx ? 'Маршрут к области' : 'Маршрут';
   // карандаш — редактирование места доступно, пока у него нет отзывов; иначе статичная кнопка поиска
   $('#place-hdr-right').innerHTML = p.reports.length === 0
-    ? `<button class="iconbtn" onclick="editPlace('${p.id}')" title="Редактировать место">${ICON.pencil}</button>`
-    : `<button class="iconbtn" onclick="toast('Поиск не входит в сценарии прототипа')">${ICON.search}</button>`;
+    ? `<button class="cbtn" onclick="editPlace('${p.id}')" title="Редактировать место">${ICON.pencil}</button>`
+    : `<button class="cbtn" onclick="toast('Поиск не входит в сценарии прототипа')" title="Поиск">${ICON.search}</button>`;
   bindCarousel($('#place-content'));
   initCardMap(p);
 };
@@ -400,8 +506,7 @@ SCREENS.reports = function (params) {
     <button class="report-item" onclick="openReport('${p.id}','${r.id}')">
       <div class="report-top"><span class="author">${esc(r.author)}</span>${catchBadge(r.catch)}</div>
       ${r.fish.length ? '<div class="report-fish">' + esc(r.fish.join(' · ')) + '</div>' : ''}
-      <div class="report-sub">${esc(r.tackle || '')}${r.tackle && r.lure ? ' · ' : ''}${esc(r.lure || '')}${r.photos ? ' · ' + r.photos + ' фото' : ''}</div>
-      <div class="report-date">${dateStr(r.daysAgo)}</div>
+      <div class="report-foot"><span class="report-sub">${reportSub(r)}</span><span class="report-date">${rDateStr(r.daysAgo)}</span></div>
     </button>`).join('')
     : '<div class="empty" style="margin-top:8px">Отчётов пока нет</div>';
 };
@@ -425,7 +530,7 @@ SCREENS.report = function (params) {
         </div>
         <div class="content" id="report-body"></div>
         <div class="barbtns">
-          <button class="btn" onclick="backToCard('${placeId}')">Перейти к месту</button>
+          <button class="btn" onclick="backToCard('${placeId}')">Перейти в место</button>
         </div>
       </section>`);
   }
@@ -433,7 +538,7 @@ SCREENS.report = function (params) {
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
       <div>
         <div style="font-size:18px;font-weight:700">${esc(r.author)}</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:2px">${dateStr(r.daysAgo)} · ${dateLong(r.daysAgo)}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">${rDateStr(r.daysAgo)}</div>
       </div>
       ${catchBadge(r.catch)}
     </div>
@@ -463,7 +568,7 @@ function openReportEdit(placeId, reportId) {
   };
   navigate('reportform', { placeId });
 }
-function backToCard(placeId) { reset([{ screen: 'map', params: {} }]); openCard(placeId); }
+function backToCard(placeId) { reset([{ screen: baseTab(), params: {} }]); openCard(placeId); }
 
 /* ---------- 05 · Новый отчёт ---------- */
 function openReportForm() {
@@ -553,7 +658,7 @@ function finishPublishReport() {
   }
   S.reportDraft = null;
   S.lastReportRef = { placeId: p.id, reportId: r.id };
-  reset([{ screen: 'map', params: {} }, { screen: 'place', params: { placeId: p.id } },
+  reset([{ screen: baseTab(), params: {} }, { screen: 'place', params: { placeId: p.id } },
          { screen: 'reports', params: { placeId: p.id } },
          { screen: 'report', params: { placeId: p.id, reportId: r.id } }]);
   toast(d.editedReportId ? 'Изменения отчёта сохранены (демо)' : 'Отчёт опубликован (демо, запись не отправлялась)');
@@ -573,21 +678,17 @@ SCREENS.coords = function () {
   if (!$('#screen-coords')) {
     $('#screens').insertAdjacentHTML('beforeend', `
       <section class="screen" id="screen-coords">
-        <div class="appheader">
+        <div class="appheader no-line">
           <button class="iconbtn" onclick="back()">${ICON.back}</button>
-          <span class="h-sub">Новое место · 1 из 2</span>
-          <span style="flex:1"></span>
-          <span class="h-demo">ДЕМО</span>
+          <div class="progress-inline"><div class="on"></div><div></div></div>
+          <button class="iconbtn" onclick="toast('Поиск не входит в сценарии прототипа')" title="Поиск">${ICON.search}</button>
         </div>
-        <div class="progress"><div class="on"></div><div></div></div>
-        <div class="content" style="padding-top:4px">
-          <div class="h1" style="margin-top:6px">Где находится место?</div>
-          <div style="font-size:13px;color:var(--text2);margin-top:6px">Перемещай курсор. Затем выбери, как место будет видно другим.</div>
-          <div class="mapwrap" style="height:280px;flex:none;border-radius:10px;overflow:hidden;margin-top:12px">
-            <div id="selmap"></div>
-            <div class="sel-cross"></div>
-          </div>
-          <div class="section-label">Показывать координаты</div>
+        <div class="mapwrap">
+          <div id="selmap"></div>
+          <div class="sel-cross"></div>
+        </div>
+        <div class="content" style="padding-top:0">
+          <div class="coords-strip" id="coords-strip">Координаты:</div>
           <div class="accuracy-grid">
             <button class="acc-card" id="acc-approx" onclick="setAccuracy('approx')">
               <span class="t">◈ Примерно</span>
@@ -598,21 +699,17 @@ SCREENS.coords = function () {
               <span class="d">Другим видна выбранная точка</span>
             </button>
           </div>
-          <div id="acc-note"></div>
-          <div class="dateRow"><span id="now-row"></span>${ICON.chev}</div>
         </div>
         <div class="barbtns"><button class="btn primary" onclick="coordsNext()">Дальше</button></div>
       </section>`);
   }
   initSelMap();
   setAccuracyUI();
-  const d = new Date();
-  $('#now-row').textContent = nowStr();
+  updateCoordsStrip();
 };
-function nowStr() {
-  const d = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  return pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + d.getFullYear() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+function updateCoordsStrip() {
+  const el = $('#coords-strip');
+  if (el && S.draftPlace) el.textContent = 'Координаты: ' + S.draftPlace.lat.toFixed(3) + ', ' + S.draftPlace.lng.toFixed(3);
 }
 function initSelMap() {
   if (selMap) { selMap.remove(); selMap = null; }
@@ -623,6 +720,7 @@ function initSelMap() {
     const c = selMap.getCenter();
     S.draftPlace.lat = +c.lat.toFixed(5);
     S.draftPlace.lng = +c.lng.toFixed(5);
+    updateCoordsStrip();
     if (S.draftPlace.accuracy === 'approx') drawSelCircle();
   });
   drawSelCircle();
@@ -640,13 +738,10 @@ function drawSelCircle() {
 function setAccuracy(v) { S.draftPlace.accuracy = v; setAccuracyUI(); }
 function setAccuracyUI() {
   const on = S.draftPlace && S.draftPlace.accuracy;
-  const a = $('#acc-approx'), b = $('#acc-exact'), note = $('#acc-note');
+  const a = $('#acc-approx'), b = $('#acc-exact');
   if (!a) return;
   a.classList.toggle('on', on === 'approx');
   b.classList.toggle('on', on === 'exact');
-  note.innerHTML = on === 'exact'
-    ? '<div class="note" style="margin-top:10px">Другие рыбаки смогут увидеть точную точку и продолжить к ней маршрут.</div>'
-    : '';
   drawSelCircle();
 }
 function coordsNext() { navigate('placedesc', {}); }
@@ -668,18 +763,15 @@ function editPlace(placeId) {
   navigate('placedesc', {});
 }
 
-/* ---------- 08 · Описание точки ---------- */
+/* ---------- 07-2 · Подробнее о новом месте ---------- */
 SCREENS.placedesc = function () {
   if (!$('#screen-placedesc')) {
     $('#screens').insertAdjacentHTML('beforeend', `
       <section class="screen" id="screen-placedesc">
         <div class="appheader">
           <button class="iconbtn" onclick="back()">${ICON.back}</button>
-          <span class="h-sub">Новое место · 2 из 2</span>
-          <span style="flex:1"></span>
-          <span class="h-demo">ДЕМО</span>
+          <div class="progress-inline"><div class="on"></div><div class="on"></div></div>
         </div>
-        <div class="progress"><div class="on"></div><div class="on"></div></div>
         <div class="content" id="pd-body"></div>
         <div class="barbtns"><button class="btn primary" onclick="publishPlace()">Опубликовать место</button></div>
       </section>`);
@@ -690,9 +782,10 @@ function renderPlaceDesc() {
   const d = S.draftPlace;
   $('#pd-body').innerHTML = `
     <div class="banner-acq">
-      <span class="coords">Координаты: ${d.accuracy === 'exact' ? '● Точно' : '◈ Примерно'} · ${esc(coordStr())}</span>
+      <span class="coords">Координаты: ${d.accuracy === 'exact' ? '● Точно' : '◈ Примерно'}</span>
       <button class="changebtn" onclick="back()">Изменить</button>
     </div>
+    <div class="h1" style="margin-top:14px">Подробнее о новом месте</div>
     <div class="form-label">Название места <span class="req">*</span></div>
     <input class="field" id="place-name" placeholder="Например: Залив у сосен" value="${esc(d.name)}" oninput="S.draftPlace.name=this.value; this.classList.remove('invalid')" />
     <div class="form-label">Тип места</div>
@@ -714,10 +807,6 @@ function renderPlaceDesc() {
     <button class="btn" onclick="addPlacePhoto()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px">
       ${ICON.cam} ${d.photos ? 'Фото: ' + d.photos + ' (демо)' : 'Фото'}
     </button>`;
-}
-function coordStr() {
-  const d = S.draftPlace;
-  return d.lat.toFixed(4) + ', ' + d.lng.toFixed(4) + (d.accuracy === 'exact' ? '' : ' (+1 км)');
 }
 function addPlacePhoto() {
   S.draftPlace.photos = S.draftPlace.photos ? 0 : 2;
@@ -756,6 +845,7 @@ function createPlaceFinal() {
       comment: d.desc,
       photos: d.photos,
       reports: [],
+      mine: true, // место, созданное пользователем — попадает в Журнал
     };
     PLACES.push(p);
     S.lastAction = 'create';
@@ -782,7 +872,6 @@ SCREENS.done = function () {
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#14181c" stroke-width="1.6"><path d="M4 12.5l5 5L20 7"/></svg>
           <div class="big" id="done-title">Место добавлено!</div>
           <div class="desc">Это демонстрация успешного сценария. Записи на сервер не отправлялись.</div>
-          <div class="note" id="done-note" style="margin-top:16px;max-width:330px"></div>
           <div class="barbtns">
             <button class="btn primary" onclick="openLastPlace()">Открыть место</button>
             <button class="btn" onclick="goMap()">Вернуться на карту</button>
@@ -791,8 +880,6 @@ SCREENS.done = function () {
       </section>`);
   }
   $('#done-title').textContent = S.lastAction === 'edit' ? 'Место обновлено!' : 'Место добавлено!';
-  $('#done-note').textContent = 'В общедоступной карте будет показана ' +
-    (S.lastCreatedAccuracy === 'exact' ? 'точная отметка.' : 'область ~1 км без точной точки.');
 };
 function goMap() { reset([{ screen: 'map', params: {} }]); }
 function openLastPlace() { reset([{ screen: 'map', params: {} }]); openCard(S.lastCreatedPlaceId); }
