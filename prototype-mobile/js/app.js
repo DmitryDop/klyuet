@@ -1,6 +1,6 @@
 /* Клюёт — интерактивный UX-прототип (этап 2).
    Роутер в виде стека экранов + живое состояние фильтров, мест и отчётов.
-   Демо-метка «ДЕМО» присутствует на внутренних экранах, сервера нет. */
+   Всё локальное: сервера нет; публикация никуда не отправляется. */
 
 /* ---------- helpers ---------- */
 const $ = (s, el) => (el || document).querySelector(s);
@@ -402,7 +402,7 @@ SCREENS.place = function (params) {
       <span style="font-size:12px;color:var(--text2)">${p.reports.length} ${pluralZapis(p.reports.length)}</span>
     </div>
     ${previewHtml}
-    <button class="btn" style="margin-top:12px;width:100%" onclick="goReports()">Все отчёты</button>`;
+    <button class="btn gray" style="margin-top:12px;width:100%" onclick="goReports()">Все отчёты</button>`;
 
   $('#place-content').innerHTML = `
     <div>
@@ -489,10 +489,9 @@ SCREENS.reports = function (params) {
     $('#screens').insertAdjacentHTML('beforeend', `
       <section class="screen" id="screen-reports">
         <div class="appheader">
-          <button class="iconbtn" onclick="back()">${ICON.back}</button>
+          <button class="cbtn" onclick="back()">${ICON.back}</button>
           <span class="h-sub" id="reports-title"></span>
           <span style="flex:1"></span>
-          <span class="h-demo">ДЕМО</span>
         </div>
         <div class="content" id="reports-list"></div>
         <div class="barbtns"><button class="btn primary" onclick="openReportForm()">Добавить свой отчёт</button></div>
@@ -520,10 +519,9 @@ SCREENS.report = function (params) {
     $('#screens').insertAdjacentHTML('beforeend', `
       <section class="screen" id="screen-report">
         <div class="appheader">
-          <button class="iconbtn" onclick="back()">${ICON.back}</button>
+          <button class="cbtn" onclick="back()">${ICON.back}</button>
           <span class="h-sub">Отчёт о рыбалке</span>
           <span style="flex:1"></span>
-          <span class="h-demo">ДЕМО</span>
           <span id="report-hdr-right"></span>
         </div>
         <div class="content" id="report-body"></div>
@@ -580,10 +578,9 @@ SCREENS.reportform = function (params) {
     $('#screens').insertAdjacentHTML('beforeend', `
       <section class="screen" id="screen-reportform">
         <div class="appheader">
-          <button class="iconbtn" onclick="back()">${ICON.back}</button>
+          <button class="cbtn" onclick="back()">${ICON.back}</button>
           <span class="h-sub">Новый отчёт</span>
           <span style="flex:1"></span>
-          <span class="h-demo">ДЕМО</span>
         </div>
         <div class="content" id="reportform-body"></div>
         <div class="barbtns"><button class="btn primary" id="publish-report" onclick="publishReport()">Опубликовать отчёт</button></div>
@@ -600,10 +597,11 @@ function renderReportForm(p) {
       <button class="seg ${d.catch === true ? 'on' : ''}" onclick="setDraft('catch', true)">С уловом</button>
       <button class="seg ${d.catch === false ? 'on' : ''}" onclick="setDraft('catch', false)">Без улова</button>
     </div>
+    ${d.catch === false ? '' : `
     <div class="form-label">Какую рыбу ловил?</div>
     <button class="selectbtn" onclick="openFishSheet('report')">
       <span class="${d.fish.length ? '' : 'ph'}">${esc(d.fish.length ? fishShort(d.fish) : 'Выбрать')}</span><span class="chev">${ICON.chevDown}</span>
-    </button>
+    </button>`}
     <div class="form-label">Способ ловли</div>
     <div class="segmented">
       <button class="seg ${d.method === 'boat' ? 'on' : ''}" onclick="setDraft('method', 'boat')">С лодки</button>
@@ -627,7 +625,12 @@ function syncPublishBtn() {
   const el = $('#publish-report');
   if (el) el.disabled = S.reportDraft.catch == null;
 }
-function setDraft(key, val) { S.reportDraft[key] = val; renderReportForm(currentPlace()); }
+function setDraft(key, val) {
+  S.reportDraft[key] = val;
+  // «Без улова» — поле выбора рыбы скрывается и выбранное сбрасывается
+  if (key === 'catch' && val === false) S.reportDraft.fish = [];
+  renderReportForm(currentPlace());
+}
 function addDraftPhoto() {
   S.reportDraft.photos = S.reportDraft.photos ? 0 : 2; // повторное нажатие снимет демо-фото
   renderReportForm(currentPlace());
@@ -677,15 +680,15 @@ SCREENS.coords = function () {
     $('#screens').insertAdjacentHTML('beforeend', `
       <section class="screen" id="screen-coords">
         <div class="appheader no-line">
-          <button class="iconbtn" onclick="back()">${ICON.back}</button>
+          <button class="cbtn" onclick="back()">${ICON.back}</button>
           <div class="progress-inline"><div class="on"></div><div></div></div>
-          <button class="iconbtn" onclick="toast('Поиск не входит в сценарии прототипа')" title="Поиск">${ICON.search}</button>
+          <button class="cbtn" onclick="toast('Поиск не входит в сценарии прототипа')" title="Поиск">${ICON.search}</button>
         </div>
         <div class="mapwrap">
           <div id="selmap"></div>
-          <div class="sel-cross"></div>
+          <div class="sel-cross" id="sel-cross"></div>
         </div>
-        <div class="content" style="padding-top:0">
+        <div class="coords-bottom" style="padding:0 16px 2px">
           <div class="coords-strip" id="coords-strip">Координаты:</div>
           <div class="accuracy-grid">
             <button class="acc-card" id="acc-approx" onclick="setAccuracy('approx')">
@@ -698,7 +701,7 @@ SCREENS.coords = function () {
             </button>
           </div>
         </div>
-        <div class="barbtns"><button class="btn primary" onclick="coordsNext()">Дальше</button></div>
+        <div class="barbtns coords-barbtns"><button class="btn primary" onclick="coordsNext()">Дальше</button></div>
       </section>`);
   }
   initSelMap();
@@ -740,6 +743,9 @@ function setAccuracyUI() {
   if (!a) return;
   a.classList.toggle('on', on === 'approx');
   b.classList.toggle('on', on === 'exact');
+  // крест-прицел — только у варианта «Точно»; «Примерно» показывает круг области
+  const cr = $('#sel-cross');
+  if (cr) cr.classList.toggle('show', on === 'exact');
   drawSelCircle();
 }
 function coordsNext() { navigate('placedesc', {}); }
@@ -767,7 +773,7 @@ SCREENS.placedesc = function () {
     $('#screens').insertAdjacentHTML('beforeend', `
       <section class="screen" id="screen-placedesc">
         <div class="appheader">
-          <button class="iconbtn" onclick="back()">${ICON.back}</button>
+          <button class="cbtn" onclick="back()">${ICON.back}</button>
           <div class="progress-inline"><div class="on"></div><div class="on"></div></div>
         </div>
         <div class="content" id="pd-body"></div>
@@ -861,10 +867,9 @@ SCREENS.done = function () {
     $('#screens').insertAdjacentHTML('beforeend', `
       <section class="screen" id="screen-done">
         <div class="appheader">
-          <button class="iconbtn" onclick="goMap()">${ICON.back}</button>
+          <button class="cbtn ic-back" onclick="goMap()">${ICON.back}</button>
           <span class="h-sub">Готово</span>
           <span style="flex:1"></span>
-          <span class="h-demo">ДЕМО</span>
         </div>
         <div class="center-screen">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#14181c" stroke-width="1.6"><path d="M4 12.5l5 5L20 7"/></svg>
