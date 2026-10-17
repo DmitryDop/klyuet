@@ -343,7 +343,6 @@ function renderJournalList() {
           </button>`).join('')
       : `<div class="j-empty">
           <div class="j-empty-title">Добавленных мест нет</div>
-          <div class="j-empty-desc">Это демонстрация успешного сценария. Запись на сервер не отправлялась.</div>
           <button class="btn primary" onclick="journalAddPlace()">Добавить</button>
         </div>`;
   } else {
@@ -357,7 +356,6 @@ function renderJournalList() {
           </button>`).join('')
       : `<div class="j-empty">
           <div class="j-empty-title">Отчетов пока нет</div>
-          <div class="j-empty-desc">Это демонстрация успешного сценария. Запись на сервер не отправлялась.</div>
         </div>`;
   }
 }
