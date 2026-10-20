@@ -400,6 +400,7 @@ SCREENS.place = function (params) {
           <div class="card-pill" id="card-pill"></div>
         </div>
         <div class="content" id="place-content" style="padding-top:14px"></div>
+        <div class="barbtns" id="place-actions" style="display:none"></div>
       </section>`);
   }
   const previewHtml = !preview.length ? '' : preview.map(r => `
@@ -416,6 +417,16 @@ SCREENS.place = function (params) {
     </div>
     ${previewHtml}
     <button class="btn gray" style="margin-top:12px;width:100%" onclick="goReports()">Все отчёты</button>`;
+
+  const actionsHtml = `
+    <button class="btn" id="route-btn" onclick="toast('Переход во внешний навигатор (демо)')">Маршрут</button>
+    <button class="btn primary" onclick="openReportForm()">Добавить отчёт</button>`;
+  // пока отзывов нет — кнопки прибиты к низу экрана; с отзывами — в потоке под отчётами
+  const barEl = $('#place-actions');
+  if (barEl) {
+    barEl.style.display = p.reports.length ? 'none' : 'flex';
+    barEl.innerHTML = p.reports.length ? '' : actionsHtml;
+  }
 
   $('#place-content').innerHTML = `
     <div>
@@ -442,10 +453,7 @@ SCREENS.place = function (params) {
     ${p.comment ? '<div class="section-label">Комментарий</div><div class="ph-text">' + esc(p.comment) + '</div>' : ''}
     ${p.photos ? '<div class="section-label">Фото</div>' + photoBox(p.photos) : ''}
     ${reportsBlock}
-    <div class="cardbtns">
-      <button class="btn" id="route-btn" onclick="toast('Переход во внешний навигатор (демо)')">Маршрут</button>
-      <button class="btn primary" onclick="openReportForm()">Добавить отчёт</button>
-    </div>`;
+    ${p.reports.length ? '<div class="cardbtns">' + actionsHtml + '</div>' : ''}`;
 
   $('#card-pill').textContent = p.approx ? 'Примерное место' : 'Точная точка';
   $('#route-btn').textContent = p.approx ? 'Маршрут к области' : 'Маршрут';
@@ -780,7 +788,7 @@ function editPlace(placeId) {
   navigate('placedesc', {});
 }
 
-/* ---------- 07-2 · Подробнее о новом месте ---------- */
+/* ---------- 07-2 · Подробнее о месте ---------- */
 SCREENS.placedesc = function () {
   if (!$('#screen-placedesc')) {
     $('#screens').insertAdjacentHTML('beforeend', `
@@ -790,19 +798,22 @@ SCREENS.placedesc = function () {
           <div class="progress-inline"><div class="on"></div><div class="on"></div></div>
         </div>
         <div class="content" id="pd-body"></div>
-        <div class="barbtns"><button class="btn primary" onclick="publishPlace()">Опубликовать место</button></div>
+        <div class="barbtns"><button class="btn primary" id="publish-place-btn" onclick="publishPlace()">Опубликовать место</button></div>
       </section>`);
   }
   renderPlaceDesc();
 };
 function renderPlaceDesc() {
   const d = S.draftPlace;
+  // при редактировании места кнопка публикации превращается в сохранение правок
+  const pubBtn = $('#publish-place-btn');
+  if (pubBtn) pubBtn.textContent = d.editing ? 'Сохранить изменения' : 'Опубликовать место';
   $('#pd-body').innerHTML = `
     <div class="banner-acq">
       <span class="coords">Координаты: ${d.accuracy === 'exact' ? '● Точно' : '◈ Примерно'}</span>
-      <button class="changebtn" onclick="back()">Изменить</button>
+      <button class="changebtn" onclick="changeCoords()">Изменить</button>
     </div>
-    <div class="h1" style="margin-top:14px">Подробнее о новом месте</div>
+    <div class="h1" style="margin-top:14px">Подробнее о месте</div>
     <div class="form-label">Название места <span class="req">*</span></div>
     <input class="field" id="place-name" placeholder="Например: Залив у сосен" value="${esc(d.name)}" oninput="S.draftPlace.name=this.value; this.classList.remove('invalid')" />
     <div class="form-label">Тип места</div>
@@ -829,6 +840,12 @@ function addPlacePhoto() {
   S.draftPlace.photos = S.draftPlace.photos ? 0 : 2;
   renderPlaceDesc();
   if (S.draftPlace.photos) toast('Добавлено 2 демо-фото (не реальные)');
+}
+function changeCoords() {
+  // «Изменить» → экран координат с картой и выбором «точно / примерно»;
+  // шаг описания заменяем шагом координат, чтобы не плодить дубли в стеке
+  stack.pop();
+  navigate('coords', {});
 }
 function publishPlace() {
   const input = $('#place-name');
