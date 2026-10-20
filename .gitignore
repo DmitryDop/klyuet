@@ -41,3 +41,8 @@ example
 # generated native folders
 /ios
 /android
+
+# local artifacts
+.figma_shots/
+remote-test/
+UX/.obsidian/
