@@ -9,6 +9,10 @@ import type { Place } from './types';
  *
  * Только публичные координаты: скрытой исходной точки у приблизительных мест
  * нет даже в fixtures (см. types.ts).
+ *
+ * Наполнение карточек: description/фото/отчёты дозированы — часть мест пустые
+ * (проверка «Не все заполнено»), часть полные; фотографии — счётчик-заглушки
+ * (как в прототипе, до появления реальных снимков).
  */
 export const DEMO_CENTER = { latitude: 58.05, longitude: 38.35 };
 
@@ -36,15 +40,66 @@ const APPROXIMATE: [number, number][] = [
   [58.11, 38.38],
 ];
 
+const PLACE_NAMES = [
+  'Залив у сосен',
+  'Каменный мыс',
+  'Устье Шексны',
+  'Песчаный плёс',
+  'Кордон Дальний',
+  'Затон у мели',
+  'Тихая протока',
+  'Вышка над ямой',
+  'Галька у дубов',
+  'Остров Полдневой',
+  'Глубокий омут',
+  'Русло в старице',
+];
+
+/* справочник видов демо-сессии (канонический список — открытый вопрос аудита) */
+const SPECIES = ['Щука', 'Окунь', 'Плотва', 'Лещ'];
+
+/* описания: пустые строки → секция комментария скрыта (проверка обоих состояний) */
+const DESCRIPTIONS: (string | undefined)[] = [
+  'Спокойный залив, берег местами заросший. Точное место указываю, берите и наслаждайтесь',
+  'Удобный подъезд почти к воде, вечером много машин.',
+  'Мелко, но рыба ходит. Нужен заброс на 30+ метров.',
+  undefined,
+  'Кordon: парковка у шлагбаума, дальше пешком минут десять.',
+  undefined,
+  'Тихо, если не выходной. Прикорм держит леща пару часов.',
+];
+
+/* фото-заглушки: индекс места → количество (0 — секция скрыта) */
+const PHOTOS_COUNT = [2, 0, 3, 0, 0, 0, 2, 0, 0, 0, 0, 1];
+
 export const demoPlaces: Place[] = [
   ...EXACT.map(([latitude, longitude], i) => ({
     id: `demo-exact-${i + 1}`,
     kind: 'exact' as const,
     coordinate: { latitude, longitude },
+    /* демо-владелец: половина мест свои — у них работает состояние владельца */
+    ownerId: i % 2 === 0 ? 'me' : 'other-1',
+    name: PLACE_NAMES[i % PLACE_NAMES.length],
+    /* чередование дикая/платная и способа для проверки строк карточки */
+    placeType: (i % 3 === 0 ? 'paid' : 'wild') as 'paid' | 'wild',
+    fishSpecies: i % 2 === 0 ? SPECIES : SPECIES.slice(0, 2),
+    access: 'Подъезд / Дальше пешком',
+    fishing: (i % 2 === 0 ? 'shore' : 'boat') as 'shore' | 'boat',
+    description: DESCRIPTIONS[i % DESCRIPTIONS.length],
+    photos: Array.from({ length: PHOTOS_COUNT[i] }, (_, p) => `demo-exact-${i + 1}-ph-${p + 1}`),
   })),
   ...APPROXIMATE.map(([latitude, longitude], i) => ({
     id: `demo-approx-${i + 1}`,
     kind: 'approximate' as const,
+    ownerId: i % 2 === 0 ? 'me' : 'other-2',
+    name: `Обрыв у Галича ${i + 1}`,
+    placeType: 'wild' as const,
+    fishSpecies: SPECIES.slice(0, i % 3 === 0 ? 4 : 2),
+    access: 'Дальше пешком',
+    fishing: 'shore' as const,
+    description: i === 0 ? 'Область показывает берег, точный подъезд — по грунтовке.' : undefined,
+    /* фото у приблизительных: 0/2 — проверка скрытия и показа */
+    photos: i === 0 ? ['demo-approx-1-ph-1', 'demo-approx-1-ph-2'] : [],
     /* радиус области одинаков у всех демо-мест: «порядка 1 км» (спека §3.1) */
     view: { coordinate: { latitude, longitude }, radiusMeters: 1000 },
   })),

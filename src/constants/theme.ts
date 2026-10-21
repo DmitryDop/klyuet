@@ -23,6 +23,21 @@ export const Colors = {
     accentIcon: '#ffffff',
     /** --color-overlay-marker-halo — обводка/гало пина */
     markerHalo: '#fafaf6',
+    /** --color-text-secondary — подписи полей/метаданные (привязка 135:6246) */
+    textSecondary: '#59625e',
+    /** --color-border-subtle — разделители списков (привязка 139:7139) */
+    borderSubtle: '#ccd4cb',
+    /**
+     * Блоки карточки места в K привязаны к --color-surface-default = #f8f9f5
+     * (снапшот 135:6245); в K-DS button-ui привязка того же токена — #ffffffe5.
+     * Расхождение одного токена в двух файлах — на решении Дмитрия; пока
+     * в коде два значения с разными именами.
+     */
+    cardSurface: '#f8f9f5',
+    /** --color-border-control — границы outline-кнопок (привязка 135:6279) */
+    borderControl: '#748078',
+    /** --color-surface-raised — плашки поверх снимков (подтверждено K 135:6237) */
+    surfaceRaised: '#ffffff',
     /** --color-overlay-point с альфой — полупрозрачная зелёная заливка
         приблизительных областей и кластеров (привязка K-DS 321:1835, 21.10.2026) */
     pointAlpha: '#176b5233',

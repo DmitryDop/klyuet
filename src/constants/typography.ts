@@ -50,15 +50,18 @@ export const TEXT: Record<string, TextStyleToken> = {
   display: { fontSize: 32, lineHeight: 38, fontWeight: 700 },
   /** Onest/Title1 — 28/34 · 700 */
   title1: { fontSize: 28, lineHeight: 34, fontWeight: 700 },
-  /** Onest/Title2 — 24/30 · 650 */
-  title2: { fontSize: 24, lineHeight: 30, fontWeight: 650 },
+  /** Onest/Title2 — 24/30 · 650 (описание); привязка узла карточки 135:6243
+      даёт Bold/700 — конфликт на уточнении, в коде пока 700 (по прецеденту
+      Label: узел приоритетен, описание K-DS ждёт исправления) */
+  title2: { fontSize: 24, lineHeight: 30, fontWeight: 700 },
   /** Onest/Title3 — 20/26 · 650 */
   title3: { fontSize: 20, lineHeight: 26, fontWeight: 650 },
   /** Onest/Label — 14/18 · 500 · кнопки/чипы/поля (описание стиля исправлено
       Дмитрием в K-DS 21.10.2026: 500; снимок узла Claster_Point подтверждает) */
   label: { fontSize: 14, lineHeight: 18, fontWeight: 500 },
-  /** Onest/Body L — 17/24 · 500 · контент */
-  bodyL: { fontSize: 17, lineHeight: 24, fontWeight: 500 },
+  /** Onest/Body L — 17/24 · 500 (описание); привязка узла таблицы 135:6246
+      даёт Regular/400 — конфликт на уточнении, в коде пока 400 */
+  bodyL: { fontSize: 17, lineHeight: 24, fontWeight: 400 },
   /** Onest/Body — 16/22 · 450 · контент */
   body: { fontSize: 16, lineHeight: 22, fontWeight: 450 },
   /** Onest/Body S — 14/20 · 450 · контент */

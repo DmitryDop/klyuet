@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import MapView, { Circle, Marker } from 'react-native-maps';
+import MapView, { Circle, MapPressEvent, Marker } from 'react-native-maps';
+import { useRouter } from 'expo-router';
 
 import ButtonUi from '@/components/button-ui';
 import ClasterPoint from '@/components/map/claster-point';
@@ -33,6 +34,7 @@ const DASH_PATTERN = [5, 4];
 
 export default function MapScreen() {
   const mapRef = useRef<MapView>(null);
+  const router = useRouter();
   const [region, setRegion] = useState(DEMO_REGION);
   const [places, setPlaces] = useState<Place[]>([]);
   const { width } = useWindowDimensions();
@@ -85,6 +87,30 @@ export default function MapScreen() {
     );
   };
 
+  /* спека §2: тап по пину или свободной части области → сразу карточка места */
+  const openPlace = (placeId: string) => router.push(`/place/${placeId}`);
+
+  /**
+   * Тап по области приблизительного места — геометрически, без overlay-слоёв:
+   * у Circle пресс-события нет, а Polygon под Fabric на iOS ненадёжен
+   * (rnmaps #5928/#5457 — области пропадают). Координата тапа проверяется
+   * расстоянием до центров областей; точные пины и кластеры перехватывают
+   * свои тапы раньше (stopPropagation у marker'ов).
+   */
+  const handleMapPress = (e: MapPressEvent) => {
+    const c = e.nativeEvent.coordinate;
+    const hit = places
+      .filter((p): p is Extract<Place, { kind: 'approximate' }> => p.kind === 'approximate')
+      .find((p) => {
+        const dLat = (c.latitude - p.view.coordinate.latitude) * 111_320;
+        const dLon = (c.longitude - p.view.coordinate.longitude) * 111_320;
+        return Math.sqrt(dLat * dLat + dLon * dLon) <= p.view.radiusMeters;
+      });
+    if (hit) {
+      openPlace(hit.id);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <MapView
@@ -92,6 +118,7 @@ export default function MapScreen() {
         style={styles.map}
         userInterfaceStyle="light"
         initialRegion={region}
+        onPress={handleMapPress}
         onRegionChangeComplete={setRegion}>
         {objects.map((o) => {
           switch (o.type) {
@@ -101,6 +128,7 @@ export default function MapScreen() {
                   key={`cluster-${o.id}`}
                   coordinate={o.coordinate}
                   tracksViewChanges={false}
+                  stopPropagation
                   onPress={() => expand(o.coordinate, o.expansionZoom)}>
                   <ClasterPoint kind={o.kind} count={o.count} />
                 </Marker>
@@ -110,11 +138,16 @@ export default function MapScreen() {
                 <Marker
                   key={o.place.id}
                   coordinate={o.place.coordinate}
-                  tracksViewChanges={false}>
+                  tracksViewChanges={false}
+                  stopPropagation
+                  onPress={() => openPlace(o.place.id)}>
                   <LocationDot />
                 </Marker>
               );
             case 'approxPlace':
+              /* Circle: провереннаяslice-1 отрисовка областей (Polygon под
+                 Fabric на iOS ненадёжен — rnmaps #5928/#5457); тап — через
+                 геометрическую проверку в handleMapPress */
               return (
                 <Circle
                   key={o.place.id}

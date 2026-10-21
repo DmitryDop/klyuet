@@ -15,9 +15,31 @@ export type GeoPoint = {
   longitude: number;
 };
 
-/** Точное место: публичные координаты. */
-export type ExactPlace = {
+/**
+ * Общие поля места: карточка и журнал (journal.md §3, карточка K).
+ * Виды рыбы — строки-названия до появления справочника; способ ловля —
+ * характеристика места (карточка K показывает её в блоке места).
+ */
+export type PlaceType = 'wild' | 'paid';
+
+export type PlaceBase = {
   id: string;
+  kind: 'exact' | 'approximate';
+  /** автор места (журнал «Мои места», действия владельца) */
+  ownerId: string;
+  name: string;
+  placeType: PlaceType;
+  fishSpecies: string[];
+  /** доступ: подъезд / дальнейший проход — строка карточки */
+  access?: string;
+  fishing?: 'shore' | 'boat';
+  /** необязательное краткое описание */
+  description?: string;
+  photos: string[];
+};
+
+/** Точное место: публичные координаты. */
+export type ExactPlace = PlaceBase & {
   kind: 'exact';
   coordinate: GeoPoint;
 };
@@ -34,8 +56,7 @@ export type ApproximatePlaceView = {
 };
 
 /** Приблизительное место: только безопасное представление. */
-export type ApproximatePlace = {
-  id: string;
+export type ApproximatePlace = PlaceBase & {
   kind: 'approximate';
   view: ApproximatePlaceView;
 };
@@ -44,3 +65,32 @@ export type Place = ExactPlace | ApproximatePlace;
 
 /** Тип кластера из утверждённого набора (спека §1.1). */
 export type ClusterKind = 'exact' | 'approximate' | 'mixed';
+
+/**
+ * Отчёт о рыбалке (reports.md §3) — отдельная сущность: только данные
+ * конкретной рыбалки и placeId. Характеристики места (координаты, тип,
+ * платность, точность) в отчёте отсутствуют по построению.
+ */
+export type CatchStatus = 'with_catch' | 'without_catch';
+
+export type FishingMethod = 'shore' | 'boat';
+
+export type Report = {
+  id: string;
+  /** только ссылка на существующее место */
+  placeId: string;
+  authorId: string;
+  /** дата самой рыбалки, ISO YYYY-MM-DD; не дата публикации */
+  fishingDate: string;
+  /** служебные: время публикации / последнего изменения */
+  publishedAt: string;
+  updatedAt: string;
+  catchStatus: CatchStatus;
+  /** при without_catch — пусто и не публикуется */
+  fishSpeciesIds: string[];
+  fishingMethod?: FishingMethod;
+  tackle?: string;
+  bait?: string;
+  comment?: string;
+  photos: string[];
+};
