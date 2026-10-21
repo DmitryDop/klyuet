@@ -175,7 +175,7 @@ export default function PlaceScreen() {
           K 329:3598 (Скролл-02): обе кнопки остаются — внутри тулбара,
           button-ui Shadows=No, y = панель +8 (инстансы 312:3300) */}
       {sheetUp && (
-        <View style={[styles.toolbar, { height: insets.top + 56 }]}>
+        <View style={[styles.toolbar, { height: insets.top + 60 }]}>
           <View style={[styles.toolbarButton, { top: insets.top + 8, left: 16 }]}>
             <ButtonUi
               icon="chevronLeft"
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
-    paddingBottom: 8,
+    paddingBottom: 8, /* кнопка 44 + top 8 + низ 8 = 60 (отступ симметричный, Дмитрий 21.10) */
     paddingHorizontal: 16,
     backgroundColor: Colors.light.background,
     alignItems: 'center',

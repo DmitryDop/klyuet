@@ -9,7 +9,7 @@ import { Colors, TabBarSurface } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /* Управления главной карты — компоновка с актуального макета K (49:820/243:10201).
-   Все кнопки — button-ui 40×40 (K-DS); «+» — variant action.
+   Все кнопки — button-ui 44×44 (K-DS dimensions/size/2xl, коммит 31da2cd); «+» — variant action.
    Поиск/фильтр/слои/гео/«+» пока НЕ ПОДКЛЮЧЕНЫ — рендер без нажатий
    (задание slice 2: без ложного впечатления работоспособности).
    Легенда точности: панель tab_bar/default + блюр, padding 8, radius 12;
