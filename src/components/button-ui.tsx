@@ -4,7 +4,8 @@ import Svg, { Path } from 'react-native-svg';
 import { Colors } from '@/constants/theme';
 import { UI_ICONS } from '@/components/ui-icons';
 
-/* Кнопка поверх карты по K-DS button-ui: 40×40, radius/sm = 12 (кривая
+/* Кнопка поверх карты по K-DS button-ui: 44×44 (dimensions/size/2xl = 44,
+   привязка вариантов 71:564/232:3630/71:598/232:3632), radius/sm = 12 (кривая
    continuous), фон --color-surface-default (#ffffffe5 — привязка K-DS 71:564),
    иконка 24×24 icon/light. Тень button_map: 0 2 4 0 rgba(0,0,0,0.16)
    (вариант Shadows=Yes 232:3630).
@@ -69,8 +70,8 @@ export default function ButtonUi({
 
 const styles = StyleSheet.create({
   button: {
-    width: 40,
-    height: 40,
+    width: 44, /* dimensions/size/2xl (K-DS 399:371) */
+    height: 44,
     borderRadius: 12,
     borderCurve: 'continuous',
     backgroundColor: 'rgba(255,255,255,0.90)',
