@@ -22,15 +22,18 @@ export default function MapControls() {
 
   return (
     <>
-      {/* поиск / фильтр / слои — верхняя колонка справа (x=336, y=45) */}
-      <View style={[styles.top, { top: insets.top + 1 }]}>
+      {/* поиск / фильтр / слои — верхняя колонка справа (K 243:10201: top 52
+          при статус-полосе 44 → 8 от safe area) */}
+      <View style={[styles.top, { top: insets.top + 8 }]}>
         <ButtonUi icon="magnifyingGlass" accessibilityLabel="Поиск (не подключено)" />
         <ButtonUi icon="sliders" accessibilityLabel="Фильтр (не подключено)" />
         <ButtonUi icon="layerGroup" accessibilityLabel="Слои (не подключено)" />
       </View>
 
-      {/* геолокация / добавление места — нижняя группа (y=650; зазор 24) */}
-      <View pointerEvents="box-none" style={[styles.bottom, { bottom: insets.bottom + 64 }]}>
+      {/* геолокация / добавление места — нижняя группа (K 243:10201: top 642,
+          gap 24, низ группы 746 — тот же край, что у легенды; зазор к таб-бару 24:
+          в коде пилюля выше на 4 (paddingBottom insets+4) → 4+48+24 от низа) */}
+      <View pointerEvents="box-none" style={[styles.bottom, { bottom: insets.bottom + 76 }]}>
         <ButtonUi
           icon="locationCrosshairs"
           accessibilityLabel="Моё местоположение (не подключено)"
@@ -42,8 +45,9 @@ export default function MapControls() {
         />
       </View>
 
-      {/* легенда точности (x=16, y=713; высота 32) */}
-      <View pointerEvents="none" style={[styles.legend, { bottom: insets.bottom + 73 }]}>
+      {/* легенда точности (K 243:10201: top 714, высота 32, зазор к таб-бару 24;
+          пилюля в коде выше на 4 → зазор 24 = insets.bottom + 4 + 48 + 24) */}
+      <View pointerEvents="none" style={[styles.legend, { bottom: insets.bottom + 76 }]}>
         <BlurView intensity={10} tint="light" style={styles.legendLayer} />
         <View style={[styles.legendLayer, styles.legendGlass]} />
         <View style={styles.legendPair}>
