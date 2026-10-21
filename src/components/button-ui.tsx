@@ -1,37 +1,62 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { Colors } from '@/constants/theme';
 import { UI_ICONS } from '@/components/ui-icons';
 
-/* Кнопка поверх карты по K-DS button-ui (71:564):
-   40×40, radius/sm = 12, фон --color-surface-default (#ffffffe5 = белое 90%,
-   подтверждено get_variable_defs 21.10.2026), иконка 24×24 icon/light
-   (plus 71:585 / minus-light 71:597). Тень — вариант Shadows=Yes (232:3630),
-   эффект button_map: 0 2 4 0 rgba(0,0,0,0.16) — подтверждена Дмитрием 21.10.2026.
+/* Кнопка поверх карты по K-DS button-ui: 40×40, radius/sm = 12 (кривая
+   continuous), фон --color-surface-default (#ffffffe5 — привязка K-DS 71:564),
+   иконка 24×24 icon/light. Тень button_map: 0 2 4 0 rgba(0,0,0,0.16)
+   (вариант Shadows=Yes 232:3630).
+   variant="action" — зелёный вариант (bg --color-action-default #176b52,
+   иконка белая --color-overlay-point-on; мастер 232:3632/3633, Inverse).
    Варианта Pressed в K-DS у button-ui нет — pressed-состояние не выдумываем
-   (обязательное правило проекта). */
+   (правило проекта). Без onPress действие рендерится как не подключённое. */
 
 export type IconButtonName = keyof typeof UI_ICONS;
+export type IconButtonVariant = 'default' | 'action';
 
 export default function ButtonUi({
   icon,
+  variant = 'default',
   onPress,
   accessibilityLabel,
 }: {
   icon: IconButtonName;
-  onPress: () => void;
+  variant?: IconButtonVariant;
+  onPress?: () => void;
   accessibilityLabel: string;
 }) {
+  const iconEntry = UI_ICONS[icon];
+  const fill = variant === 'action' ? Colors.light.accentIcon : Colors.light.text;
+
+  const glyph = (
+    <Svg
+      width={24}
+      height={24}
+      viewBox={iconEntry.viewBox !== undefined ? `0 0 ${iconEntry.viewBox} ${iconEntry.viewBox}` : '0 0 24 24'}>
+      <Path d={iconEntry.d} fill={fill} />
+    </Svg>
+  );
+
+  if (!onPress) {
+    /* действие не подключено: без нажатий, но доступно для скринридеров */
+    return (
+      <View
+        style={[styles.button, variant === 'action' && styles.buttonAction]}
+        accessibilityLabel={accessibilityLabel}>
+        {glyph}
+      </View>
+    );
+  }
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
-      style={styles.button}>
-      <Svg width={24} height={24} viewBox="0 0 24 24">
-        <Path d={UI_ICONS[icon].d} fill={Colors.light.text} />
-      </Svg>
+      style={[styles.button, variant === 'action' && styles.buttonAction]}>
+      {glyph}
     </Pressable>
   );
 }
@@ -41,15 +66,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    /* Кривая скругления Figma (corner smoothing 60%) = непрерывные углы iOS.
-       В RN процент не задаётся — нативное приближение: borderCurve continuous
-       (только iOS, на Android игнорируется). */
     borderCurve: 'continuous',
-    /* --color-surface-default: #ffffffe5 — прямая привязка K-DS 71:564 */
     backgroundColor: 'rgba(255,255,255,0.90)',
-    /* button_map (K-DS 232:3630): DROP_SHADOW #00000029, offset (0,2), radius 4 */
     boxShadow: '0 2px 4px 0 rgba(0,0,0,0.16)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  buttonAction: {
+    backgroundColor: Colors.light.accent,
   },
 });

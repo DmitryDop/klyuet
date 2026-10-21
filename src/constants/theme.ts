@@ -23,6 +23,9 @@ export const Colors = {
     accentIcon: '#ffffff',
     /** --color-overlay-marker-halo — обводка/гало пина */
     markerHalo: '#fafaf6',
+    /** --color-overlay-point с альфой — полупрозрачная зелёная заливка
+        приблизительных областей и кластеров (привязка K-DS 321:1835, 21.10.2026) */
+    pointAlpha: '#176b5233',
   },
 } as const;
 
