@@ -57,6 +57,9 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: Colors.light.borderSubtle,
+    /* разделитель внутри px-зоны: 16 от краёв инфо-блока (SpacingSeparator
+       w-full у px-контейнера InfoRow, K 135:6246) */
+    marginHorizontal: 16,
     marginVertical: 15,
   },
 });

@@ -94,6 +94,9 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: Colors.light.borderSubtle,
+    /* разделитель внутри px-зоны: 16 от краёв report-блока (SpacingSeparator
+       w-full у px-контейнера report-item, K 135:6275) */
+    marginHorizontal: 16,
     marginVertical: 15,
   },
 });
