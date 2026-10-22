@@ -618,7 +618,8 @@ export default function ReportFormScreen() {
         </View>
       )}
 
-      {/* шторка видов (K 91:6113): мульти, с чипсами-фильтрами */}
+      {/* шторка видов (K 91:6113): мульти, с чипсами-фильтрами и поиском
+          (K-DS Search 218:562; задача _x: обеспечить поиск по справочнику) */}
       <SelectSheet
         visible={speciesOpen}
         title="Вид рыбы"

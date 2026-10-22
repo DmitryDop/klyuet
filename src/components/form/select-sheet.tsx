@@ -93,14 +93,16 @@ function SheetBody({
   const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState<string[]>(initial);
   const [category, setCategory] = useState<string>(categories?.[0] ?? '');
-
-  const visibleItems = useMemo(
-    () =>
-      category === '' || category === categories?.[0]
-        ? items
-        : items.filter((it) => it.category === category),
-    [category, categories, items],
-  );
+  /* фильтрация по категории: чипс-лейбл → category (порядок categories:
+     [Все, ...] — первый всегда «без фильтра»); пустой чипс = без фильтра */
+  const visibleItems = useMemo(() => {
+    const categoryKey = categories?.indexOf(category) ?? -1;
+    const categoryMap = ['predatory', 'peaceful']; /* Хищная, Мирная */
+    if (categoryKey > 0) {
+      return items.filter((it) => it.category === categoryMap[categoryKey - 1]);
+    }
+    return items;
+  }, [items, category, categories]);
 
   /* выбор коммитится в поле сразу (Дмитрий 22.10):
      снасть (single) — тап выбирает и ЗАКРЫВАЕТ шторку, кнопок нет;
