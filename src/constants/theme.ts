@@ -36,8 +36,25 @@ export const Colors = {
     cardSurface: '#f8f9f5',
     /** --color-border-control — границы outline-кнопок (привязка 135:6279) */
     borderControl: '#748078',
+    /** --color-selection-text — текст активных чипов (привязка 224:6017, 22.10) */
+    selectionText: '#125640',
+    /** --color-focus-ring — граница 2px focused-полей (привязка K-DS 165:32/209:131, 22.10) */
+    focusRing: '#176b52',
+    /**
+     * Граббер шторок: привязка узла Grabber (K-DS 224:1033) в контексте Sheet
+     * даёт --color-text-primary = #181d1c33 (20% альфа) — светло-серый,
+     * подтверждено Дмитрием 22.10.
+     */
+    grabber: 'rgba(24, 29, 28, 0.2)',
+    /** --color-danger-text — обязательные поля «*» (K 206:9632, 22.10) */
+    dangerText: '#a83f37',
     /** --color-surface-raised — плашки поверх снимков (подтверждено K 135:6237) */
     surfaceRaised: '#ffffff',
+    /**
+     * Overlay шторок — подтверждённая переменная `bg/overlay` (K-DS,
+     * привязка overlay 240:4406): #18201d @ 40%. Используется Sheet и Modal Card.
+     */
+    scrim: '#18201d66',
     /** --color-overlay-point с альфой — полупрозрачная зелёная заливка
         приблизительных областей и кластеров (привязка K-DS 321:1835, 21.10.2026) */
     pointAlpha: '#176b5233',

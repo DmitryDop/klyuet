@@ -1,13 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import Animated, {
+  interpolate,
+  runOnJS,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import ButtonUi from '@/components/button-ui';
 import { CURRENT_USER_ID, demoPlaceRepo } from '@/data/repo';
 import type { Place, Report } from '@/data/types';
-import { PlaceHeader } from '@/components/map/place-header';
+import { PlaceHeader, DIMMING_BACKDROP } from '@/components/map/place-header';
 import InfoRow from '@/components/place/info-row';
 import ReportItem from '@/components/place/report-item';
 import Button from '@/components/button';
@@ -23,6 +30,7 @@ import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
      скроллит контент, тапы до кнопок доходят); при появлении тулбара
      кнопки шапки скрыты, назад работает из тулбара;
    - Bottom Action прилипает к низу экрана (решение Дмитрия).
+   - Тап по отчёту → /report/[id] (slice 4); «Все отчеты (N)» → /place-reports/[id].
 
    Внутренние отступы по макету: «Фото» → картинки 8; «Комментарий» → текст 12. */
 
@@ -36,22 +44,57 @@ export default function PlaceScreen() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [sheetUp, setSheetUp] = useState(false);
+  /* скролл-анимация K 328:3096 (Дмитрий 22.10, механика макета): подложка
+     шапки «ovelay map» — сплошной #181D1C; на блоке шапки (dimming block:
+     карта+маркер+плашка+кнопки) альфа-канал по кадрам 05/04/03 — перекрытие
+     72/96/136 → RN y 32/56/96 (перекрытие = 40 + scrollY): 1 → 0.7 → 0.4, clamp.
+     Reanimated ворклеты — нативный драйвер, без ре-рендеров
+     (Animated.event в RN 0.86 — crash «Object is not a function»). */
+  const scrollY = useSharedValue(0);
+  const toolbarThreshold = SHEET_TOP - insets.top - 56; /* порог тулбара */
+  const headerAnim = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [32, 56, 96], [1, 0.7, 0.4], 'clamp'),
+  }));
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (e) => {
+      /* SharedValue присваивается в ворклете — это не React state (реанимация) */
+      // eslint-disable-next-line react-hooks/immutability
+      scrollY.value = e.contentOffset.y;
+      runOnJS(setSheetUp)(e.contentOffset.y >= toolbarThreshold);
+    },
+  });
 
   useEffect(() => {
-    Promise.all([demoPlaceRepo.getPlace(id), demoPlaceRepo.getReports(id)]).then(
-      ([p, rs]) => {
-        setPlace(p);
-        setReports(rs);
-        setLoaded(true);
-      },
-    );
+    void (async () => {
+      const p = await demoPlaceRepo.getPlace(id);
+      if (p) setPlace(p);
+      setLoaded(true);
+    })();
   }, [id]);
+
+  /* отчёты обновляются при возврате: публикация из формы меняет список
+     «Свежие отчеты» (reports.md §2: текущие списки обновлять при возврате) */
+  useFocusEffect(
+    useCallback(() => {
+      let alive = true;
+      void (async () => {
+        const rs = await demoPlaceRepo.getReports(id);
+        if (alive) setReports(rs);
+      })();
+      return () => {
+        alive = false;
+      };
+    }, [id]),
+  );
 
   if (!loaded || !place) {
     return <View style={[styles.container, styles.stub]} />;
   }
 
-  const isOwner = place.ownerId === CURRENT_USER_ID;
+  /* Правило Дмитрия: pencil → только у СВОИХ мест и только пока в них нет
+     отчётов; появился любой отчёт (свой или чужой) — редактирование
+     заменяется на поиск. Касается всех мест. */
+  const canEdit = place.ownerId === CURRENT_USER_ID && reports.length === 0;
   const subtitle =
     place.placeType === 'wild' ? 'Дикое место · Бесплатно' : 'Платное место';
 
@@ -66,18 +109,20 @@ export default function PlaceScreen() {
 
   return (
     <View style={styles.container}>
-      {/* фиксированная шапка (карта + маркер + плашка), без кнопок */}
-      <View style={StyleSheet.absoluteFill}>
-        <PlaceHeader place={place} />
-      </View>
+      {/* dimming по макету: подложка «ovelay map» (#181D1C) — отдельным слоем,
+          НЕ анимируется; альфика получает только content-блок над ней
+          (карта+маркер+плашка) — иначе подложка светлеет вместе с картой */}
+      <View style={[StyleSheet.absoluteFill, styles.dimmingBackdrop]} />
+      <Animated.View style={[StyleSheet.absoluteFill, headerAnim]}>
+        <PlaceHeader place={place} scrollY={scrollY} />
+      </Animated.View>
 
-      <ScrollView
+      {/* лист-скролл — Reanimated ScrollView: только он принимает
+          useAnimatedScrollHandler (ворклет, нативный драйвер) */}
+      <Animated.ScrollView
         contentContainerStyle={{ paddingTop: SHEET_TOP, paddingBottom: panelReserve + 16 }}
         showsVerticalScrollIndicator={false}
-        onScroll={(e) => {
-          const y = e.nativeEvent.contentOffset.y;
-          setSheetUp(y >= SHEET_TOP - insets.top - 56);
-        }}
+        onScroll={scrollHandler}
         scrollEventThrottle={16}>
         {/* лист: bg #e8ece5 и верхние скругления 24; стартует на y=280
             (paddingTop контейнера) — перекрытие нижних 40px шапки получается
@@ -115,44 +160,49 @@ export default function PlaceScreen() {
               </View>
             )}
 
-            {/* отчёты, счётчик по решению Дмитрия: при 1–2 отчётах весь список
-                без кнопки (нижний отступ после последнего — 16, K 333:5762);
-                с 3-го — две свежих + «Все отчеты (N)», остальные по тапу */}
+            {/* отчёты: при ≤3 — весь список без кнопки; с 4-го — три свежих
+                + «Все отчеты (N)», остальные по тапу (Дмитрий 22.10) */}
             {reports.length > 0 && (
               <View
                 style={[
                   styles.block,
                   styles.reportBlock,
-                  reports.length < 3 && styles.reportBlockNoButton,
+                  reports.length < 4 && styles.reportBlockNoButton,
                 ]}>
                 <Text style={[styles.blockLabel12, styles.reportTitle]}>Свежие отчеты</Text>
                 {reports
-                  .slice(0, reports.length >= 3 ? 2 : reports.length)
+                  .slice(0, reports.length >= 4 ? 3 : reports.length)
                   .map((r, i) => (
                     <ReportItem
                       key={r.id}
                       report={r}
                       separator={
                         i <
-                        Math.min(reports.length, reports.length >= 3 ? 2 : reports.length) - 1
+                        Math.min(reports.length, reports.length >= 4 ? 3 : reports.length) - 1
                       }
+                      onPress={() => router.navigate(`/report/${r.id}`)}
                     />
                   ))}
-                {reports.length >= 3 && (
+                {reports.length >= 4 && (
                   <View style={styles.ctaWrap}>
-                    <Button label={`Все отчеты (${reports.length})`} variant="outline" />
+                    <Button
+                      label={`Все отчеты (${reports.length})`}
+                      variant="outline"
+                      onPress={() => router.navigate(`/place-reports/${id}`)}
+                    />
                   </View>
                 )}
               </View>
             )}
           </View>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
 
-      {/* кнопки шапки поверх скролла; при тулбаре — скрыты (назад в тулбаре).
-          K 135:6230 button_overlay_map: top 52 при статус-полосе 44 → 8 от safe area */}
+      {/* кнопки шапки поверх скролла; при тулбаре — скрыты (назад в тулбаре);
+          приглушаются dimming'ом по скроллу, как шапка (K 328:3096, кнопки
+          входят в dimming block кадра 03) */}
       {!sheetUp && (
-        <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+        <Animated.View style={[StyleSheet.absoluteFill, headerAnim]} pointerEvents="box-none">
           <View style={[styles.headerButtonWrap, { top: insets.top + 8, left: 16 }]}>
             <ButtonUi
               icon="chevronLeft"
@@ -162,13 +212,13 @@ export default function PlaceScreen() {
           </View>
           <View style={[styles.headerButtonWrap, { top: insets.top + 8, right: 16 }]}>
             <ButtonUi
-              icon={isOwner ? 'pen' : 'magnifyingGlass'}
+              icon={canEdit ? 'pen' : 'magnifyingGlass'}
               accessibilityLabel={
-                isOwner ? 'Редактировать место (не подключено)' : 'Поиск (не подключено)'
+                canEdit ? 'Редактировать место (не подключено)' : 'Поиск (не подключено)'
               }
             />
           </View>
-        </View>
+        </Animated.View>
       )}
 
       {/* тулбар: непрозрачен до самого верха (статус-зона тоже bg-primary).
@@ -184,24 +234,38 @@ export default function PlaceScreen() {
               accessibilityLabel="Назад"
             />
           </View>
-          <Text style={styles.toolbarTitle} numberOfLines={1}>
-            {place.name}
-          </Text>
+          {/* заголовок: always центр панели (docs/components-toolbar.md),
+              не в потоке — раньше «упал» вниз при justifyContent flex-end */}
+          <View
+            style={[styles.toolbarTitleWrap, { top: insets.top + 8, bottom: 8 }]}
+            pointerEvents="none">
+            <View style={styles.toolbarTitleBox}>
+              <Text style={styles.toolbarTitle} numberOfLines={1}>
+                {place.name}
+              </Text>
+            </View>
+          </View>
           <View style={[styles.toolbarButton, { top: insets.top + 8, right: 16 }]}>
             <ButtonUi
-              icon={isOwner ? 'pen' : 'magnifyingGlass'}
+              icon={canEdit ? 'pen' : 'magnifyingGlass'}
               type="toolbar"
               accessibilityLabel={
-                isOwner ? 'Редактировать место (не подключено)' : 'Поиск (не подключено)'
+                canEdit ? 'Редактировать место (не подключено)' : 'Поиск (не подключено)'
               }
             />
           </View>
         </View>
       )}
 
-      {/* Bottom Action (K 135:6279): панель прилипает к низу, bg bg-primary */}
+      {/* Bottom Action (K 135:6279): панель прилипает к низу, bg bg-primary;
+          «Добавить отчёт» → форма отчёта с привязкой placeId (reports.md §2) */}
       <View style={[styles.panel, { paddingBottom: 8 + insets.bottom }]}>
-        <Button label="Добавить отчёт" variant="outline" flex />
+        <Button
+          label="Добавить отчёт"
+          variant="outline"
+          flex
+          onPress={() => router.push(`/report-form/${id}`)}
+        />
         <Button label="Маршрут" variant="primary" flex />
       </View>
     </View>
@@ -330,10 +394,23 @@ const styles = StyleSheet.create({
     color: Colors.light.textSecondary,
   },
   ctaWrap: {
-    paddingHorizontal: 8,
+    /* контейнер кнопки «Все отчеты (N)»: слева/справа/снизу по 16
+       (Дмитрий, 22.10) */
+    paddingHorizontal: 16,
+    paddingBottom: 16,
     /* в K перед кнопкой comments-content имеет pb-[24px] — «кнопка прилипла
        к тексту» исправлено отступом 24 */
     marginTop: 24,
+  },
+  dimmingBackdrop: {
+    /* подложка «ovelay map» — сплошной #181D1C, высота зоны шапки 320
+       (frame 330:5076 height=320; fill 330:5076, Дмитрий 22.10) */
+    backgroundColor: DIMMING_BACKDROP,
+    height: 320,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
   },
   toolbar: {
     position: 'absolute',
@@ -349,6 +426,19 @@ const styles = StyleSheet.create({
   toolbarButton: {
     position: 'absolute',
     overflow: 'hidden',
+  },
+  toolbarTitleWrap: {
+    /* full-width обёртка: центр = центр панели, не зависит от кнопок */
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toolbarTitleBox: {
+    /* зона 255 (K-DS 218:405): ellipsis длинного названия */
+    width: 255,
+    alignItems: 'center',
   },
   toolbarTitle: {
     ...rnTextStyle(TEXT.headline),

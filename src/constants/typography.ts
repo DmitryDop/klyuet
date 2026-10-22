@@ -54,8 +54,9 @@ export const TEXT: Record<string, TextStyleToken> = {
       даёт Bold/700 — конфликт на уточнении, в коде пока 700 (по прецеденту
       Label: узел приоритетен, описание K-DS ждёт исправления) */
   title2: { fontSize: 24, lineHeight: 30, fontWeight: 700 },
-  /** Onest/Title3 — 20/26 · 650 */
-  title3: { fontSize: 20, lineHeight: 26, fontWeight: 650 },
+  /** Onest/Title3 — 20/26 · 600 (вес подтверждён Дмитрием 21.10.2026; стиль в
+      K-DS — «Bold», фактическая ось на макете отчёта — 600) */
+  title3: { fontSize: 20, lineHeight: 26, fontWeight: 600 },
   /** Onest/Label — 14/18 · 500 · кнопки/чипы/поля (описание стиля исправлено
       Дмитрием в K-DS 21.10.2026: 500; снимок узла Claster_Point подтверждает) */
   label: { fontSize: 14, lineHeight: 18, fontWeight: 500 },

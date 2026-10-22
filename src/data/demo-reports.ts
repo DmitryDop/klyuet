@@ -2,24 +2,29 @@ import type { Report } from './types';
 
 /**
  * Demo fixtures отчётов (linked к demoPlaces по placeId; reports.md §3).
- * authorId — ключ из AUTHOR_NAMES (repo.ts). Фото в демо — счётчик-заглушки
- * (как в прототипе): в массиве лежат маркеры-строки, содержимого нет.
+ * authorId — ключ из AUTHOR_NAMES (repo.ts). Фотографии: единственная
+ * подтверждённая демо-сцена — assets/demo/report-346.png (фото Дмитрия 21.10.2026);
+ * маркер '346' в массиве. Повтор маркера в demo-report-1 — для сценария
+ * «2 фото» с точками-индикаторами галереи; реальных снимков больше нет.
  * Даты рыбалки: разрывы — для проверки форматов (Сегодня/Вчера/N дней/дд.мм.гггг).
  */
 export const demoReports: Report[] = [
   {
+    /* сценарий макета K 157:8531 «Мой отчет С фото»: мой отчёт на «Заливе
+       у сосен», 2 фото (page dots), 8 видов — по решению Дмитрия все
+       виды в отчёте показываются полностью, без «и ещё N» */
     id: 'demo-report-1',
     placeId: 'demo-exact-1',
-    authorId: 'other-1',
+    authorId: 'me',
     fishingDate: '2026-10-20',
     publishedAt: '2026-10-20T18:40:00Z',
     updatedAt: '2026-10-20T18:40:00Z',
     catchStatus: 'with_catch',
-    fishSpeciesIds: ['Щука', 'Окунь'],
+    fishSpeciesIds: ['Щука', 'Окунь', 'Судак', 'Голавль', 'Лещ', 'Плотва', 'Подуст', 'Язь'],
     fishingMethod: 'shore',
     tackle: 'Спиннинг',
     bait: 'Воблер',
-    photos: ['demo-ph-1', 'demo-ph-2'],
+    photos: ['346', '346'],
   },
   {
     id: 'demo-report-2',
@@ -59,7 +64,7 @@ export const demoReports: Report[] = [
     fishingMethod: 'shore',
     tackle: 'Поплавочная снасть',
     bait: 'Опарыш',
-    photos: ['demo-ph-3'],
+    photos: ['346'],
   },
   {
     id: 'demo-report-4',
@@ -84,7 +89,7 @@ export const demoReports: Report[] = [
     catchStatus: 'with_catch',
     fishSpeciesIds: ['Лещ', 'Плотва'],
     fishingMethod: 'boat',
-    tackle: 'Донка',
+    tackle: 'Донная снасть',
     photos: [],
   },
   {

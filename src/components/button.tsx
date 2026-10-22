@@ -2,11 +2,15 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { Colors } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
+import Spinner from '@/components/ui/spinner';
 
 /* Кнопка K-DS (мастер Button, высота 48, radius/sm 12): Label 14/18.
    Здесь используются варианты Outline и Primary (панель карточки K 135:6279).
-   Pressed/Focus/Loading/Disabled из K-DS не переданы макетом этого экрана —
-   не выдумываются; таповое поведение появится при подключении действий. */
+   Пресс/ховер не выдумывается (правило проекта, нет в этом макете).
+   Disabled (K-DS 248:4949): вся кнопка opacity 0.4, не реагирует.
+   Loading (K-DS 165:22 / 194:147): лоадер Spinner (Medium 20) по центру,
+   White на primary / Brand на outline; лейбл скрыт; повторная отправка
+   заблокирована (спека reports.md §8). */
 
 export type ButtonVariant = 'primary' | 'outline';
 
@@ -15,26 +19,44 @@ export default function Button({
   variant,
   onPress,
   flex = false,
+  disabled = false,
+  loading = false,
 }: {
   label: string;
   variant: ButtonVariant;
   onPress?: () => void;
   /** flex:1 внутри панелей кнопок (панель карточки) */
   flex?: boolean;
+  /** K-DS State=Disabled: opacity 0.4, пресс-реакции нет */
+  disabled?: boolean;
+  /** K-DS State=Loading: спиннер, лейбл скрыт, повторный тап заблокирован */
+  loading?: boolean;
 }) {
+  const inactive = disabled || loading;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      onPress={onPress}
-      style={variant === 'primary' ? [styles.base, styles.primary, flex && styles.flex] : [styles.base, styles.outline, flex && styles.flex]}>
-      <Text
-        style={[
-          styles.label,
-          { color: variant === 'primary' ? Colors.light.accentIcon : Colors.light.text },
-        ]}>
-        {label}
-      </Text>
+      accessibilityState={{ disabled: inactive, busy: loading }}
+      onPress={inactive ? undefined : onPress}
+      style={[
+        styles.base,
+        variant === 'primary' ? styles.primary : styles.outline,
+        flex && styles.flex,
+        inactive && styles.inactive,
+      ]}>
+      {loading ? (
+        /* K-DS State=Loading: свой Spinner Medium 20, лейбл скрыт */
+        <Spinner size="medium" appearance={variant === 'primary' ? 'white' : 'brand'} />
+      ) : (
+        <Text
+          style={[
+            styles.label,
+            { color: variant === 'primary' ? Colors.light.accentIcon : Colors.light.text },
+          ]}>
+          {label}
+        </Text>
+      )}
     </Pressable>
   );
 }
@@ -66,5 +88,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     flexBasis: '0%',
     flexShrink: 1,
+  },
+  inactive: {
+    /* K-DS 248:4949 (Disabled): opacity 0.4 на кнопке целиком */
+    opacity: 0.4,
   },
 });

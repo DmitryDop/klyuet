@@ -1,9 +1,15 @@
 import { useEffect } from 'react';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 
 import { Colors } from '@/constants/theme';
+import ToastHost from '@/components/ui/toast';
+
+/* GestureHandlerRootView — свайп-закрытие шторок (граббер SheetModal;
+   детектор жестов работает только внутри root view gesture-handler). */
 
 /* Шрифты загрузятся до первого рендера, сплеш-скрин виден, пока готовы не все
    ресурсы — без мигания системного шрифта (подключение Onest, 21.10.2026) */
@@ -47,10 +53,18 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={LightNavTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-      </Stack>
-    </ThemeProvider>
+    <GestureHandlerRootView style={styles.flex}>
+      <ThemeProvider value={LightNavTheme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+        </Stack>
+        {/* единый тост поверх всех экранов (reports.md §8) */}
+        <ToastHost />
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+});

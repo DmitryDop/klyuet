@@ -1,27 +1,42 @@
 import { StyleSheet, Text, View } from 'react-native';
 import MapView from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 
 import LocationDot from '@/components/map/location-dot';
 import { Colors } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 import type { Place } from '@/data/types';
 
-/* Шапка карточки места (K 135:6230 / 125:5893): фиксированная подложка-снимок
-   высотой 320 (неинтерактивный MapView), маркер по центру, плашка-подпись
-   снизу (surface-raised, px 8/py 4, radius 8, Onest/Caption).
+/* Шапка карточки места (K 135:6230 / 125:5893; анимация 328:3096): подложка
+   «ovelay map» — сплошной #181D1C (fill 330:5076 — тёмная подложка под картой,
+   проявляется через альфу dimming block'а); поверх — снимок-карта 320
+   (неинтерактивный MapView), маркер по центру, плашка-подпись снизу
+   (surface-raised, px 8/py 4, radius 8, Onest/Caption).
    Кнопки назад/действие НЕ в этом слое: рендерятся экраном поверх скролла
-   (иначе ScrollView наезжает сверху и глушит тапы). */
+   (иначе ScrollView наезжает сверху и глушит тапы).
+   Анимация (Дмитрий 22.10): плашка едет вместе с листом (translateY
+   = −scrollY: в кадрах подпись = верх листа − 32); альфа блока ведёт экран
+   (place/[id].tsx). */
 
 const HEADER_HEIGHT = 320;
+/* dimming-подложка «ovelay map» — сплошной #181D1C (K 330:5076; значение
+   совпадает с --color-text-primary: семантика подоложки — на уточнении токена) */
+export const DIMMING_BACKDROP = '#181d1c';
 
 /* Зум мини-карты — как в прототипе (app.js initCardMap): Leaflet-уровень
    14 точное / 12 приблизительное → долготный span = 360/2^z * (393/256) */
 const SPAN_EXACT = (360 / 2 ** 14) * (393 / 256);
 const SPAN_APPROX = (360 / 2 ** 12) * (393 / 256);
 
-export function PlaceHeader({ place }: { place: Place }) {
+export function PlaceHeader({ place, scrollY }: { place: Place; scrollY?: SharedValue<number> }) {
   const insets = useSafeAreaInsets();
+  /* плашка едет вместе с листом (translateY = −scrollY, K 328:3096);
+     без scrollY — статичная шапка */
+  const badgeAnim = useAnimatedStyle(() => {
+    if (scrollY == null) return {};
+    return { transform: [{ translateY: -scrollY.value }] };
+  });
   const center =
     place.kind === 'exact' ? place.coordinate : place.view.coordinate;
   const isExact = place.kind === 'exact';
@@ -55,12 +70,13 @@ export function PlaceHeader({ place }: { place: Place }) {
         pointerEvents="none">
         {isExact ? <LocationDot /> : <ApproximateMarker />}
       </View>
-      {/* плашка-подпись: 48 от низа шапки */}
-      <View style={styles.badge}>
+      {/* плашка-подпись: едет вместе с листом (translateY = −scrollY,
+          K 328:3096); при глубоком скролле уходит под тулбар/лист */}
+      <Animated.View style={[styles.badge, badgeAnim]}>
         <Text style={styles.badgeText}>
           {place.kind === 'exact' ? 'Точное место' : 'Примерное место'}
         </Text>
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -74,7 +90,7 @@ function ApproximateMarker() {
 const styles = StyleSheet.create({
   header: {
     height: HEADER_HEIGHT,
-    backgroundColor: Colors.light.background,
+    backgroundColor: DIMMING_BACKDROP, /* «ovelay map» fill (K 330:5076) */
   },
   map: {
     position: 'absolute',
