@@ -8,6 +8,8 @@ import {
   TextInput,
   useWindowDimensions,
   View,
+  /* RN 0.88 (Strict TypeScript API): ref — TextInputInstance (миграция SDK 58) */
+  type TextInputInstance,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -63,7 +65,7 @@ export default function SearchScreen() {
   const [status, setStatus] = useState<Status>('idle');
   const [focused, setFocused] = useState(false);
 
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const seqRef = useRef(0);
   const abortRef = useRef<AbortController | null>(null);

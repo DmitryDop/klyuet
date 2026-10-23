@@ -5,13 +5,14 @@ import {
   StyleSheet,
   Text,
   View,
-  type ScrollView as ScrollViewType,
+  /* RN 0.88 (Strict TypeScript API): ref — ScrollViewInstance (миграция SDK 58) */
+  type ScrollViewInstance,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {
   useLocalSearchParams,
   useRouter,
-  useNavigation,
+  usePreventRemove /* SDK 58: beforeRemove удалён — блокировка через usePreventRemove (reports.md §6) */,
 } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ButtonUi from '@/components/button-ui';
@@ -90,9 +91,6 @@ export default function ReportFormScreen() {
   }>();
   const isEdit = reportId != null;
   const router = useRouter();
-  const navigation = useNavigation<{
-    addListener: (event: string, cb: (e: FormGuardEvent) => void) => () => void;
-  }>();
   const insets = useSafeAreaInsets();
 
   const [place, setPlace] = useState<Place | null>(null);
@@ -111,7 +109,7 @@ export default function ReportFormScreen() {
   const [errorModal, setErrorModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   /* скролл к полю с ошибкой (K 87:4145: поле с ошибкой должно быть видно) */
-  const scrollViewRef = useRef<ScrollViewType | null>(null);
+  const scrollViewRef = useRef<ScrollViewInstance | null>(null);
   const speciesFieldY = useRef(0);
 
   /* высота клавиатуры (K 87:4145: поле при фокусе всегда видно).
@@ -133,8 +131,6 @@ export default function ReportFormScreen() {
       didHide.remove();
     };
   }, []);
-
-  const allowExitRef = useRef(false);
 
   /* Загрузка: место обязательно; для правки — значения отчёта (§8: не
      показывать недостоверную пустую форму) */
@@ -185,16 +181,17 @@ export default function ReportFormScreen() {
 
   /* Выход (reports.md §6): «Назад» при несохранённых изменениях → модалка.
      Без изменений и служебные переходы (replace после отправки) проходят
-     сразу. */
-  useEffect(() => {
-    if (loading) return;
-    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-      if (allowExitRef.current || !dirty) return;
-      e.preventDefault();
-      setExitModal(true);
-    });
-    return unsubscribe;
-  }, [navigation, loading, dirty]);
+     сразу.
+     SDK 58 (expo-router, гайд миграции 57→58): событие beforeRemove
+     удалено — блокировка через usePreventRemove: условие отрисовано как
+     проп (ref не реагирует), повтор блокированного перехода — repeat().
+     Успешная публикация/сохранение и «Выйти» сначала делают форму чистой
+     (baseline = form → dirty false), затем повторяют переход. */
+  const repeatExitRef = useRef<(() => void) | null>(null);
+  usePreventRemove(!loading && dirty, ({ repeat }) => {
+    setExitModal(true);
+    repeatExitRef.current = repeat;
+  });
 
   /* ошибки полей: валидация по нажатию (§4.6), подсветка по K-DS Error
      (K 87:4145): граница 2px danger + подпись причины; снимается исправлением
@@ -242,8 +239,10 @@ export default function ReportFormScreen() {
       return;
     }
     /* успех: открыть созданный/обновлённый отчёт, тост на цели (§4.7, §6);
-       replace — форма не должна остаться в истории */
-    allowExitRef.current = true;
+       replace — форма не должна остаться в истории. Служебный переход не
+       должен спрашивать подтверждение (§6): форма становится чистой
+       (baseline = submitted) ДО replace — usePreventRemove отпускает. */
+    setBaseline({ ...form });
     router.replace(`/report/${created.id}`);
     showToast(isEdit ? 'Изменения сохранены' : 'Отчёт опубликован');
   };
@@ -603,8 +602,11 @@ export default function ReportFormScreen() {
             label: 'Выйти',
             onPress: () => {
               setExitModal(false);
-              allowExitRef.current = true;
-              router.back();
+              /* discarding: форма больше не содержит несохранённых данных
+                 (reports.md §6) → usePreventRemove отпускает, repeat() —
+                 повтор заблокированного перехода (гайд SDK 58) */
+              setBaseline({ ...form });
+              repeatExitRef.current?.();
             },
           },
         ]}
@@ -633,11 +635,7 @@ export default function ReportFormScreen() {
   );
 }
 
-/* beforeRemove: preventDefault + возобновление через модалку */
-type FormGuardEvent = {
-  preventDefault: () => void;
-  data: { action: unknown };
-};
+/* (SDK 58: beforeRemove-гвард заменён usePreventRemove — тип события больше не нужен) */
 
 const styles = StyleSheet.create({
   container: {
