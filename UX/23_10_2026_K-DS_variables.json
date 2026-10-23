@@ -1,0 +1,3505 @@
+[
+  {
+    "collection": "Primitives",
+    "mode": "Default",
+    "variables": {
+      "dimensions": {
+        "spacing": {
+          "none": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "GAP"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 0,
+              "unit": "px"
+            }
+          },
+          "3xs": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "GAP"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 2,
+              "unit": "px"
+            }
+          },
+          "2xs": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "GAP"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 4,
+              "unit": "px"
+            }
+          },
+          "xs": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "GAP"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 8,
+              "unit": "px"
+            }
+          },
+          "sm": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "GAP"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 12,
+              "unit": "px"
+            }
+          },
+          "md": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "GAP"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 16,
+              "unit": "px"
+            }
+          },
+          "lg": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "GAP"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 20,
+              "unit": "px"
+            }
+          },
+          "xl": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "GAP"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 24,
+              "unit": "px"
+            }
+          },
+          "2xl": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "GAP"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 32,
+              "unit": "px"
+            }
+          },
+          "3xl": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "GAP"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 40,
+              "unit": "px"
+            }
+          },
+          "4xl": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "GAP"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 48,
+              "unit": "px"
+            }
+          },
+          "5xl": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "GAP"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 64,
+              "unit": "px"
+            }
+          }
+        },
+        "radius": {
+          "none": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "CORNER_RADIUS"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 0,
+              "unit": "px"
+            }
+          },
+          "3xs": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "CORNER_RADIUS"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 2,
+              "unit": "px"
+            }
+          },
+          "2xs": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "CORNER_RADIUS"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 4,
+              "unit": "px"
+            }
+          },
+          "xs": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "CORNER_RADIUS"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 8,
+              "unit": "px"
+            }
+          },
+          "sm": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "CORNER_RADIUS"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 12,
+              "unit": "px"
+            }
+          },
+          "md": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "CORNER_RADIUS"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 16,
+              "unit": "px"
+            }
+          },
+          "lg": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "CORNER_RADIUS"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 24,
+              "unit": "px"
+            }
+          },
+          "xl": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "CORNER_RADIUS"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 32,
+              "unit": "px"
+            }
+          },
+          "full": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "CORNER_RADIUS"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 9999,
+              "unit": "px"
+            }
+          }
+        },
+        "size": {
+          "4xs": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "WIDTH_HEIGHT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 2,
+              "unit": "px"
+            }
+          },
+          "3xs": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "WIDTH_HEIGHT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 4,
+              "unit": "px"
+            }
+          },
+          "2xs": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "WIDTH_HEIGHT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 8,
+              "unit": "px"
+            }
+          },
+          "xs": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "WIDTH_HEIGHT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 12,
+              "unit": "px"
+            }
+          },
+          "sm": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "WIDTH_HEIGHT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 16,
+              "unit": "px"
+            }
+          },
+          "md": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "WIDTH_HEIGHT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 24,
+              "unit": "px"
+            }
+          },
+          "lg": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "WIDTH_HEIGHT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 32,
+              "unit": "px"
+            }
+          },
+          "xl": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "WIDTH_HEIGHT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 40,
+              "unit": "px"
+            }
+          },
+          "2xl": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "WIDTH_HEIGHT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 44,
+              "unit": "px"
+            }
+          },
+          "3xl": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "WIDTH_HEIGHT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 48,
+              "unit": "px"
+            }
+          },
+          "4xl": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "WIDTH_HEIGHT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 56,
+              "unit": "px"
+            }
+          },
+          "5xl": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "WIDTH_HEIGHT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 64,
+              "unit": "px"
+            }
+          }
+        },
+        "stroke": {
+          "1": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "STROKE_FLOAT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 1,
+              "unit": "px"
+            }
+          },
+          "2": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "STROKE_FLOAT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 2,
+              "unit": "px"
+            }
+          },
+          "3": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "STROKE_FLOAT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 3,
+              "unit": "px"
+            }
+          },
+          "4": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "STROKE_FLOAT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 4,
+              "unit": "px"
+            }
+          },
+          "05": {
+            "$type": "dimension",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [
+                  "STROKE_FLOAT"
+                ],
+                "resolvedType": "FLOAT"
+              }
+            },
+            "$value": {
+              "value": 0.5,
+              "unit": "px"
+            }
+          }
+        }
+      },
+      "color": {
+        "stone": {
+          "100": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-100)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.34901962,
+                0.38431373,
+                0.36862746
+              ],
+              "hex": "#59625e"
+            }
+          },
+          "110": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-110)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.23921569,
+                0.3019608,
+                0.26666668
+              ],
+              "hex": "#3d4d44"
+            }
+          },
+          "120": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-120)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.16078432,
+                0.2,
+                0.18431373
+              ],
+              "hex": "#29332f"
+            }
+          },
+          "130": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-130)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.13333334,
+                0.17254902,
+                0.15294118
+              ],
+              "hex": "#222c27"
+            }
+          },
+          "140": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-140)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.09411765,
+                0.1254902,
+                0.11372549
+              ],
+              "hex": "#18201d"
+            }
+          },
+          "160": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-160)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.09411765,
+                0.11372549,
+                0.10980392
+              ],
+              "hex": "#181d1c"
+            }
+          },
+          "170": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-170)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.0627451,
+                0.09019608,
+                0.078431375
+              ],
+              "hex": "#101714"
+            }
+          },
+          "000": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-000)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                1,
+                1,
+                1
+              ],
+              "hex": "#ffffff"
+            }
+          },
+          "010": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-010)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.98039216,
+                0.98039216,
+                0.9647059
+              ],
+              "hex": "#fafaf6"
+            }
+          },
+          "020": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-020)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.972549,
+                0.9764706,
+                0.9607843
+              ],
+              "hex": "#f8f9f5"
+            }
+          },
+          "030": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-030)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.94509804,
+                0.9490196,
+                0.92941177
+              ],
+              "hex": "#f1f2ed"
+            }
+          },
+          "040": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-040)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.9098039,
+                0.9254902,
+                0.8980392
+              ],
+              "hex": "#e8ece5"
+            }
+          },
+          "050": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-050)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.8,
+                0.83137256,
+                0.79607844
+              ],
+              "hex": "#ccd4cb"
+            }
+          },
+          "060": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-060)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.68235296,
+                0.72156864,
+                0.69803923
+              ],
+              "hex": "#aeb8b2"
+            }
+          },
+          "070": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-070)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.5137255,
+                0.56078434,
+                0.5294118
+              ],
+              "hex": "#838f87"
+            }
+          },
+          "080": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-stone-080)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.46666667,
+                0.5137255,
+                0.48235294
+              ],
+              "hex": "#77837b"
+            }
+          }
+        },
+        "river": {
+          "110": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-river-110)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.12941177,
+                0.21176471,
+                0.23529412
+              ],
+              "hex": "#21363c"
+            }
+          },
+          "000": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-river-000)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.8745098,
+                0.92941177,
+                0.9411765
+              ],
+              "hex": "#dfedf0"
+            }
+          },
+          "030": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-river-030)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.4745098,
+                0.68235296,
+                0.7372549
+              ],
+              "hex": "#79aebc"
+            }
+          },
+          "040": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-river-040)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.34117648,
+                0.5764706,
+                0.63529414
+              ],
+              "hex": "#5793a2"
+            }
+          },
+          "070": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-river-070)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.21568628,
+                0.42745098,
+                0.48235294
+              ],
+              "hex": "#376d7b"
+            }
+          },
+          "080": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-river-080)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.18039216,
+                0.36862746,
+                0.41960785
+              ],
+              "hex": "#2e5e6b"
+            }
+          }
+        },
+        "red": {
+          "000": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-red-000)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.96862745,
+                0.8862745,
+                0.8745098
+              ],
+              "hex": "#f7e2df"
+            }
+          },
+          "050": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-red-050)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.23921569,
+                0.14509805,
+                0.13725491
+              ],
+              "hex": "#3d2523"
+            }
+          },
+          "010": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-red-010)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.94509804,
+                0.54509807,
+                0.5137255
+              ],
+              "hex": "#f18b83"
+            }
+          },
+          "020": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-red-020)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.8627451,
+                0.42352942,
+                0.39215687
+              ],
+              "hex": "#dc6c64"
+            }
+          },
+          "030": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-red-030)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.72156864,
+                0.2901961,
+                0.25882354
+              ],
+              "hex": "#b84a42"
+            }
+          },
+          "040": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-red-040)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.65882355,
+                0.24705882,
+                0.21568628
+              ],
+              "hex": "#a83f37"
+            }
+          }
+        },
+        "forest": {
+          "100": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-forest-100)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.050980393,
+                0.2784314,
+                0.20784314
+              ],
+              "hex": "#0d4735"
+            }
+          },
+          "110": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-forest-110)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.14901961,
+                0.24705882,
+                0.20392157
+              ],
+              "hex": "#263f34"
+            }
+          },
+          "140": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-forest-140)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.09019608,
+                0.23921569,
+                0.1882353
+              ],
+              "hex": "#173d30"
+            }
+          },
+          "020": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-forest-020)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.84705883,
+                0.9098039,
+                0.8745098
+              ],
+              "hex": "#d8e8df"
+            }
+          },
+          "030": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-forest-030)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.72156864,
+                0.827451,
+                0.7254902
+              ],
+              "hex": "#b8d3b9"
+            }
+          },
+          "050": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-forest-050)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.38431373,
+                0.7647059,
+                0.5921569
+              ],
+              "hex": "#62c397"
+            }
+          },
+          "060": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-forest-060)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.2627451,
+                0.654902,
+                0.49411765
+              ],
+              "hex": "#43a77e"
+            }
+          },
+          "070": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-forest-070)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.20784314,
+                0.5686275,
+                0.41960785
+              ],
+              "hex": "#35916b"
+            }
+          },
+          "080": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-forest-080)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.09019608,
+                0.41960785,
+                0.32156864
+              ],
+              "hex": "#176b52"
+            }
+          },
+          "090": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-forest-090)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.07058824,
+                0.3372549,
+                0.2509804
+              ],
+              "hex": "#125640"
+            }
+          }
+        },
+        "amber": {
+          "100": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-amber-100)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.23529412,
+                0.1882353,
+                0.105882354
+              ],
+              "hex": "#3c301b"
+            }
+          },
+          "010": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-amber-010)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.95686275,
+                0.8901961,
+                0.77254903
+              ],
+              "hex": "#f4e3c5"
+            }
+          },
+          "040": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-amber-040)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.8862745,
+                0.6509804,
+                0.2784314
+              ],
+              "hex": "#e2a647"
+            }
+          },
+          "050": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-amber-050)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.81960785,
+                0.5411765,
+                0.14117648
+              ],
+              "hex": "#d18a24"
+            }
+          },
+          "080": {
+            "$type": "color",
+            "$description": "",
+            "$extensions": {
+              "figma": {
+                "scopes": [],
+                "resolvedType": "COLOR",
+                "codeSyntax": {
+                  "WEB": "var(--color-amber-080)"
+                }
+              }
+            },
+            "$value": {
+              "colorSpace": "srgb",
+              "components": [
+                0.50980395,
+                0.3137255,
+                0.050980393
+              ],
+              "hex": "#82500d"
+            }
+          }
+        }
+      },
+      "opacity": {
+        "5": {
+          "$type": "number",
+          "$description": "",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "COLOR_OPACITY"
+              ],
+              "resolvedType": "FLOAT"
+            }
+          },
+          "$value": 5
+        },
+        "10": {
+          "$type": "number",
+          "$description": "",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "COLOR_OPACITY"
+              ],
+              "resolvedType": "FLOAT"
+            }
+          },
+          "$value": 10
+        },
+        "20": {
+          "$type": "number",
+          "$description": "",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "COLOR_OPACITY"
+              ],
+              "resolvedType": "FLOAT"
+            }
+          },
+          "$value": 20
+        },
+        "30": {
+          "$type": "number",
+          "$description": "",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "COLOR_OPACITY"
+              ],
+              "resolvedType": "FLOAT"
+            }
+          },
+          "$value": 30
+        },
+        "40": {
+          "$type": "number",
+          "$description": "",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "COLOR_OPACITY"
+              ],
+              "resolvedType": "FLOAT"
+            }
+          },
+          "$value": 40
+        },
+        "50": {
+          "$type": "number",
+          "$description": "",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "COLOR_OPACITY"
+              ],
+              "resolvedType": "FLOAT"
+            }
+          },
+          "$value": 50
+        },
+        "60": {
+          "$type": "number",
+          "$description": "",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "COLOR_OPACITY"
+              ],
+              "resolvedType": "FLOAT"
+            }
+          },
+          "$value": 60
+        },
+        "70": {
+          "$type": "number",
+          "$description": "",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "COLOR_OPACITY"
+              ],
+              "resolvedType": "FLOAT"
+            }
+          },
+          "$value": 70
+        },
+        "80": {
+          "$type": "number",
+          "$description": "",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "COLOR_OPACITY"
+              ],
+              "resolvedType": "FLOAT"
+            }
+          },
+          "$value": 80
+        },
+        "90": {
+          "$type": "number",
+          "$description": "",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "COLOR_OPACITY"
+              ],
+              "resolvedType": "FLOAT"
+            }
+          },
+          "$value": 90
+        }
+      }
+    }
+  },
+  {
+    "collection": "Klyot · Color",
+    "mode": "Light",
+    "variables": {
+      "bg": {
+        "primary": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #F1F2ED · Dark #111715",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-bg-primary)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.040"
+        },
+        "secondary": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #E7EAE3 · Dark #18201D",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-bg-secondary)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.050"
+        },
+        "overlay": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #18201D · Dark #101714",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "iOS": "bg/overlay"
+              },
+              "composedColor": {
+                "color": "$.Primitives.Default.color.stone.140",
+                "opacity": "$.Primitives.Default.opacity.40"
+              }
+            }
+          },
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.09411765,
+              0.1254902,
+              0.11372549
+            ],
+            "alpha": 0.4,
+            "hex": "#18201d"
+          }
+        }
+      },
+      "surface": {
+        "default": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #FAFAF6 · Dark #202925",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-surface-default)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.020"
+        },
+        "raised": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #FFFFFF · Dark #29332F · Light = surface-strong, Dark = surface-raised.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-surface-raised)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.000"
+        }
+      },
+      "text&icon": {
+        "primary": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #181D1C · Dark #F2F4EF",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-text-primary)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.160"
+        },
+        "primary_alpha_20": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #181D1C · Dark #F2F4EF",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-text-primary)"
+              },
+              "composedColor": {
+                "color": "$.Primitives.Default.color.stone.160",
+                "opacity": "$.Primitives.Default.opacity.20"
+              }
+            }
+          },
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.09411765,
+              0.11372549,
+              0.10980392
+            ],
+            "alpha": 0.2,
+            "hex": "#181d1c"
+          }
+        },
+        "secondary": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #59625E · Dark #AEB8B2",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-text-secondary)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.100"
+        },
+        "tertiary": {
+          "$type": "color",
+          "$description": "",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "ALL_SCOPES"
+              ],
+              "resolvedType": "COLOR"
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.070"
+        },
+        "on": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #FFFFFF · Dark #111715",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-action-on)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.000"
+        }
+      },
+      "border": {
+        "subtle": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #CDD2CB · Dark #36423D",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-border-subtle)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.050"
+        },
+        "control": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #748078 · Dark #72847A",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-border-control)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.070"
+        },
+        "clipping": {
+          "$type": "color",
+          "$description": "Light #FFFFFF · Dark #101714",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "iOS": "border/clipping"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.000"
+        }
+      },
+      "action": {
+        "default": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #176B52 · Dark #43A77E",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-action-default)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.080"
+        },
+        "hover": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #125640 · Dark #62C397 · Light = accent-hover, Dark = accent-strong.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-action-hover)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.090"
+        },
+        "pressed": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #0D4735 · Dark #35916B",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-action-pressed)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.100"
+        }
+      },
+      "selection": {
+        "bg": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #D8E8DF · Dark #173D30",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-selection-bg)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.020"
+        },
+        "text": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #125640 · Dark #62C397",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-selection-text)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.090"
+        }
+      },
+      "info": {
+        "default": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #376D7B · Dark #5793A2",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-info-default)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.river.070"
+        },
+        "text": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #2E5E6B · Dark #79AEBC",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-info-text)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.river.080"
+        },
+        "bg": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #DFEDF0 · Dark #21363C",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-info-bg)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.river.000"
+        }
+      },
+      "bite": {
+        "default": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #D18A24 · Dark #E2A647",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-bite-default)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.amber.050"
+        },
+        "text": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #82500D · Dark #E2A647",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-bite-text)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.amber.080"
+        },
+        "bg": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #F4E3C5 · Dark #3C301B",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-bite-bg)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.amber.010"
+        }
+      },
+      "danger": {
+        "default": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #B84A42 · Dark #DC6C64",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-danger-default)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.red.030"
+        },
+        "text": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #A83F37 · Dark #F18B83",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-danger-text)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.red.040"
+        },
+        "bg": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #F7E2DF · Dark #3D2523",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-danger-bg)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.red.000"
+        }
+      },
+      "focus": {
+        "ring": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #176B52 · Dark #62C397",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-focus-ring)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.080"
+        }
+      },
+      "disabled": {
+        "bg": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #E7EAE3 · Dark #29332F",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-disabled-bg)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.040"
+        },
+        "text": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #59625E · Dark #AEB8B2",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-disabled-text)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.100"
+        }
+      },
+      "overlay": {
+        "point": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-point)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.080"
+        },
+        "point_alpha_10": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-point)"
+              },
+              "composedColor": {
+                "color": "$.Primitives.Default.color.forest.080",
+                "opacity": "$.Primitives.Default.opacity.20"
+              }
+            }
+          },
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.09019608,
+              0.41960785,
+              0.32156864
+            ],
+            "alpha": 0.2,
+            "hex": "#176b52"
+          }
+        },
+        "point-on": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-point-on)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.000"
+        },
+        "point-selected": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-point-selected)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.090"
+        },
+        "cluster": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-cluster)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.110"
+        },
+        "cluster-on": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-cluster-on)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.000"
+        },
+        "marker-halo": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-marker-halo)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.010"
+        },
+        "catch": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-catch)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.amber.050"
+        },
+        "catch-on": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-catch-on)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.160"
+        }
+      },
+      "button_small": {
+        "default": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #FAFAF6 · Dark #222C27",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "iOS": "button_small/default"
+              },
+              "composedColor": {
+                "color": "$.Primitives.Default.color.stone.000",
+                "opacity": "$.Primitives.Default.opacity.90"
+              }
+            }
+          },
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              1,
+              1,
+              1
+            ],
+            "alpha": 0.9,
+            "hex": "#ffffff"
+          }
+        },
+        "pressed": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #FFFFFF · Dark #222C27",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "iOS": "button_small/pressed"
+              },
+              "composedColor": {
+                "color": "$.Primitives.Default.color.stone.000",
+                "opacity": "$.Primitives.Default.opacity.50"
+              }
+            }
+          },
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              1,
+              1,
+              1
+            ],
+            "alpha": 0.5,
+            "hex": "#ffffff"
+          }
+        },
+        "raised": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #FFFFFF · Dark #29332F · Light = surface-strong, Dark = surface-raised.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "iOS": "button_small/raised"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.000"
+        }
+      },
+      "tab_bar": {
+        "default": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #FAFAF6 · Dark #202925",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "iOS": "tab_bar/default"
+              },
+              "composedColor": {
+                "color": "$.Primitives.Default.color.stone.010",
+                "opacity": "$.Primitives.Default.opacity.90"
+              }
+            }
+          },
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.98039216,
+              0.98039216,
+              0.9647059
+            ],
+            "alpha": 0.9,
+            "hex": "#fafaf6"
+          }
+        },
+        "raised": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #FFFFFF · Dark #29332F · Light = surface-strong, Dark = surface-raised.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-surface-raised)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.000"
+        }
+      }
+    }
+  },
+  {
+    "collection": "Klyot · Color",
+    "mode": "Dark",
+    "variables": {
+      "bg": {
+        "primary": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #F1F2ED · Dark #111715",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-bg-primary)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.170"
+        },
+        "secondary": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #E7EAE3 · Dark #18201D",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-bg-secondary)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.140"
+        },
+        "overlay": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #18201D · Dark #101714",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "iOS": "bg/overlay"
+              },
+              "composedColor": {
+                "color": "$.Primitives.Default.color.stone.170",
+                "opacity": "$.Primitives.Default.opacity.40"
+              }
+            }
+          },
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.0627451,
+              0.09019608,
+              0.078431375
+            ],
+            "alpha": 0.4,
+            "hex": "#101714"
+          }
+        }
+      },
+      "surface": {
+        "default": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #FAFAF6 · Dark #202925",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-surface-default)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.130"
+        },
+        "raised": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #FFFFFF · Dark #29332F · Light = surface-strong, Dark = surface-raised.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-surface-raised)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.120"
+        }
+      },
+      "text&icon": {
+        "primary": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #181D1C · Dark #F2F4EF",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-text-primary)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.020"
+        },
+        "primary_alpha_20": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #181D1C · Dark #F2F4EF",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-text-primary)"
+              },
+              "composedColor": {
+                "color": "$.Primitives.Default.color.stone.020",
+                "opacity": "$.Primitives.Default.opacity.20"
+              }
+            }
+          },
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.972549,
+              0.9764706,
+              0.9607843
+            ],
+            "alpha": 0.2,
+            "hex": "#f8f9f5"
+          }
+        },
+        "secondary": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #59625E · Dark #AEB8B2",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-text-secondary)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.060"
+        },
+        "tertiary": {
+          "$type": "color",
+          "$description": "",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "ALL_SCOPES"
+              ],
+              "resolvedType": "COLOR"
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.100"
+        },
+        "on": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #FFFFFF · Dark #111715",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-action-on)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.170"
+        }
+      },
+      "border": {
+        "subtle": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #CDD2CB · Dark #36423D",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-border-subtle)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.110"
+        },
+        "control": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #748078 · Dark #72847A",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-border-control)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.080"
+        },
+        "clipping": {
+          "$type": "color",
+          "$description": "Light #FFFFFF · Dark #101714",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "iOS": "border/clipping"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.170"
+        }
+      },
+      "action": {
+        "default": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #176B52 · Dark #43A77E",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-action-default)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.060"
+        },
+        "hover": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #125640 · Dark #62C397 · Light = accent-hover, Dark = accent-strong.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-action-hover)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.050"
+        },
+        "pressed": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #0D4735 · Dark #35916B",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-action-pressed)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.070"
+        }
+      },
+      "selection": {
+        "bg": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #D8E8DF · Dark #173D30",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-selection-bg)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.140"
+        },
+        "text": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #125640 · Dark #62C397",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-selection-text)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.050"
+        }
+      },
+      "info": {
+        "default": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #376D7B · Dark #5793A2",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-info-default)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.river.040"
+        },
+        "text": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #2E5E6B · Dark #79AEBC",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-info-text)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.river.030"
+        },
+        "bg": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #DFEDF0 · Dark #21363C",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-info-bg)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.river.110"
+        }
+      },
+      "bite": {
+        "default": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #D18A24 · Dark #E2A647",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-bite-default)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.amber.040"
+        },
+        "text": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #82500D · Dark #E2A647",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-bite-text)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.amber.040"
+        },
+        "bg": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #F4E3C5 · Dark #3C301B",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-bite-bg)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.amber.100"
+        }
+      },
+      "danger": {
+        "default": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #B84A42 · Dark #DC6C64",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-danger-default)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.red.020"
+        },
+        "text": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #A83F37 · Dark #F18B83",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-danger-text)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.red.010"
+        },
+        "bg": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #F7E2DF · Dark #3D2523",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-danger-bg)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.red.050"
+        }
+      },
+      "focus": {
+        "ring": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #176B52 · Dark #62C397",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-focus-ring)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.050"
+        }
+      },
+      "disabled": {
+        "bg": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #E7EAE3 · Dark #29332F",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-disabled-bg)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.120"
+        },
+        "text": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · дополнительная роль. Light #59625E · Dark #AEB8B2",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "SHAPE_FILL",
+                "TEXT_FILL"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-disabled-text)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.060"
+        }
+      },
+      "overlay": {
+        "point": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-point)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.050"
+        },
+        "point_alpha_10": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-point)"
+              },
+              "composedColor": {
+                "color": "$.Primitives.Default.color.forest.050",
+                "opacity": "$.Primitives.Default.opacity.20"
+              }
+            }
+          },
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.38431373,
+              0.7647059,
+              0.5921569
+            ],
+            "alpha": 0.2,
+            "hex": "#62c397"
+          }
+        },
+        "point-on": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-point-on)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.170"
+        },
+        "point-selected": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-point-selected)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.amber.040"
+        },
+        "cluster": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-cluster)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.forest.030"
+        },
+        "cluster-on": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-cluster-on)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.170"
+        },
+        "marker-halo": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-marker-halo)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.170"
+        },
+        "catch": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-catch)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.amber.040"
+        },
+        "catch-on": {
+          "$type": "color",
+          "$description": "ПРЕДЛАГАЕТСЯ · элемент приложения поверх API-карты. Цвета картографической подложки сюда не входят.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "TEXT_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-overlay-catch-on)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.170"
+        }
+      },
+      "button_small": {
+        "default": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #FAFAF6 · Dark #222C27",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "iOS": "button_small/default"
+              },
+              "composedColor": {
+                "color": "$.Primitives.Default.color.stone.130",
+                "opacity": "$.Primitives.Default.opacity.90"
+              }
+            }
+          },
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.13333334,
+              0.17254902,
+              0.15294118
+            ],
+            "alpha": 0.9,
+            "hex": "#222c27"
+          }
+        },
+        "pressed": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #FFFFFF · Dark #222C27",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "iOS": "button_small/pressed"
+              },
+              "composedColor": {
+                "color": "$.Primitives.Default.color.stone.130",
+                "opacity": "$.Primitives.Default.opacity.30"
+              }
+            }
+          },
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.13333334,
+              0.17254902,
+              0.15294118
+            ],
+            "alpha": 0.3,
+            "hex": "#222c27"
+          }
+        },
+        "raised": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #FFFFFF · Dark #29332F · Light = surface-strong, Dark = surface-raised.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "iOS": "button_small/raised"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.120"
+        }
+      },
+      "tab_bar": {
+        "default": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #FAFAF6 · Dark #202925",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "iOS": "tab_bar/default"
+              },
+              "composedColor": {
+                "color": "$.Primitives.Default.color.stone.130",
+                "opacity": "$.Primitives.Default.opacity.90"
+              }
+            }
+          },
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.13333334,
+              0.17254902,
+              0.15294118
+            ],
+            "alpha": 0.9,
+            "hex": "#222c27"
+          }
+        },
+        "raised": {
+          "$type": "color",
+          "$description": "Задано Дмитрием. Light #FFFFFF · Dark #29332F · Light = surface-strong, Dark = surface-raised.",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "FRAME_FILL",
+                "SHAPE_FILL",
+                "STROKE_COLOR"
+              ],
+              "resolvedType": "COLOR",
+              "codeSyntax": {
+                "WEB": "var(--color-surface-raised)"
+              }
+            }
+          },
+          "$value": "$.Primitives.Default.color.stone.120"
+        }
+      }
+    }
+  },
+  {
+    "collection": "Typography",
+    "mode": "Mode 1",
+    "variables": {
+      "Font Family": {
+        "Sans Serif": {
+          "$type": "string",
+          "$description": "",
+          "$extensions": {
+            "figma": {
+              "scopes": [
+                "ALL_SCOPES"
+              ],
+              "resolvedType": "STRING"
+            }
+          },
+          "$value": "Onest"
+        }
+      }
+    }
+  }
+]

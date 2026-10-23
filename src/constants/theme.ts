@@ -34,8 +34,9 @@ export const Colors = {
      * в коде два значения с разными именами.
      */
     cardSurface: '#f8f9f5',
-    /** --color-border-control — границы outline-кнопок (привязка 135:6279) */
-    borderControl: '#748078',
+    /** --color-border-control — границы outline-кнопок (K-DS, обновление 23.10
+     *  Дмитрием: #838F87, сверкано по K-DS_variables.json) */
+    borderControl: '#838f87',
     /** --color-selection-text — текст активных чипов (привязка 224:6017, 22.10) */
     selectionText: '#125640',
     /** --color-action-pressed — граница выбранной карточки видимости
