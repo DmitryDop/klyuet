@@ -22,6 +22,18 @@ export type GeoPoint = {
  */
 export type PlaceType = 'wild' | 'paid';
 
+/**
+ * Приватность места (задача _x/18.md §5):
+ * - private — личное: точные координаты видит только владелец, публичного
+ *   представления места нет;
+ * - public — общедоступно; вид для других задаёт kind
+ *   ('exact' | 'approximate'), точность не смешивается с приватностью.
+ */
+export type PlacePrivacy = 'private' | 'public';
+
+/** Точность публичного представления (шаг 1 создания, задача _x/18.md §6). */
+export type PublicAccuracy = 'approximate' | 'exact';
+
 export type PlaceBase = {
   id: string;
   kind: 'exact' | 'approximate';
@@ -29,6 +41,8 @@ export type PlaceBase = {
   ownerId: string;
   name: string;
   placeType: PlaceType;
+  /** private — личное место, публичного представления нет (задача _x/18.md §5) */
+  privacy: PlacePrivacy;
   fishSpecies: string[];
   /** доступ: подъезд / дальнейший проход — строка карточки */
   access?: string;

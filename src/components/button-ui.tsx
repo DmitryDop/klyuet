@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 import { Colors } from '@/constants/theme';
 import { UI_ICONS } from '@/components/ui-icons';
@@ -25,12 +25,16 @@ export default function ButtonUi({
   icon,
   variant = 'default',
   type = 'map',
+  badge = false,
   onPress,
   accessibilityLabel,
 }: {
   icon: IconButtonName;
   variant?: IconButtonVariant;
   type?: IconButtonType;
+  /** Бейдж активности: оранжевая точка в правом верхнем углу (K-DS bage 438:588,
+      пример на кнопке 438:733–736). Ставится на 44×44, позиция top/right −4. */
+  badge?: boolean;
   onPress?: () => void;
   accessibilityLabel: string;
 }) {
@@ -53,6 +57,7 @@ export default function ButtonUi({
     return (
       <View style={style} accessibilityLabel={accessibilityLabel}>
         {glyph}
+        {badge && <Bage />}
       </View>
     );
   }
@@ -64,7 +69,21 @@ export default function ButtonUi({
       onPress={onPress}
       style={style}>
       {glyph}
+      {badge && <Bage />}
     </Pressable>
+  );
+}
+
+/* Бейдж активности (K-DS bage 438:588): круг 14×14 — заливка r6 #D18A24
+   (литерал SVG мастера), обводка 2 white; тень 0,3,4 rgba(0,0,0,0.24) —
+   feFlood-фильтр SVG мастера, RN-тень того же вида. */
+function Bage() {
+  return (
+    <View style={styles.bage}>
+      <Svg width={14} height={14} viewBox="0 0 14 14">
+        <Circle cx={7} cy={7} r={6} fill="#d18a24" stroke="#ffffff" strokeWidth={2} />
+      </Svg>
+    </View>
   );
 }
 
@@ -85,5 +104,16 @@ const styles = StyleSheet.create({
   },
   buttonAction: {
     backgroundColor: Colors.light.accent,
+  },
+  bage: {
+    position: 'absolute',
+    top: -4, /* пример на кнопке (438:733): badge 14×14, top/right −4 */
+    right: -4,
+    width: 14,
+    height: 14,
+    shadowOffset: { width: 0, height: 3 }, /* фильтр мастера: dy 3 */
+    shadowRadius: 8, /* feGaussianBlur stdDeviation 4 ≈ blur-radius 8 */
+    shadowColor: '#0000003d', /* 24% чёрного */
+    shadowOpacity: 1,
   },
 });

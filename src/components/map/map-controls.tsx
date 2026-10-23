@@ -10,24 +10,24 @@ import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /* Управления главной карты — компоновка с актуального макета K (49:820/243:10201).
    Все кнопки — button-ui 44×44 (K-DS dimensions/size/2xl, коммит 31da2cd); «+» — variant action.
-   Поиск/фильтр/слои/гео/«+» пока НЕ ПОДКЛЮЧЕНЫ — рендер без нажатий
-   (задание slice 2: без ложного впечатления работоспособности).
+   Поиск — заглушка (не подключено); «+» подключён; гео — фейк-возврат в
+   посёлок Восход (fake user location, Дмитрий 23.10); фильтр подключён
+   (задача _x/17.md); слои убраны (Дмитрий 23.10).
    Легенда точности: панель tab_bar/default + блюр, padding 8, radius 12;
    «Точно» — location-pin 16×16 акцентом, «Примерно» — круг 12×12
    (заливка и пунктирная граница #176b52). Текст — Onest/Caption 12/16. */
 
-export default function MapControls() {
+export default function MapControls({ onFilterPress, filterBadge, onAddPress, onGeoPress }: { onFilterPress?: () => void; filterBadge?: boolean; onAddPress?: () => void; onGeoPress?: () => void }) {
   const insets = useSafeAreaInsets();
   const pin = UI_ICONS.locationPin;
 
   return (
     <>
-      {/* поиск / фильтр / слои — верхняя колонка справа (K 243:10201: top 52
-          при статус-полосе 44 → 8 от safe area) */}
+      {/* поиск / фильтр — верхняя колонка справа (K 243:10201: top 52
+          при статус-полосе 44 → 8 от safe area); слои убраны (Дмитрий 23.10) */}
       <View style={[styles.top, { top: insets.top + 8 }]}>
         <ButtonUi icon="magnifyingGlass" accessibilityLabel="Поиск (не подключено)" />
-        <ButtonUi icon="sliders" accessibilityLabel="Фильтр (не подключено)" />
-        <ButtonUi icon="layerGroup" accessibilityLabel="Слои (не подключено)" />
+        <ButtonUi icon="sliders" badge={filterBadge} accessibilityLabel="Фильтр" onPress={onFilterPress} />
       </View>
 
       {/* геолокация / добавление места — нижняя группа (K 243:10201: top 642,
@@ -36,12 +36,14 @@ export default function MapControls() {
       <View pointerEvents="box-none" style={[styles.bottom, { bottom: insets.bottom + 76 }]}>
         <ButtonUi
           icon="locationCrosshairs"
-          accessibilityLabel="Моё местоположение (не подключено)"
+          accessibilityLabel="Вернуться в моё местоположение — посёлок Восход"
+          onPress={onGeoPress}
         />
         <ButtonUi
           icon="plus"
           variant="action"
-          accessibilityLabel="Добавить место (не подключено)"
+          accessibilityLabel="Добавить место"
+          onPress={onAddPress}
         />
       </View>
 

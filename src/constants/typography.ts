@@ -57,9 +57,12 @@ export const TEXT: Record<string, TextStyleToken> = {
   /** Onest/Title3 — 20/26 · 600 (вес подтверждён Дмитрием 21.10.2026; стиль в
       K-DS — «Bold», фактическая ось на макете отчёта — 600) */
   title3: { fontSize: 20, lineHeight: 26, fontWeight: 600 },
-  /** Onest/Label — 14/18 · 500 · кнопки/чипы/поля (описание стиля исправлено
-      Дмитрием в K-DS 21.10.2026: 500; снимок узла Claster_Point подтверждает) */
+  /** Onest/Label — 14/18 · 500 · чипы/поля (восстановлено 22.10: 14/18
+      остаётся чипам и полям; кнопкам — labelL) */
   label: { fontSize: 14, lineHeight: 18, fontWeight: 500 },
+  /** Onest/Label L — 16/20 · 500 · основные кнопки (Дмитрий 22.10: стиль
+      в K-DS давно; описание и значения стиля подтверждают 16/20/500) */
+  labelL: { fontSize: 16, lineHeight: 20, fontWeight: 500 },
   /** Onest/Body L — 17/24 · 500 (описание); привязка узла таблицы 135:6246
       даёт Regular/400 — конфликт на уточнении, в коде пока 400 */
   bodyL: { fontSize: 17, lineHeight: 24, fontWeight: 400 },

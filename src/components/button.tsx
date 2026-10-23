@@ -4,14 +4,15 @@ import { Colors } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 import Spinner from '@/components/ui/spinner';
 
-/* Кнопка K-DS (мастер Button, высота 48, radius/sm 12): Label 14/18.
+/* Кнопка K-DS (мастер Button, высота 48, radius/sm 12). Лейбл — глобальный
+   токен TEXT.label (Onest/Label 16/20 · 500 — глобально, Дмитрий 22.10),
+   локальных переопределений не делаем.
    Здесь используются варианты Outline и Primary (панель карточки K 135:6279).
    Пресс/ховер не выдумывается (правило проекта, нет в этом макете).
    Disabled (K-DS 248:4949): вся кнопка opacity 0.4, не реагирует.
    Loading (K-DS 165:22 / 194:147): лоадер Spinner (Medium 20) по центру,
    White на primary / Brand на outline; лейбл скрыт; повторная отправка
    заблокирована (спека reports.md §8). */
-
 export type ButtonVariant = 'primary' | 'outline';
 
 export default function Button({
@@ -80,7 +81,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.light.borderControl,
   },
   label: {
-    ...rnTextStyle(TEXT.label),
+    /* Onest/Label L 16/20 · 500 — добавлено Дмитрием 22.10 (токен labelL) */
+    ...rnTextStyle(TEXT.labelL),
     fontFamily: FONT_FAMILY,
     textAlign: 'center',
   },

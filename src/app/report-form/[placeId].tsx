@@ -1,10 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActionSheetIOS,
-  Image,
   Keyboard,
-  Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,27 +8,23 @@ import {
   type ScrollView as ScrollViewType,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import * as DocumentPicker from 'expo-document-picker';
-import * as ImagePicker from 'expo-image-picker';
 import {
   useLocalSearchParams,
   useRouter,
   useNavigation,
 } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path, Rect } from 'react-native-svg';
-
 import ButtonUi from '@/components/button-ui';
 import Button from '@/components/button';
 import Chip from '@/components/form/chip';
 import FormField from '@/components/form/form-field';
 import FormInput from '@/components/form/form-input';
 import FormSelect from '@/components/form/form-select';
+import PhotoAdd from '@/components/form/photo-add';
 import SelectSheet from '@/components/form/select-sheet';
 import SheetModal from '@/components/ui/sheet-modal';
 import ModalCard from '@/components/ui/modal-card';
 import { showToast } from '@/components/ui/toast';
-import { UI_ICONS } from '@/components/ui-icons';
 import { SPECIES_CATALOG, TACKLE_CATALOG } from '@/data/catalog';
 import { CURRENT_USER_ID, demoPlaceRepo } from '@/data/repo';
 import type { CatchStatus, Place } from '@/data/types';
@@ -70,7 +62,6 @@ import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
    - валидация (§3): статус и дата обязательны; при «С уловом» — минимум один
      вид; «Опубликовать» disabled до выполнения (прецедент K 91:5899). */
 
-import { photoSource } from '@/logic/photos';
 
 type FormState = {
   catchStatus: CatchStatus;
@@ -287,73 +278,6 @@ export default function ReportFormScreen() {
     return -1;
   }, [form.fishingDate]);
 
-  /* «Добавить фото» (206:9639): системный ActionSheet (iOS) — камера /
-     медиатека / документы; выбранный снимок — реальный URI в photos.
-     Демо-маркер '346' остаётся только в fixtures. */
-  const addPhotoSource = (uri: string) => {
-    patchForm({ photos: [...form.photos, uri] });
-    /* превью над кнопкой раздвигает контент: доскрол сохраняет CTA
-       в границах экрана (Дмитрий 22.10: кнопка не должна пропадать) */
-    setTimeout(() => {
-       
-      console.log('[diag] scrollToEnd fired, ref:', scrollViewRef.current != null);
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 60);
-  };
-
-  const openPhotoActions = () => {
-    if (submitting) return;
-    /* iOS — системный ActionSheet; без iOS — сразу медиатека */
-    if (Platform.OS !== 'ios') {
-      void ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 }).then(
-        (r) => {
-          if (!r.canceled && r.assets[0] != null) addPhotoSource(r.assets[0].uri);
-        },
-      );
-      return;
-    }
-    ActionSheetIOS.showActionSheetWithOptions(
-      {
-        options: ['Сделать фото', 'Выбрать из медиатеки', 'Выбрать из документов', 'Отмена'],
-        cancelButtonIndex: 3,
-        userInterfaceStyle: 'light', /* V1 — светлая тема */
-      },
-      (buttonIndex) => {
-        void (async () => {
-          try {
-            if (buttonIndex === 0) {
-              /* камера: право запрашивается перед запуском (Expo Go);
-                 отказ/сбой — тихий выход, форма не искажается */
-              const cam = await ImagePicker.requestCameraPermissionsAsync();
-              if (!cam.granted) return;
-              const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.8 });
-              if (!result.canceled && result.assets[0] != null) {
-                addPhotoSource(result.assets[0].uri);
-              }
-            } else if (buttonIndex === 1) {
-              const media = await ImagePicker.requestMediaLibraryPermissionsAsync();
-              if (!media.granted) return;
-              const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8, selectionLimit: 1 });
-              if (!result.canceled && result.assets[0] != null) {
-                addPhotoSource(result.assets[0].uri);
-              }
-            } else if (buttonIndex === 2) {
-              const result = await DocumentPicker.getDocumentAsync({ type: 'image/*', multiple: false, copyToCacheDirectory: true });
-              if (result.canceled === false && result.assets?.[0]?.uri != null) {
-                addPhotoSource(result.assets[0].uri);
-              }
-            }
-          } catch {
-            /* системный пикер недоступен — форма без фото остаётся рабочей */
-          }
-        })();
-      },
-    );
-  };
-
-  const removePhoto = (index: number) => {
-    patchForm({ photos: form.photos.filter((_, i) => i !== index) });
-  };
 
   const speciesValue =
     form.catchStatus === 'with_catch' ? (form.species.length > 0 ? form.species.join(', ') : null) : null;
@@ -374,9 +298,7 @@ export default function ReportFormScreen() {
     );
   }
 
-  /* [diag] состояние панели (снять после разбора бага CTA, 22.10) */
-   
-  console.log('[diag] form kb:', keyboardHeight, 'focus:', inputFocus, 'photos:', form.photos.length);
+  /* состояние панели уже принято (панель над клавиатурой, 87:4145) */
 
   return (
     <View style={styles.container}>
@@ -551,49 +473,16 @@ export default function ReportFormScreen() {
         </FormField>
 
         {/* фото-превью (206:9709): только при наличии; px 16, py 8 */}
-        {form.photos.length > 0 && (
-          <View style={styles.photoRowWrap}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoRow}>
-              {form.photos.map((ph, i) => (
-                <View key={`${ph}-${i}`} style={styles.photoWrap}>
-                  <Image source={photoSource(ph)} style={styles.photo} />
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Удалить фото"
-                    disabled={submitting}
-                    onPress={() => removePhoto(i)}
-                    style={styles.photoDelete}>
-                    <Svg width={24} height={24} viewBox="0 0 24 24">
-                      <Path
-                        d={UI_ICONS.circleXmark.d}
-                        fill="#b84a42" /* литерал макета (не токен), 206:9711 */
-                      />
-                    </Svg>
-                  </Pressable>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-
-        {/* Добавить фото (206:9639): dashed, dash 8 / gap 4 (Дмитрий 22.10) —
-            RN borderStyle dashed не параметризуется, рамка через SVG;
-            тап — системный ActionSheet и pickers (реальные URI) */}
-        <View style={styles.uploadWrap}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Добавить фото"
-            disabled={submitting}
-            onPress={openPhotoActions}
-            style={styles.upload}>
-            <UploadDash />
-            <Svg width={24} height={24} viewBox="0 0 24 24">
-              <Path d={UI_ICONS.camera.d} fill={Colors.light.text} />
-            </Svg>
-            {/* иконка → подпись: gap 4 (258:684) */}
-            <Text style={styles.uploadLabel}>Добавить фото</Text>
-          </Pressable>
-        </View>
+        {/* фото: общий блок (photo-add.tsx, задача _x/18.md) — пикер,
+            превью с удалением и dashed-кнопка; доскрол CTA после добавления */}
+        <PhotoAdd
+          photos={form.photos}
+          onChange={(next) => patchForm({ photos: next })}
+          disabled={submitting}
+          onAfterAdd={() =>
+            setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 60)
+          }
+        />
 
         {/* кнопка в потоке формы (не плавает, не перекрывает контент —
             решение Дмитрия 22.10) — НЕ выгружается из дерева: при фокусе поля
@@ -750,35 +639,6 @@ type FormGuardEvent = {
   data: { action: unknown };
 };
 
-/* dashed-рамка кнопки «Добавить фото»: dash 8 / gap 4, stroke
-   --color-border-control, radius 12 (решение Дмитрия 22.10) */
-function UploadDash() {
-  const [size, setSize] = useState({ w: 0, h: 48 });
-  return (
-    <View
-      style={[StyleSheet.absoluteFill, styles.uploadDashWrap]}
-      pointerEvents="none"
-      onLayout={(e) =>
-        setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })
-      }>
-      <Svg width={size.w} height={size.h}>
-        <Rect
-          x={0.5}
-          y={0.5}
-          width={Math.max(0, size.w - 1)}
-          height={Math.max(0, size.h - 1)}
-          rx={11.5}
-          ry={11.5}
-          stroke={Colors.light.borderControl}
-          strokeWidth={1}
-          strokeDasharray="8 4"
-          fill="none"
-        />
-      </Svg>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -854,61 +714,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     justifyContent: 'flex-start',
-  },
-  photoRowWrap: {
-    paddingHorizontal: 16,
-    paddingVertical: 8, /* preview photo (206:9709) */
-  },
-  photoRow: {
-    gap: 8, /* между фото 8 (206:9710) */
-  },
-  photoWrap: {
-    width: 146,
-    height: 111,
-    borderRadius: 12,
-    borderCurve: 'continuous',
-    backgroundColor: Colors.light.cardSurface,
-  },
-  photo: {
-    width: 146,
-    height: 111,
-    borderRadius: 12,
-    resizeMode: 'cover',
-  },
-  photoDelete: {
-    position: 'absolute',
-    top: 0,
-    right: 0, /* badge в правом верхнем углу (206:9711: left 122 = right 0) */
-    width: 24,
-    height: 24,
-    borderRadius: 24,
-    backgroundColor: Colors.light.background, /* подложка badge (#e8ece5, 84:3894) */
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  uploadWrap: {
-    paddingHorizontal: 16,
-    paddingVertical: 8, /* Upload (206:9638) */
-  },
-  upload: {
-    /* границу рисует UploadDash (dash 8 / gap 4) — стилей border нет */
-    height: 48,
-    borderRadius: 12,
-    borderCurve: 'continuous',
-    backgroundColor: Colors.light.cardSurface,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  uploadLabel: {
-    ...rnTextStyle(TEXT.label),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
-  },
-  uploadDashWrap: {
-    borderRadius: 12,
-    overflow: 'hidden',
   },
   panel: {
     /* absolute-режим — только над клавиатурой (bottom в JSX);

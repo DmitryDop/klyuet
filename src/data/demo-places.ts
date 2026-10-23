@@ -80,6 +80,8 @@ export const demoPlaces: Place[] = [
     /* демо-владелец: половина мест свои — у них работает состояние владельца */
     ownerId: i % 2 === 0 ? 'me' : 'other-1',
     name: PLACE_NAMES[i % PLACE_NAMES.length],
+    /* демо-фикстуры — общедоступные (задача 18; частные создаются сценарием «+») */
+    privacy: 'public' as const,
     /* чередование дикая/платная и способа для проверки строк карточки */
     placeType: (i % 3 === 0 ? 'paid' : 'wild') as 'paid' | 'wild',
     fishSpecies: i % 2 === 0 ? SPECIES : SPECIES.slice(0, 2),
@@ -94,6 +96,7 @@ export const demoPlaces: Place[] = [
     ownerId: i % 2 === 0 ? 'me' : 'other-2',
     name: `Обрыв у Галича ${i + 1}`,
     placeType: 'wild' as const,
+    privacy: 'public' as const,
     fishSpecies: SPECIES.slice(0, i % 3 === 0 ? 4 : 2),
     access: 'Дальше пешком',
     fishing: 'shore' as const,

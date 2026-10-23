@@ -81,7 +81,11 @@ export default function SheetModal({
     }
   }, [visible, open, dragY, mounted]);
 
-  /* свайп-граббер: полоса сверху 16px (py 8 тулбара), кнопки ряда не перекрыты */
+  /* свайп-закрытие 1:1: detector на ВСЕЙ шторке (Дмитрий 23.10: «пальцем
+     не сразу попадаешь» в полосу 16 граббера; прецедент шага 1). Скролл
+     защищён сам: нативный ScrollView-лист перехватывает тач в своей зоне
+     (пан активируется только вне списка — тулбар/граббер/пустоты);
+     чекбоксы/радио — тапы: пан требует 8 px сдвига */
   const swipeClose = Gesture.Pan()
     .activeOffsetY(8)
     .onUpdate((e) => {
@@ -130,6 +134,10 @@ export default function SheetModal({
           onPress={onClose}
           style={styles.overlayFill}
         />
+        {/* detector на всей шторке (один ребёнок — требование RNGH): драг
+            отовсюду; скролл-лист перехватывает тач нативно (пан не мешает
+            скроллу), кнопки/чекбоксы — тапы (пан требует 8 px сдвига) */}
+        <GestureDetector gesture={swipeClose}>
         <Animated.View
           style={[
             styles.sheet,
@@ -139,14 +147,12 @@ export default function SheetModal({
               : /* по контенту: прибита к низу, но не выше линии 44 */
                 { maxHeight: screenH - Math.max(44, insets.top) },
           ]}>
-          {/* полоса свайпа-закрытия: граббер зона (py 8, граббер pb 4) */}
-          <GestureDetector gesture={swipeClose}>
-            <View style={styles.grabberZone}>
-              <View style={styles.grabber} />
-            </View>
-          </GestureDetector>
+          <View style={styles.grabberZone}>
+            <View style={styles.grabber} />
+          </View>
           {children}
         </Animated.View>
+        </GestureDetector>
       </View>
     </Modal>
   );

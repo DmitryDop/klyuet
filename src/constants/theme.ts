@@ -38,6 +38,9 @@ export const Colors = {
     borderControl: '#748078',
     /** --color-selection-text — текст активных чипов (привязка 224:6017, 22.10) */
     selectionText: '#125640',
+    /** --color-action-pressed — граница выбранной карточки видимости
+        (привязка K 402:6522, шаг 1 создания места, 22.10) */
+    actionPressed: '#0d4735',
     /** --color-focus-ring — граница 2px focused-полей (привязка K-DS 165:32/209:131, 22.10) */
     focusRing: '#176b52',
     /**
