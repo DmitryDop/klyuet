@@ -17,16 +17,17 @@ import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
    «Точно» — location-pin 16×16 акцентом, «Примерно» — круг 12×12
    (заливка и пунктирная граница #176b52). Текст — Onest/Caption 12/16. */
 
-export default function MapControls({ onFilterPress, filterBadge, onAddPress, onGeoPress }: { onFilterPress?: () => void; filterBadge?: boolean; onAddPress?: () => void; onGeoPress?: () => void }) {
+export default function MapControls({ onFilterPress, filterBadge, onAddPress, onGeoPress, onSearchPress }: { onFilterPress?: () => void; filterBadge?: boolean; onAddPress?: () => void; onGeoPress?: () => void; onSearchPress?: () => void }) {
   const insets = useSafeAreaInsets();
   const pin = UI_ICONS.locationPin;
 
   return (
     <>
       {/* поиск / фильтр — верхняя колонка справа (K 243:10201: top 52
-          при статус-полосе 44 → 8 от safe area); слои убраны (Дмитрий 23.10) */}
+          при статус-полосе 44 → 8 от safe area); слои убраны (Дмитрий 23.10);
+          поиск подключён (ТЗ _x/20.md) */}
       <View style={[styles.top, { top: insets.top + 8 }]}>
-        <ButtonUi icon="magnifyingGlass" accessibilityLabel="Поиск (не подключено)" />
+        <ButtonUi icon="magnifyingGlass" accessibilityLabel="Поиск населённого пункта" onPress={onSearchPress} />
         <ButtonUi icon="sliders" badge={filterBadge} accessibilityLabel="Фильтр" onPress={onFilterPress} />
       </View>
 

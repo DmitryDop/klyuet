@@ -12,6 +12,8 @@ import MapControls from '@/components/map/map-controls';
 import AddPlaceSheet, { Crosshair, AreaSight } from '@/components/map/add-place-sheet';
 import { demoPlaceRepo } from '@/data/repo';
 import { getAppliedMapFilter } from '@/data/filter-store';
+import { clearPendingSearchTarget, getPendingSearchTarget } from '@/data/map-search-store';
+import { FAKE_USER_LOCATION } from '@/data/user-location';
 import {
   clearPlaceCreateDraft,
   ensurePlaceCreateDraft,
@@ -47,11 +49,9 @@ const DEMO_REGION = {
   longitudeDelta: 0.35,
 };
 
-/* Фейковая геопозиция пользователя (Дмитрий 23.10): посёлок Восход — «мы
-   находимся там»; реальная геолокация подключится позже. Координаты сняты
-   с метки посёлка на демо-карте. Кнопка локации (шаг 1 и карта) всегда
-   возвращает сюда; старт карты — из посёлка. */
-const FAKE_USER_LOCATION = { latitude: DEMO_REGION.latitude, longitude: DEMO_REGION.longitude };
+/* Фейковая геопозиция пользователя — общая константа (user-location.ts,
+   Дмитрий 23.10): посёлок Восход; та же точка — точка отсчёта расстояний
+   геопоиска (ТЗ _x/20.md §7). Реальная геолокация подключится позже. */
 
 /* Пунктир границ: [штрих, пробел] в points (утверждено Дмитрием 21.10.2026) */
 const DASH_PATTERN = [5, 4];
@@ -119,6 +119,22 @@ export default function MapScreen() {
           только данные и возврат меток после отмены/успеха */
       if (getPlaceCreateDraft() == null && markersState === 'hidden') {
         startFadeIn();
+      }
+      /* геопоиск (ТЗ _x/20.md §8): выбор результата закоммитил цель;
+          камера плавно уезжает на границы пункта, метки/кластеры
+          пересчитываются по новому региону сами. Один раз, цель очищается. */
+      const target = getPendingSearchTarget();
+      if (target) {
+        clearPendingSearchTarget();
+        mapRef.current?.animateToRegion(
+          {
+            latitude: target.coordinate.latitude,
+            longitude: target.coordinate.longitude,
+            latitudeDelta: target.latitudeDelta,
+            longitudeDelta: target.longitudeDelta,
+          },
+          500,
+        );
       }
     }, [markersState, startFadeIn]),
   );
@@ -343,6 +359,9 @@ export default function MapScreen() {
           <MapControls
             onFilterPress={() => router.push('/filter')}
             filterBadge={isFilterActive(appliedFilter)}
+            /* геопоиск: полноэкранный /search (ТЗ _x/20.md) — карта остаётся
+                смонтированной, состояние переживает закрытие (§9) */
+            onSearchPress={() => router.push('/search')}
             onGeoPress={() =>
               /* фейк-гео (Дмитрий 23.10): возврат в посёлок Восход */
               mapRef.current?.animateToRegion(
