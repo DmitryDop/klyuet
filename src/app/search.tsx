@@ -304,7 +304,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.background,
   },
   box: {
+    /* Search_box (K 426:9610): p16 со всех сторон — 16 снизу отделяют панель
+       поля от панели результатов (поэтому она не липнет к списку) */
     paddingHorizontal: 16,
+    paddingBottom: 16,
   },
   /* Search_content (K 426:9611): radius 24, py 16, поверхность #f8f9f5 */
   fieldPanel: {
