@@ -15,6 +15,13 @@ import type { GeoPoint, PlacePrivacy, PublicAccuracy } from '@/data/types';
  */
 
 export type PlaceCreateDraft = {
+  /**
+   * Редактирование (сценарий карандаша, Дмитрий 23.10): id редактируемого
+   * места. Шаги 1/2 работают с черновиком как при создании; применение —
+   * ЕДИНОЕ на финальном сохранении (updatePlace); отмена/закрытие не
+   * трогают исходное место. Отсутствует — обычное создание.
+   */
+  editPlaceId?: string;
   coordinate: GeoPoint;
   privacy: PlacePrivacy;
   accuracy: PublicAccuracy;

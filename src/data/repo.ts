@@ -24,6 +24,13 @@ export interface PlaceRepo {
   updateReport(id: string, patch: Omit<Report, 'id' | 'placeId' | 'authorId' | 'publishedAt' | 'updatedAt'>): Promise<Report | null>;
   /** Создание места (задача _x/18.md §3–§5, map-place-flows-mvp.md §3) */
   createPlace(draft: PlaceDraft): Promise<Place>;
+  /**
+   * Редактирование места (сценарий карандаша, Дмитрий 23.10): ЕДИНОЕ
+   * применение черновика в финальном сохранении — координаты/точность/
+   * приватность пересобирают публичное представление, как в createPlace;
+   * createdAt не меняется. До сохранения исходное место без изменений.
+   */
+  updatePlace(id: string, draft: PlaceDraft): Promise<Place | null>;
 }
 
 /** Черновик создания места: шаги 1–2 в двух сториях (task _x/18.md). */
@@ -176,5 +183,51 @@ export const demoPlaceRepo: PlaceRepo = {
         : { ...base, kind: 'exact', coordinate: draft.coordinate };
     state.places.unshift(place);
     return place;
+  },
+
+  async updatePlace(id, draft) {
+    await new Promise((r) => setTimeout(r, NET_MS));
+    const i = state.places.findIndex((p) => p.id === id);
+    if (i < 0) return null;
+    const prev = state.places[i];
+    /* представление пересобирается как в createPlace («серверная» сторона):
+       приблизительное место получает округлённый центр области, свой
+       прежний радиус; точное — координату черновика */
+    const round1e4 = (v: number) => Math.round(v * 10_000) / 10_000;
+    const rebuilt: Place =
+      draft.privacy === 'public' && draft.accuracy === 'approximate'
+        ? {
+            ...prev,
+            name: draft.name,
+            placeType: draft.placeType,
+            privacy: draft.privacy,
+            fishSpecies: [...draft.fishSpecies],
+            access: draft.access,
+            description: draft.description,
+            photos: [...draft.photos],
+            kind: 'approximate',
+            view: {
+              coordinate: {
+                latitude: round1e4(draft.coordinate.latitude),
+                longitude: round1e4(draft.coordinate.longitude),
+              },
+              /* прежний радиус: черновик радиус не редактирует */
+              radiusMeters: prev.kind === 'approximate' ? prev.view.radiusMeters : 500,
+            },
+          }
+        : {
+            ...prev,
+            name: draft.name,
+            placeType: draft.placeType,
+            privacy: draft.privacy,
+            fishSpecies: [...draft.fishSpecies],
+            access: draft.access,
+            description: draft.description,
+            photos: [...draft.photos],
+            kind: 'exact',
+            coordinate: draft.coordinate,
+          };
+    state.places[i] = rebuilt;
+    return rebuilt;
   },
 };

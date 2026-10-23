@@ -13,6 +13,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import ButtonUi from '@/components/button-ui';
 import { CURRENT_USER_ID, demoPlaceRepo } from '@/data/repo';
+import { requestAddPlaceStart } from '@/data/add-request-store';
 import type { Place, Report } from '@/data/types';
 import { PlaceHeader, DIMMING_BACKDROP } from '@/components/map/place-header';
 import InfoRow from '@/components/place/info-row';
@@ -213,13 +214,19 @@ export default function PlaceScreen() {
           </View>
           {/* правый угол: только у СВОИХ мест без отчётов — карандаш
               (правило Дмитрия 22.10: pencil → только пока нет отчётов).
-              Кнопку поиска из карточки убрал Дмитрий 23.10: у чужих мест
-              и у своих с отчётами правый угол пустой */}
+              Сценарий редактирования (Дмитрий 23.10): шаг 1 на карте с
+              точкой места → шаг 2 — «Сохранить изменения»; изменения
+              применяются только в конце. Кнопки поиска в карточке нет. */}
           {canEdit && (
             <View style={[styles.headerButtonWrap, { top: insets.top + 8, right: 16 }]}>
               <ButtonUi
                 icon="pen"
-                accessibilityLabel="Редактировать место (не подключено)"
+                accessibilityLabel="Редактировать место"
+                onPress={() => {
+                  requestAddPlaceStart(place);
+                  /* переход на карту: шаг 1 откроется поверх (интент-стор) */
+                  router.navigate('/(tabs)/map');
+                }}
               />
             </View>
           )}

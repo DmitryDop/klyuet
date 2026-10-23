@@ -23,7 +23,7 @@ import {
   usePlaceCreateActive,
   usePlaceCreateDraft,
 } from '@/data/place-create-store';
-import type { Place, Report } from '@/data/types';
+import type { GeoPoint, Place, Report } from '@/data/types';
 import { applyMapFilter, isFilterActive } from '@/logic/filter';
 import { PlaceClusterIndex } from '@/logic/clustering';
 import { Colors } from '@/constants/theme';
@@ -65,6 +65,9 @@ export default function MapScreen() {
   /* зеркало региона для useFocusEffect (регион в deps не вносится —
      перезапуск эффекта на каждую камеру недопустим) */
   const regionRef = useRef(region);
+  /* редактирование: точка места для прицеливания камеры при первом замере
+     шторки (сценарий карандаша, Дмитрий 23.10); null — не редактирование */
+  const editAimRef = useRef<GeoPoint | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [appliedFilter, setAppliedFilter] = useState(getAppliedMapFilter());
@@ -140,18 +143,46 @@ export default function MapScreen() {
           500,
         );
       }
-      /* «Добавить» из Журнала (ТЗ _x/21.md §6): СУЩЕСТВУЮЩИЙ сценарий —
-          шаг 1 на карте; координата — текущий центр карты (regionRef —
-          зеркало state, как в handleRegionChange), как и у «+» карты */
-      if (consumeAddPlaceRequest()) {
+      /* «Добавить» из Журнала (ТЗ _x/21.md §6) и карандаш карточки (сценарий
+          Дмитрия 23.10): СУЩЕСТВУЮЩИЙ двухшаговый сценарий; place из запроса
+          — редактирование: префилл черновика, применение только при
+          финальном сохранении. Координата: новое место — центр карты,
+          редактирование — точка места. */
+      const request = consumeAddPlaceRequest();
+      if (request) {
+        const requested = request.place;
+        const editCoordinate =
+          requested == null
+            ? { latitude: regionRef.current?.latitude ?? DEMO_REGION.latitude, longitude: regionRef.current?.longitude ?? DEMO_REGION.longitude }
+            : requested.kind === 'exact'
+              ? requested.coordinate
+              : requested.view.coordinate;
         clearPlaceCreateDraft();
-        ensurePlaceCreateDraft({
-          coordinate: {
-            latitude: regionRef.current?.latitude ?? DEMO_REGION.latitude,
-            longitude: regionRef.current?.longitude ?? DEMO_REGION.longitude,
-          },
+        const fresh = ensurePlaceCreateDraft({
+          coordinate: editCoordinate,
+          privacy: requested?.privacy,
+          accuracy: requested?.kind === 'exact' ? 'exact' : requested == null ? undefined : 'approximate',
         });
+        if (requested != null) {
+          /* префилл шага 2 + маркер редактирования: форма коммитит
+              updatePlace ЕДИНСТВЕННО на финальном сохранении */
+          setPlaceCreateDraft({
+            ...fresh,
+            editPlaceId: requested.id,
+            name: requested.name,
+            placeType: requested.placeType,
+            fishSpecies: [...requested.fishSpecies],
+            access: requested.access,
+            description: requested.description ?? '',
+            photos: [...requested.photos],
+          });
+        }
         setSheetH(0);
+        if (requested != null) {
+          /* камера к точке места после первого замера шторки: прицел =
+             точка места (та же арифметика §8 противо-сдвига) */
+          editAimRef.current = requested.kind === 'exact' ? requested.coordinate : requested.view.coordinate;
+        }
         if (markersState !== 'hidden' && markersState !== 'fading-out') {
           startFadeOut();
         }
@@ -430,6 +461,25 @@ export default function MapScreen() {
           }}
           onHeightChange={(h) => {
             setSheetH(h);
+            /* редактирование: первая измеренная высота шторки — анимируем
+                камеру так, чтобы прицел совпал с точкой места: прецедент
+                арифметики §8, координата = точка − половина шторки */
+            const aim = editAimRef.current;
+            if (aim && h > 0) {
+              const r = regionRef.current ?? { latitudeDelta: DEMO_REGION.latitudeDelta };
+              const mpp = (r.latitudeDelta * 111_320) / screenH;
+              const liftLat = ((h / 2) * mpp) / 111_320;
+              mapRef.current?.animateToRegion(
+                {
+                  latitude: aim.latitude - liftLat,
+                  longitude: aim.longitude,
+                  latitudeDelta: r.latitudeDelta,
+                  longitudeDelta: r.longitudeDelta,
+                },
+                250,
+              );
+              editAimRef.current = null;
+            }
           }}
           sheetShift={sheetShift}
           /* снятие шторки — событие: adding снимет store (через clear),

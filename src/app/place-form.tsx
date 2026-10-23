@@ -61,6 +61,12 @@ export default function PlaceFormScreen() {
   const scrollViewRef = useRef<ScrollViewInstance>(null);
   const nameFieldY = useRef(0);
 
+  /* порядок: режим определяется ДО эффектов — черновик (карта префиллит
+     его до перехода) доступен на первом рендере */
+  const draft = getPlaceCreateDraft()!;
+  const isEdit = draft.editPlaceId != null;
+  const publishLabel = isEdit ? 'Сохранить изменения' : 'Опубликовать';
+
   /* прямой вход (deep link) без шага 1 — черновик создаётся с дефолтой
      точкой Демо-центра; рабочий сценарий всегда начинается с шага 1 */
   const [, setVersion] = useState(0);
@@ -68,9 +74,15 @@ export default function PlaceFormScreen() {
     ensurePlaceCreateDraft({ coordinate: { latitude: 58.05, longitude: 38.35 } });
     return null;
   }, []);
-  /* черновик читается свежим на каждом рендере: store — модульное
-     состояние, patch bump-ит версию */
-  const draft = getPlaceCreateDraft()!;
+  /* редактирование: любое снятие формы (назад/отмена) гасит edit-черновик —
+     исходное место остаётся без изменений (сценарий Дмитрия 23.10);
+     при обычном создании черновик обязан жить для возврата в шаг 1 */
+  useEffect(() => {
+    if (!isEdit) return;
+    return () => {
+      clearPlaceCreateDraft();
+    };
+  }, [isEdit]);
 
   const [name, setName] = useState(draft.name);
   const [nameSubmitted, setNameSubmitted] = useState(false);
@@ -136,14 +148,20 @@ export default function PlaceFormScreen() {
       description: current.description || undefined,
       photos: [...current.photos],
     };
-    void demoPlaceRepo
-      .createPlace(placeDraft)
-      .then((created) => {
+    void (isEdit
+      ? demoPlaceRepo.updatePlace(draft.editPlaceId as string, placeDraft)
+      : demoPlaceRepo.createPlace(placeDraft)
+    )
+      .then((place) => {
+        if (place == null) {
+          setErrorModal(true);
+          return;
+        }
         clearPlaceCreateDraft();
-        /* успех (§3.4): карточка опубликованного места + тост —
-           прецедент отчёта (replace: «Назад» — на карту) */
-        router.replace(`/place/${created.id}`);
-        showToast('Место добавлено');
+        /* успех (§3.4): карточка места + тост — replace: «Назад» — на карту;
+           тост редактирования — «Изменения сохранены» (journal.md §6) */
+        router.replace(`/place/${place.id}`);
+        showToast(isEdit ? 'Изменения сохранены' : 'Место добавлено');
       })
       .catch(() => {
         setErrorModal(true);
@@ -162,7 +180,7 @@ export default function PlaceFormScreen() {
         <View style={[styles.toolbarTitleWrap, { top: insets.top + 8, bottom: 8 }]}>
           <View style={styles.toolbarTitleBox}>
             <Text style={styles.toolbarTitle} numberOfLines={1}>
-              Подробнее о месте
+              {isEdit ? 'Редактирование места' : 'Подробнее о месте'}
             </Text>
           </View>
         </View>
@@ -287,7 +305,7 @@ export default function PlaceFormScreen() {
             { paddingBottom: 8 + insets.bottom },
             inputFocus != null && keyboardHeight > 0 && styles.hiddenKb,
           ]}>
-          <Button label="Опубликовать" variant="primary" loading={submitting} onPress={submitting ? undefined : publish} />
+          <Button label={publishLabel} variant="primary" loading={submitting} onPress={submitting ? undefined : publish} />
         </View>
       </ScrollView>
 
@@ -296,7 +314,7 @@ export default function PlaceFormScreen() {
           привязка к inputFocus: пикер фото её не прячет */}
       {inputFocus != null && keyboardHeight > 0 && (
         <View style={[styles.panelKeyboard, { paddingBottom: 8, bottom: keyboardHeight }]}>
-          <Button label="Опубликовать" variant="primary" loading={submitting} onPress={submitting ? undefined : publish} />
+          <Button label={publishLabel} variant="primary" loading={submitting} onPress={submitting ? undefined : publish} />
         </View>
       )}
 
@@ -329,7 +347,7 @@ export default function PlaceFormScreen() {
       <ModalCard
         visible={errorModal}
         icon="warn"
-        title="Не удалось опубликовать место"
+        title={isEdit ? 'Не удалось сохранить изменения' : 'Не удалось опубликовать место'}
         body={'Ваши данные сохранены в форме.\nПопробуйте ещё раз.'}
         actions={[
           { label: 'Вернуться к форме', onPress: () => setErrorModal(false) },
