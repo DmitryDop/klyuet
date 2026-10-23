@@ -92,8 +92,8 @@ export default function PlaceScreen() {
   }
 
   /* Правило Дмитрия: pencil → только у СВОИХ мест и только пока в них нет
-     отчётов; появился любой отчёт (свой или чужой) — редактирование
-     заменяется на поиск. Касается всех мест. */
+     отчётов (появился любой отчёт — карандаша нет). Кнопки поиска в
+     карточке нет (убрана Дмитрием 23.10). Касается всех мест. */
   const canEdit = place.ownerId === CURRENT_USER_ID && reports.length === 0;
   const subtitle =
     place.placeType === 'wild' ? 'Дикое место · Бесплатно' : 'Платное место';
@@ -118,10 +118,11 @@ export default function PlaceScreen() {
       </Animated.View>
 
       {/* лист-скролл — Reanimated ScrollView: только он принимает
-          useAnimatedScrollHandler (ворклет, нативный драйвер) */}
+          useAnimatedScrollHandler (ворклет, нативный драйвер).
+          Системный индикатор включён (Дмитрий 23.10) */}
       <Animated.ScrollView
         contentContainerStyle={{ paddingTop: SHEET_TOP, paddingBottom: panelReserve + 16 }}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator
         onScroll={scrollHandler}
         scrollEventThrottle={16}>
         {/* лист: bg #e8ece5 и верхние скругления 24; стартует на y=280
@@ -210,14 +211,18 @@ export default function PlaceScreen() {
               accessibilityLabel="Назад"
             />
           </View>
-          <View style={[styles.headerButtonWrap, { top: insets.top + 8, right: 16 }]}>
-            <ButtonUi
-              icon={canEdit ? 'pen' : 'magnifyingGlass'}
-              accessibilityLabel={
-                canEdit ? 'Редактировать место (не подключено)' : 'Поиск (не подключено)'
-              }
-            />
-          </View>
+          {/* правый угол: только у СВОИХ мест без отчётов — карандаш
+              (правило Дмитрия 22.10: pencil → только пока нет отчётов).
+              Кнопку поиска из карточки убрал Дмитрий 23.10: у чужих мест
+              и у своих с отчётами правый угол пустой */}
+          {canEdit && (
+            <View style={[styles.headerButtonWrap, { top: insets.top + 8, right: 16 }]}>
+              <ButtonUi
+                icon="pen"
+                accessibilityLabel="Редактировать место (не подключено)"
+              />
+            </View>
+          )}
         </Animated.View>
       )}
 

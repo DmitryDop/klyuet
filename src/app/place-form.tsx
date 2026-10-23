@@ -300,13 +300,14 @@ export default function PlaceFormScreen() {
         </View>
       )}
 
-      {/* шторка видов (K 91:6113): мульти, live-применение в черновик */}
+      {/* шторка видов (K 91:6113 + поиск K 434:4402): мульти, live-применение */}
       <SelectSheet
         visible={speciesOpen}
         title="Какая рыба водится?"
         items={SPECIES_CATALOG}
         categories={['Все', 'Хищная', 'Мирная']}
         mode="multi"
+        searchable
         initial={draft.fishSpecies}
         onApply={(sel) => patch({ fishSpecies: sel })}
         onClose={() => setSpeciesOpen(false)}

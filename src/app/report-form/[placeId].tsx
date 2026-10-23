@@ -506,14 +506,14 @@ export default function ReportFormScreen() {
         </View>
       )}
 
-      {/* шторка видов (K 91:6113): мульти, с чипсами-фильтрами и поиском
-          (K-DS Search 218:562; задача _x: обеспечить поиск по справочнику) */}
+      {/* шторка видов (K 91:6113 + поиск K 434:4402): мульти, с чипсами */}
       <SelectSheet
         visible={speciesOpen}
         title="Вид рыбы"
         items={SPECIES_CATALOG}
         categories={['Все', 'Хищная', 'Мирная']}
         mode="multi"
+        searchable
         initial={form.species}
         onApply={(sel) => patchForm({ species: sel })}
         onClose={() => setSpeciesOpen(false)}

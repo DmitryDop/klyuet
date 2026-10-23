@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
@@ -25,6 +25,13 @@ import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
  *   «Применить» (primary), gap 8.
  * Прецедент K 91:5899: без выбора «Применить» disabled; у необязательного
  * одиночного выбора (снасть) «Применить» активен всегда (пусто = очистить).
+ *
+ * searchable (K 434:4402/434:4904, Дмитрий 23.10 — поиск в шторке «Вид
+ * рыбы»): строка K-DS Search 40px между чипсами и списком (Slot 238:3947:
+ * Search row px16 py8, поле 40 — в фокусе 2px focus-ring, без фокуса 1px
+ * border-control; внешней кнопки у поля в шторке нет). Фильтрация живая,
+ * без debounce (локальный список); пусто → «Ничего не найдено»
+ * (K 434:5131: px16 py16, Body S 14/20 · 450 secondary, по центру).
  */
 export type SheetItem = { name: string; category?: string };
 
@@ -38,6 +45,7 @@ export default function SelectSheet({
   onApply,
   onClose,
   fullHeight = true,
+  searchable = false,
 }: {
   visible: boolean;
   title: string;
@@ -50,6 +58,8 @@ export default function SelectSheet({
   onClose: () => void;
   /** Full Height по умолчанию; false — шторка по наполнению (как «Снасть») */
   fullHeight?: boolean;
+  /** строка поиска в шторке (K 434:4402/434:4904); включается у шторок видов */
+  searchable?: boolean;
 }) {
   return (
     <SheetModal visible={visible} onClose={onClose} fullHeight={fullHeight}>
@@ -66,6 +76,7 @@ export default function SelectSheet({
         onApply={onApply}
         onClose={onClose}
         fullHeight={fullHeight}
+        searchable={searchable}
       />
     </SheetModal>
   );
@@ -80,6 +91,7 @@ function SheetBody({
   onApply,
   onClose,
   fullHeight = true,
+  searchable = false,
 }: {
   title: string;
   items: SheetItem[];
@@ -89,20 +101,53 @@ function SheetBody({
   onApply: (selected: string[]) => void;
   onClose: () => void;
   fullHeight?: boolean;
+  searchable?: boolean;
 }) {
   const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState<string[]>(initial);
   const [category, setCategory] = useState<string>(categories?.[0] ?? '');
+  /* поиск (K 434:4402): ввод фильтрует список шторки; состояние на одном
+     открытии — SheetBody пересоздаётся на каждое открытие шторки */
+  const [query, setQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+  /* клавиатура (Дмитрий 23.10): по макетам K 434:4402 — при её подъёме
+     кнопки «Очистить/Применить» сидят НАД ней, до низа списка доскроллить
+     можно. keyboardDidShow — Android (willShow там не эмитится) */
+  const [keyboardH, setKeyboardH] = useState(0);
+  useEffect(() => {
+    const showWill = Keyboard.addListener('keyboardWillShow', (e) => {
+      setKeyboardH(e.endCoordinates.height);
+    });
+    const showDid = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKeyboardH((h) => h || e.endCoordinates.height);
+    });
+    const hide = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardH(0);
+    });
+    return () => {
+      showWill.remove();
+      showDid.remove();
+      hide.remove();
+    };
+  }, []);
   /* фильтрация по категории: чипс-лейбл → category (порядок categories:
-     [Все, ...] — первый всегда «без фильтра»); пустой чипс = без фильтра */
+     [Все, ...] — первый всегда «без фильтра»); пустой чипс = без фильтра.
+     Поиск (K 434:4402): подстрока без учёта регистра и ё/е («ёрш» = «Ёрш») */
   const visibleItems = useMemo(() => {
-    const categoryKey = categories?.indexOf(category) ?? -1;
-    const categoryMap = ['predatory', 'peaceful']; /* Хищная, Мирная */
-    if (categoryKey > 0) {
-      return items.filter((it) => it.category === categoryMap[categoryKey - 1]);
+    const byCategory = (() => {
+      const categoryKey = categories?.indexOf(category) ?? -1;
+      const categoryMap = ['predatory', 'peaceful']; /* Хищная, Мирная */
+      if (categoryKey > 0) {
+        return items.filter((it) => it.category === categoryMap[categoryKey - 1]);
+      }
+      return items;
+    })();
+    const q = query.trim().toLowerCase().replace(/ё/g, 'е');
+    if (!q) {
+      return byCategory;
     }
-    return items;
-  }, [items, category, categories]);
+    return byCategory.filter((it) => it.name.toLowerCase().replace(/ё/g, 'е').includes(q));
+  }, [items, category, categories, query]);
 
   /* выбор коммитится в поле сразу (Дмитрий 22.10):
      снасть (single) — тап выбирает и ЗАКРЫВАЕТ шторку, кнопок нет;
@@ -131,9 +176,12 @@ function SheetBody({
       style={[
         styles.content,
         /* content-режим: высота по наполнению (без flex-растяжения);
-           список при переполнении капится maxHeight на самой шторке */
+           список при переполнении капится maxHeight на самой шторке.
+           Принцип панели отчёта (K 87:4145): при открытой клавиатуре
+           safe-area-inset исключён — клавиатурай накрыта зона home-индикатора,
+           нижний край = keyboardH + pb 8 кнопок */
         !fullHeight && styles.contentWrap,
-        { paddingBottom: 8 + insets.bottom },
+        { paddingBottom: keyboardH > 0 ? keyboardH : 8 + insets.bottom },
       ]}>
       {/* тулбар после граббера SheetModal: ряд 44 + pb 8 (K-DS 224:987) */}
       <View style={styles.sheetToolbar}>
@@ -164,52 +212,106 @@ function SheetBody({
           ))}
         </View>
       )}
+      {/* поиск (K 434:4402): K-DS Search row — px16 py8, поле 40; внешней
+          кнопки в шторке нет (макет); border 2 focus / 1 default (434:4931) */}
+      {searchable && (
+        <View style={styles.searchRow}>
+          <View
+            style={[
+              styles.searchField,
+              searchFocused ? styles.searchFieldFocus : styles.searchFieldIdle,
+            ]}>
+            <View style={styles.searchIconBox}>
+              <Svg width={20} height={20} viewBox="0 0 24 24">
+                <Path d={UI_ICONS.magnifyingGlass.d} fill={Colors.light.text} />
+              </Svg>
+            </View>
+            <TextInput
+              style={[styles.searchInput, rnTextStyle(TEXT.body), { fontFamily: FONT_FAMILY }]}
+              value={query}
+              onChangeText={setQuery}
+              autoCorrect={false}
+              autoCapitalize="none"
+              returnKeyType="search"
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+              onSubmitEditing={() => Keyboard.dismiss()}
+              accessibilityLabel={`Поиск: ${title}`}
+            />
+            {query.length > 0 && (
+              <Pressable
+                accessibilityLabel="Очистить поиск"
+                onPress={() => setQuery('')}
+                style={styles.searchIconBox}>
+                <Svg width={20} height={20} viewBox="0 0 24 24">
+                  <Path d={UI_ICONS.circleXmark.d} fill={Colors.light.text} />
+                </Svg>
+              </Pressable>
+            )}
+          </View>
+        </View>
+      )}
       <ScrollView
         style={[styles.list, !fullHeight && styles.listContent]}
+        /* без резерва снизу: высоту клавиатуры съедает paddingBottom
+           контейнера шторки — список ужат над клавиатурой, белого
+           хвоста после последнего пункта нет (Дмитрий 23.10) */
         contentContainerStyle={{ paddingBottom: 8 }}
-        showsVerticalScrollIndicator={false}>
-        {visibleItems.map((item) => {
-          const checked = draft.includes(item.name);
-          return (
-            <Pressable
-              key={item.name}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked }}
-              accessibilityLabel={item.name}
-              onPress={() => toggle(item.name)}
-              style={styles.cell}>
-              {/* Cell (K-DS 268:980): ряд без вертикали, py 8 — на колонках */}
-              <View style={styles.cellRow}>
-                <View style={styles.cellTextWrap}>
-                  <Text style={styles.cellText}>{item.name}</Text>
-                </View>
-                <View style={styles.cellRight}>
-                  {/* Checkbox (268:901/1024, multi) / Radio (268:969/1034, single) */}
-                  <View
-                    style={[
-                      styles.checkbox,
-                      checked && styles.checkboxChecked,
-                      mode === 'single' && styles.radio,
-                    ]}>
-                    {checked &&
-                      (mode === 'single' ? (
-                        /* точка 10×10 r8 (429:200/268:1034, bg #176b52) */
-                        <View style={styles.radioDot} />
-                      ) : (
-                        <Svg width={18} height={18} viewBox="0 0 18 18">
-                          <Path d={UI_ICONS.check.d} fill="#176b52" />
-                        </Svg>
-                      ))}
+        showsVerticalScrollIndicator
+        keyboardShouldPersistTaps="handled">
+        {visibleItems.length === 0 && searchable ? (
+          /* пустой поиск: K 434:5131 — px16 py16, Body S, по центру */
+          <View style={styles.emptyMessage}>
+            <Text style={[styles.emptyText, rnTextStyle(TEXT.bodyS), { fontFamily: FONT_FAMILY }]}>
+              Ничего не найдено
+            </Text>
+          </View>
+        ) : (
+          visibleItems.map((item) => {
+            const checked = draft.includes(item.name);
+            return (
+              <Pressable
+                key={item.name}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked }}
+                accessibilityLabel={item.name}
+                onPress={() => toggle(item.name)}
+                style={styles.cell}>
+                {/* Cell (K-DS 268:980): ряд без вертикали, py 8 — на колонках */}
+                <View style={styles.cellRow}>
+                  <View style={styles.cellTextWrap}>
+                    <Text style={styles.cellText}>{item.name}</Text>
+                  </View>
+                  <View style={styles.cellRight}>
+                    {/* Checkbox (268:901/1024, multi) / Radio (268:969/1034, single) */}
+                    <View
+                      style={[
+                        styles.checkbox,
+                        checked && styles.checkboxChecked,
+                        mode === 'single' && styles.radio,
+                      ]}>
+                      {checked &&
+                        (mode === 'single' ? (
+                          /* точка 10×10 r8 (429:200/268:1034, bg #176b52) */
+                          <View style={styles.radioDot} />
+                        ) : (
+                          <Svg width={18} height={18} viewBox="0 0 18 18">
+                            <Path d={UI_ICONS.check.d} fill="#176b52" />
+                          </Svg>
+                        ))}
+                    </View>
                   </View>
                 </View>
-              </View>
-            </Pressable>
-          );
-        })}
+              </Pressable>
+            );
+          })
+        )}
       </ScrollView>
 
       {/* Bottom Action (238:3948): Очистить + Применить — только multi
-          (у снасти кнопок нет: тап закрывает, решение Дмитрия 22.10) */}
+          (у снасти кнопок нет: тап закрывает, решение Дмитрия 22.10).
+          Подъём над клавиатурой делает paddingBottom контейнера выше
+          (keyboardH без inset — K 87:4145), уряд пб остаётся 8 */}
       <View style={[styles.actions, mode === 'single' && styles.actionsHidden]}>
         <Button
           label="Очистить"
@@ -271,6 +373,51 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  searchRow: {
+    /* Search row (K 434:4931): px16 py8, без внешней кнопки; SheetModal
+       уже отступает от тулбара — только py сверху/снизу */
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  searchField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 40, /* dimensions/size/xl — K-DS Search (мастер 429:10650) */
+    borderRadius: 12,
+    borderCurve: 'continuous',
+    backgroundColor: Colors.light.cardSurface,
+  },
+  searchFieldFocus: {
+    /* State Focus: 2px --color-focus-ring (K 434:4931 → 223:941) */
+    borderWidth: 2,
+    borderColor: Colors.light.focusRing,
+  },
+  searchFieldIdle: {
+    /* без фокуса: 1px --color-border-control (K 432:11759, прецедент) */
+    borderWidth: 1,
+    borderColor: Colors.light.borderControl,
+  },
+  searchIconBox: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  searchInput: {
+    flex: 1,
+    color: Colors.light.text,
+    minHeight: 40,
+    paddingVertical: 0,
+  },
+  emptyMessage: {
+    /* message (K 434:5131): p (md, 16); Body S по центру */
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  emptyText: {
+    color: Colors.light.textSecondary,
+    textAlign: 'center',
   },
   content: {
     flex: 1, /* Full Height: контент занимает шторку (K-DS 238:3945) */

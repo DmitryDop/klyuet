@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   useWindowDimensions,
   View,
   /* RN 0.88 (Strict TypeScript API): ref — TextInputInstance (миграция SDK 58) */
@@ -25,6 +26,7 @@ import {
 import { setPendingSearchTarget } from '@/data/map-search-store';
 import { FAKE_USER_LOCATION } from '@/data/user-location';
 import { UI_ICONS } from '@/components/ui-icons';
+import ButtonUi from '@/components/button-ui';
 import { Colors } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
@@ -64,6 +66,22 @@ export default function SearchScreen() {
   const [results, setResults] = useState<GeoSearchResult[]>([]);
   const [status, setStatus] = useState<Status>('idle');
   const [focused, setFocused] = useState(false);
+  /* высота клавиатуры: список ужмается над ней — до последнего пункта
+     доскроллить можно, не закрывая клавиатуру (приёмка Дмитрия 23.10) */
+  const [keyboardH, setKeyboardH] = useState(0);
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardWillShow', (e) => {
+      setKeyboardH(e.endCoordinates.height);
+    });
+    const hide = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardH(0);
+    });
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   const inputRef = useRef<TextInputInstance>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -154,9 +172,10 @@ export default function SearchScreen() {
   };
 
   const showList = status === 'ready' && results.length > 0;
-  /* потолок списка: до края экрана; прокрутка работает только при
-     ограниченной высоте FlatList (панель-wrap по контенту вокруг него) */
-  const listMaxHeight = screenH - insets.top - 16 - 88 - 16 - 8 - 16;
+  /* потолок списка: до края экрана; при открытой клавиатуре — над ней,
+     до последнего пункта можно доскроллить (приёмка 23.10);
+     при переполнении справа появляется тонкий системный скролбар */
+  const listMaxHeight = screenH - insets.top - 16 - 88 - 16 - 8 - 16 - keyboardH;
 
   return (
     <View style={styles.container}>
@@ -199,21 +218,18 @@ export default function SearchScreen() {
                 </Pressable>
               )}
             </View>
-            {/* кнопка закрытия поиска (§4.1): крестик close 71:573 */}
-            <Pressable
-              accessibilityRole="button"
+            {/* кнопка закрытия поиска (§4.1): крестик close 71:573;
+                sm 40×40 (K-DS button_sm, Дмитрий 23.10 — ширина 44 была багом) */}
+            <ButtonUi
+              icon="close"
+              size="sm"
+              type="toolbar"
               accessibilityLabel="Закрыть поиск"
               onPress={() => router.back()}
-              style={styles.closeBtn}>
-              <PathIcon name="close" size={24} fill={Colors.light.text} />
-            </Pressable>
+            />
           </View>
         </View>
       </View>
-
-      {/* пустой поиск (§4.1) и загрузка (короткий debounce — без индикатора,
-          список не моргает): пустое пространство */}
-      {(status === 'idle' || status === 'loading') && <View style={styles.spacer} />}
 
       {/* готово, пусто — компактное текстовое состояние (§4.4) */}
       {status === 'ready' && results.length === 0 && (
@@ -279,6 +295,13 @@ export default function SearchScreen() {
           </View>
         </View>
       )}
+
+      {/* фон вне списка и вне поля (приёмка 23.10): тап — клавиатура закрыта,
+          поле в default-границе (у TextInput это onBlur); flex:1 — остаток
+          экрана во всех состояниях */}
+      <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+        <View style={styles.tail} />
+      </TouchableWithoutFeedback>
     </View>
   );
 }
@@ -355,20 +378,11 @@ const styles = StyleSheet.create({
     minHeight: 40,
     paddingVertical: 0,
   },
-  closeBtn: {
-    /* button-ui слота Search: 44×40, белый, radius 12 (K 426:9612; 223:918) */
-    width: 44,
-    height: 40,
-    borderRadius: 12,
-    borderCurve: 'continuous',
-    backgroundColor: Colors.light.surfaceRaised,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   surface: {
     backgroundColor: Colors.light.cardSurface, /* --color-surface-default #f8f9f5 */
   },
-  spacer: {
+  tail: {
+    /* фон вне панелей: тап закрывает клавиатуру (приёмка 23.10) */
     flex: 1,
   },
   /* rezultat (K 426:9613): px16 снаружи; панель list 9614: py 8;

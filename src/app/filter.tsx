@@ -164,14 +164,15 @@ export default function FilterScreen() {
         <Button label="Показать" variant="primary" flex onPress={apply} />
       </View>
 
-      {/* шторка вида рыбы: мульти, чипсы-категории, живое применение в
-          черновик (K 91:6113; строка поиска — отдельный макет) */}
+      {/* шторка вида рыбы: мульти, чипсы-категории, поиск (K 434:4402),
+          живое применение в черновик (K 91:6113) */}
       <SelectSheet
         visible={speciesOpen}
         title="Вид рыбы"
         items={SPECIES_CATALOG}
         categories={['Все', 'Хищная', 'Мирная']}
         mode="multi"
+        searchable
         initial={draft.species}
         onApply={(sel) => patch({ species: sel })}
         onClose={() => setSpeciesOpen(false)}
