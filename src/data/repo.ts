@@ -153,6 +153,8 @@ export const demoPlaceRepo: PlaceRepo = {
       access: draft.access,
       description: draft.description,
       photos: [...draft.photos],
+      /* дата создания = сегодня (ТЗ _x/21.md §4); при правках не меняется */
+      createdAt: new Date().toISOString().slice(0, 10),
     };
     /* преобразование точки в публичное представление — «серверная» сторона:
        при «Все · Примерно» исходная точка сохраняется только как центр

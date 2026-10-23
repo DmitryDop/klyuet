@@ -72,6 +72,23 @@ const DESCRIPTIONS: (string | undefined)[] = [
 /* фото-заглушки: индекс места → количество (0 — секция скрыта) */
 const PHOTOS_COUNT = [2, 0, 3, 0, 0, 0, 2, 0, 0, 0, 0, 1];
 
+/* даты создания (ISO YYYY-MM-DD): новее — выше, даты как в макетах Журнала
+   (06.10.2026 / 02.10.2026 и далее назад) */
+const CREATED_AT = [
+  '2026-10-06',
+  '2026-10-02',
+  '2026-09-28',
+  '2026-09-21',
+  '2026-09-14',
+  '2026-09-09',
+  '2026-09-05',
+  '2026-08-30',
+  '2026-08-22',
+  '2026-08-15',
+  '2026-08-08',
+  '2026-07-30',
+];
+
 export const demoPlaces: Place[] = [
   ...EXACT.map(([latitude, longitude], i) => ({
     id: `demo-exact-${i + 1}`,
@@ -89,6 +106,7 @@ export const demoPlaces: Place[] = [
     fishing: (i % 2 === 0 ? 'shore' : 'boat') as 'shore' | 'boat',
     description: DESCRIPTIONS[i % DESCRIPTIONS.length],
     photos: Array.from({ length: PHOTOS_COUNT[i] }, (_, p) => `demo-exact-${i + 1}-ph-${p + 1}`),
+    createdAt: CREATED_AT[i],
   })),
   ...APPROXIMATE.map(([latitude, longitude], i) => ({
     id: `demo-approx-${i + 1}`,
@@ -105,5 +123,6 @@ export const demoPlaces: Place[] = [
     photos: i === 0 ? ['demo-approx-1-ph-1', 'demo-approx-1-ph-2'] : [],
     /* радиус области одинаков у всех демо-мест: «порядка 1 км» (спека §3.1) */
     view: { coordinate: { latitude, longitude }, radiusMeters: 1000 },
+    createdAt: CREATED_AT[EXACT.length + i],
   })),
 ];

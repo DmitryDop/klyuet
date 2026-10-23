@@ -13,6 +13,7 @@ import AddPlaceSheet, { Crosshair, AreaSight } from '@/components/map/add-place-
 import { demoPlaceRepo } from '@/data/repo';
 import { getAppliedMapFilter } from '@/data/filter-store';
 import { clearPendingSearchTarget, getPendingSearchTarget } from '@/data/map-search-store';
+import { consumeAddPlaceRequest } from '@/data/add-request-store';
 import { FAKE_USER_LOCATION } from '@/data/user-location';
 import {
   clearPlaceCreateDraft,
@@ -61,6 +62,9 @@ export default function MapScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [region, setRegion] = useState(DEMO_REGION);
+  /* зеркало региона для useFocusEffect (регион в deps не вносится —
+     перезапуск эффекта на каждую камеру недопустим) */
+  const regionRef = useRef(region);
   const [places, setPlaces] = useState<Place[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [appliedFilter, setAppliedFilter] = useState(getAppliedMapFilter());
@@ -136,7 +140,23 @@ export default function MapScreen() {
           500,
         );
       }
-    }, [markersState, startFadeIn]),
+      /* «Добавить» из Журнала (ТЗ _x/21.md §6): СУЩЕСТВУЮЩИЙ сценарий —
+          шаг 1 на карте; координата — текущий центр карты (regionRef —
+          зеркало state, как в handleRegionChange), как и у «+» карты */
+      if (consumeAddPlaceRequest()) {
+        clearPlaceCreateDraft();
+        ensurePlaceCreateDraft({
+          coordinate: {
+            latitude: regionRef.current?.latitude ?? DEMO_REGION.latitude,
+            longitude: regionRef.current?.longitude ?? DEMO_REGION.longitude,
+          },
+        });
+        setSheetH(0);
+        if (markersState !== 'hidden' && markersState !== 'fading-out') {
+          startFadeOut();
+        }
+      }
+    }, [markersState, startFadeIn, startFadeOut]),
   );
 
   /* точка = центр карты: live в шторку и в черновик. onRegionChangeComplete,
@@ -147,6 +167,7 @@ export default function MapScreen() {
      (компенсацию камеры снял Дмитрий 23.10: бестолкова, вместо неё — зум) */
   const handleRegionChange = (next: typeof region) => {
     setRegion((prev) => ({ ...prev, ...next }));
+    regionRef.current = { ...regionRef.current, ...next };
     const current = getPlaceCreateDraft();
     if (current != null && sheetH > 0) {
       /* lift — метры → градусы широты: /111_320 (метров в градусе) */

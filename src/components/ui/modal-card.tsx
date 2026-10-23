@@ -24,7 +24,8 @@ import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
  *   системная «назад»; действие правой кнопки выполняет родительскую
  *   логику сразу (навигация) — поведение кнопок не меняется;
  * - карточка: surface-raised, radius 24, px 16, pt 24, pb 16, от края 16/б16;
- *   иконка 56 (circle-info #376D7B / attention #D18A24), Title1 28/34,
+ *   иконка 56 (circle-info #376D7B / attention #D18A24), Title2 24/30
+ *   (обновление K-DS 23.10, Дмитрий: title модалок = Title2),
  *   текст Body 16/22 secondary (pt 12), кнопки pt 24 (Outline + Primary).
  */
 export type ModalCardIcon = 'info' | 'warn';
@@ -166,7 +167,8 @@ const styles = StyleSheet.create({
     /* Title: иконка 56 → заголовок, gap 8 (308:1384) */
   },
   title: {
-    ...rnTextStyle(TEXT.title1),
+    /* Title2 24/30 · 700 (K-DS 308:1358, обновление 23.10 — было Title1 28/34) */
+    ...rnTextStyle(TEXT.title2),
     fontFamily: FONT_FAMILY,
     color: Colors.light.text,
     textAlign: 'center',
