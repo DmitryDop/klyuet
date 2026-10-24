@@ -577,7 +577,8 @@ export default function MapScreen() {
             {/* назад (383:7087): отмена процесса — та же точка, что свайп граббера */}
             <View style={[styles.back, { top: insets.top + 8 }]}>
               <ButtonIcon
-                icon="chevronLeft"
+                /* закрытие шага 1 — крестик, не шеврон (Дмитрий 24.10, K 383:7080) */
+                icon="close"
                 accessibilityLabel="Отменить создание места"
                 onPress={() => createExitRef.current?.()}
               />
