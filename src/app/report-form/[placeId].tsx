@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
   ScrollView,
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
+  type KeyboardEvent,
+  type ViewInstance,
   /* RN 0.88 (Strict TypeScript API): ref — ScrollViewInstance (миграция SDK 58) */
   type ScrollViewInstance,
 } from 'react-native';
@@ -112,81 +113,163 @@ export default function ReportFormScreen() {
   /* скролл к полю с ошибкой (K 87:4145: поле с ошибкой должно быть видно) */
   const scrollViewRef = useRef<ScrollViewInstance | null>(null);
   const speciesFieldY = useRef(0);
-  /* высоты текстовых полей: низ поля над клавиатурой + панель кнопки
-     (ТЗ _x/26, задача 24.10); измеряются onLayout обёрток полей */
-  const baitFieldY = useRef(0);
-  const baitFieldH = useRef(0);
-  const commentFieldY = useRef(0);
-  const commentFieldH = useRef(0);
-  const { height: screenH } = useWindowDimensions();
+  const baitFieldRef = useRef<ViewInstance>(null);
+  const commentFieldRef = useRef<ViewInstance>(null);
 
-  /* высота клавиатуры (K 87:4145: поле при фокусе всегда видно).
-     Панель поднимается ТОЛЬКО при фокусе поля ввода (гонка «фокус→ref»
-     при первом тапе исключена: высота клавиатуры записывается при любых
-     событиях, решение о подъёме принимает фокус); пикер фото не спрятает
-     кнопку: без фокуса панель всегда внизу, застрявшая высота не двигает. */
+  /* Все измерения — в координатах окна, включая keyboard.screenY.
+     Команда отправляется только при готовых панели и диапазоне контента. */
+  type InputField = 'bait' | 'comment';
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [diag, setDiag] = useState(''); /* TEMP: диагностическая строка в тулбаре */
-  const [diagOff, setDiagOff] = useState(''); /* TEMP: достигнутый offset */
-  const [inputFocus, setInputFocus] = useState<'bait' | 'comment' | null>(null);
-  /* отражение keyboardHeight для синхронного доступа из onFocus (state
-     обновляется асинхронно после события) */
-  const keyboardHeightRef = useRef(0);
-  /* поле, вызвавшее открытие клавиатуры: при keyboardWillShow скроллится
-     сразу с высотой события (onFocus приходит раньше события) */
-  const pendingFieldRef = useRef<{ y: number; h: number } | null>(null);
-  /* текущий offset скролла (onScroll, ref — без перерисовок): скролл к полю
-     только если его низ перекрыт видимой областью */
-  const scrollOffsetRef = useRef(0);
-  /* подскролл текстового поля над клавиатурой + панель кнопки (ТЗ _x/26):
-     72 = pt 16 + кнопка 48 + pb 8 — панельная константа резерва контента;
-     y/h — координаты поля в контенте (onLayout) */
-  const scrollFieldAboveKeyboard = useCallback((y: number, h: number, kb: number) => {
-    /* scrollTo — АБСОЛЮТНЫЙ offset (дефект 24.10: передавал добавку при
-       открытом клавиатурном подскролле — «показал верхушку»);
-       target = низ поля − дно видимой зоны (screenH − kb − 72) */
-    const target = y + h - (screenH - kb - 80); /* 72 панель + 8 зазор */
-    /* скролл только если поле прикрыто: сколько низа поля ниже дна зоны
-       с учётом текущего offset */
-    if (y + h - scrollOffsetRef.current - (screenH - kb - 72) > 0) {
-      scrollViewRef.current?.scrollTo({ y: Math.round(target), animated: true });
-    }
-    setDiag(`t=${Math.round(target)} kb=${Math.round(kb)} scr=${Math.round(screenH)} y=${Math.round(y)}`); /* TEMP */
-  }, [screenH]); /* TEMP: без скролл-лога */
-  const focusField = (y: number, h: number) => {
-    pendingFieldRef.current = { y, h };
-    if (keyboardHeightRef.current > 0) {
-      /* клавиатура уже открыта (переключение поля к полю): сразу */
-      scrollFieldAboveKeyboard(y, h, keyboardHeightRef.current);
-    }
-  };
-  useEffect(() => {
-    const show = Keyboard.addListener('keyboardWillShow', (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
-      keyboardHeightRef.current = e.endCoordinates.height;
-    });
-    const didHide = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardHeight(0);
-      keyboardHeightRef.current = 0;
-      pendingFieldRef.current = null;
-    });
-    return () => {
-      show.remove();
-      didHide.remove();
-    };
+  const [inputFocus, setInputFocus] = useState<InputField | null>(null);
+  const formRef = useRef<ViewInstance>(null);
+  const keyboardPanelRef = useRef<ViewInstance>(null);
+  const focusedFieldRef = useRef<{ id: InputField; view: ViewInstance } | null>(null);
+  const keyboardFrameRef = useRef<KeyboardEvent['endCoordinates'] | null>(null);
+  const scrollRequestRef = useRef(0);
+  const scrollFrameRef = useRef<number | null>(null);
+  const blurFrameRef = useRef<number | null>(null);
+  const lastScrollTargetRef = useRef<number | null>(null);
+  const fieldScrollPausedRef = useRef(false);
+
+  const cancelFieldScroll = useCallback(() => {
+    scrollRequestRef.current += 1;
+    if (scrollFrameRef.current != null) cancelAnimationFrame(scrollFrameRef.current);
+    scrollFrameRef.current = null;
   }, []);
 
-  /* подскролл ПОСЛЕ commit'а reserve-контента (deps: состояние клавиатуры/
-     фокуса): scrollTo внутри 60-мс таймера гонялся с рендером reserve —
-     contentSize менялся после скролла и offset сжимался (воспроизведено
-     24.10). Эффект выполняется после apply paddingBottom — maxOffset верен. */
+  const queueFieldScroll = useCallback(() => {
+    cancelFieldScroll();
+    const request = scrollRequestRef.current;
+    if (fieldScrollPausedRef.current || focusedFieldRef.current == null || keyboardFrameRef.current == null) return;
+    scrollFrameRef.current = requestAnimationFrame(() => {
+      scrollFrameRef.current = null;
+      const focused = focusedFieldRef.current;
+      const keyboard = keyboardFrameRef.current;
+      const scroll = scrollViewRef.current;
+      const content = scroll?.getInnerViewRef();
+      const panel = keyboardPanelRef.current;
+      if (focused == null || keyboard == null || scroll == null || content == null || panel == null) return;
+
+      void Promise.all([scroll, focused.view, content, panel].map((view) =>
+        new Promise<{ y: number; height: number }>((resolve) => {
+          view.measureInWindow((_x, y, _width, height) => resolve({ y, height }));
+        }),
+      )).then(([viewport, field, body, actionPanel]) => {
+        /* Фокус, frame клавиатуры или layout могли измениться за время
+           асинхронных измерений. Старый запрос больше не имеет права скроллить. */
+        if (request !== scrollRequestRef.current || focused !== focusedFieldRef.current || keyboard !== keyboardFrameRef.current) return;
+        if ([viewport, field, body, actionPanel].some((frame) => frame.height <= 0)) return;
+        /* Не используем старую позицию панели до применения нового bottom. */
+        if (Math.abs(actionPanel.y + actionPanel.height - keyboard.screenY) > 1) return;
+
+        const top = viewport.y;
+        const bottom = Math.min(viewport.y + viewport.height, keyboard.screenY, actionPanel.y) - 8;
+        if (bottom <= top) return;
+        const offset = viewport.y - body.y;
+        const fieldY = field.y - body.y;
+        let target = offset;
+        if (field.height > bottom - top) {
+          /* На компактном экране целая обёртка может не поместиться:
+             показываем её начало; TextInput сохраняет внутренний скролл. */
+          target = fieldY;
+        } else if (field.y + field.height > bottom) {
+          target = fieldY + field.height - (bottom - top);
+        } else if (field.y < top) {
+          target = fieldY;
+        }
+        target = Math.max(0, Math.ceil(target));
+        const maxOffset = Math.max(0, body.height - viewport.height);
+        /* Нативный contentSize ещё может быть прежним. Следующие
+           onContentSizeChange/onLayout повторят измерение без таймера. */
+        if (target > maxOffset + 1) return;
+        target = Math.min(target, maxOffset);
+        if (Math.abs(target - offset) <= 1 || (lastScrollTargetRef.current != null && Math.abs(target - lastScrollTargetRef.current) <= 1)) return;
+        lastScrollTargetRef.current = target;
+        scroll.scrollTo({ y: target, animated: true });
+      });
+    });
+  }, [cancelFieldScroll]);
+
+  const focusField = (id: InputField, view: ViewInstance | null) => {
+    if (blurFrameRef.current != null) cancelAnimationFrame(blurFrameRef.current);
+    blurFrameRef.current = null;
+    focusedFieldRef.current = view == null ? null : { id, view };
+    setInputFocus(id);
+    fieldScrollPausedRef.current = false;
+    queueFieldScroll();
+  };
+  const blurField = (id: InputField) => {
+    if (focusedFieldRef.current?.id !== id) return;
+    focusedFieldRef.current = null;
+    cancelFieldScroll();
+    /* При переходе между полями не убираем резерв на промежуточном blur. */
+    blurFrameRef.current = requestAnimationFrame(() => {
+      blurFrameRef.current = null;
+      if (focusedFieldRef.current == null) {
+        setInputFocus(null);
+        lastScrollTargetRef.current = null;
+      }
+    });
+  };
+  const updateKeyboardFrame = useCallback((frame: KeyboardEvent['endCoordinates']) => {
+    if (keyboardFrameRef.current == null) fieldScrollPausedRef.current = false;
+    keyboardFrameRef.current = frame;
+    cancelFieldScroll();
+    formRef.current?.measureInWindow((_x, y, _width, height) => {
+      if (keyboardFrameRef.current !== frame) return;
+      const overlap = Math.max(0, Math.min(height, y + height - frame.screenY));
+      if (overlap === 0 || frame.height === 0) {
+        keyboardFrameRef.current = null;
+        return; /* закрытие завершит keyboardDidHide */
+      }
+      setKeyboardHeight(overlap);
+      queueFieldScroll();
+    });
+  }, [cancelFieldScroll, queueFieldScroll]);
+
   useEffect(() => {
-    const field = pendingFieldRef.current;
-    if (field != null && inputFocus != null && keyboardHeight > 0) {
-      pendingFieldRef.current = null;
-      scrollFieldAboveKeyboard(field.y, field.h, keyboardHeight);
-    }
-  }, [keyboardHeight, inputFocus, scrollFieldAboveKeyboard]);
+    const change = (event: KeyboardEvent) => updateKeyboardFrame(event.endCoordinates);
+    const hide = () => {
+      keyboardFrameRef.current = null;
+      lastScrollTargetRef.current = null;
+      cancelFieldScroll();
+    };
+    const subscriptions = [
+      Keyboard.addListener('keyboardWillShow', change),
+      Keyboard.addListener('keyboardWillChangeFrame', change),
+      Keyboard.addListener('keyboardDidShow', change),
+      Keyboard.addListener('keyboardWillHide', hide),
+      Keyboard.addListener('keyboardDidHide', () => {
+        hide();
+        setKeyboardHeight(0);
+      }),
+    ];
+    const current = Keyboard.metrics();
+    if (current != null) updateKeyboardFrame(current);
+    return () => {
+      subscriptions.forEach((subscription) => subscription.remove());
+      keyboardFrameRef.current = null;
+      cancelFieldScroll();
+      if (blurFrameRef.current != null) cancelAnimationFrame(blurFrameRef.current);
+    };
+  }, [cancelFieldScroll, updateKeyboardFrame]);
+
+  useLayoutEffect(() => {
+    queueFieldScroll();
+  }, [keyboardHeight, inputFocus, queueFieldScroll]);
+
+  const pauseFieldScroll = () => {
+    /* Явный скролл валидации/фото и жест пользователя имеют приоритет. */
+    fieldScrollPausedRef.current = true;
+    cancelFieldScroll();
+    lastScrollTargetRef.current = null;
+  };
+
+  const onFormLayout = () => {
+    const frame = keyboardFrameRef.current;
+    if (frame != null) updateKeyboardFrame(frame);
+    queueFieldScroll();
+  };
 
   /* Загрузка: место обязательно; для правки — значения отчёта (§8: не
      показывать недостоверную пустую форму) */
@@ -266,6 +349,7 @@ export default function ReportFormScreen() {
     /* «Это поле нужно заполнить» — канонический текст причины (K 87:4145) */
     setSpeciesSubmitted(true);
     if (form.catchStatus === 'with_catch' && form.species.length === 0) {
+      pauseFieldScroll();
       /* доскип до поля с ошибкой: над ним запас видимости */
       scrollViewRef.current?.scrollTo({ y: Math.max(0, speciesFieldY.current - 120), animated: true });
       return;
@@ -356,7 +440,7 @@ export default function ReportFormScreen() {
   /* состояние панели уже принято (панель над клавиатурой, 87:4145) */
 
   return (
-    <View style={styles.container}>
+    <View ref={formRef} onLayout={onFormLayout} style={styles.container}>
       {/* тулбар: назад + (создание/редактирование). Toolbar - Top - iPhone:
           py 8 px 16; заголовок — всегда центр панели; высота insets.top+60,
           кнопки absolute на top insets.top+8 (правило slice 4) */}
@@ -374,13 +458,6 @@ export default function ReportFormScreen() {
           <View style={styles.toolbarTitleBox}>
             <Text style={styles.toolbarTitle} numberOfLines={1}>
               {isEdit ? 'Редактирование отчета' : 'Новый отчёт'}
-              <Text style={{ fontSize: 10 }}>
-                {'  ' + diag}
-                {' / ' + diagOff}
-              </Text>
-            </Text>
-            <Text style={{ fontSize: 9 }}>
-              {diagOff}
             </Text>
           </View>
         </View>
@@ -390,10 +467,10 @@ export default function ReportFormScreen() {
         ref={scrollViewRef}
         keyboardShouldPersistTaps="handled"
         scrollEventThrottle={16}
-        onScroll={(e) => {
-          scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
-          setDiagOff(`off=${Math.round(e.nativeEvent.contentOffset.y)} kb=${keyboardHeightRef.current}`); /* TEMP */
-        }}
+        onLayout={queueFieldScroll}
+        onContentSizeChange={queueFieldScroll}
+        onScrollBeginDrag={pauseFieldScroll}
+        onMomentumScrollEnd={() => { lastScrollTargetRef.current = null; }}
         /* контент доскипится до активного поля над клавиатурой: запас
            по высоте клавиатуры динамический */
         contentContainerStyle={{
@@ -515,24 +592,21 @@ export default function ReportFormScreen() {
         </FormField>
 
         {/* Приманка (206:9636) — Input 48 (K-DS 353:9851) */}
-        <View onLayout={(e) => (baitFieldY.current = e.nativeEvent.layout.y, baitFieldH.current = e.nativeEvent.layout.height)}>
+        <View ref={baitFieldRef} collapsable={false} onLayout={queueFieldScroll}>
           <FormField label="Приманка (необязательно)">
             <FormInput
               value={form.bait}
               onChangeText={(t) => patchForm({ bait: t })}
               placeholder="" /* макет: пустое поле (placeholder=Off) */
               editable={!submitting}
-              onFocus={() => {
-                setInputFocus('bait');
-                focusField(baitFieldY.current, baitFieldH.current);
-              }}
-              onBlur={() => setInputFocus(null)}
+              onFocus={() => focusField('bait', baitFieldRef.current)}
+              onBlur={() => blurField('bait')}
             />
           </FormField>
         </View>
 
         {/* Что происходило? (206:9637) — Textarea 120 (K-DS 227:6352) */}
-        <View onLayout={(e) => (commentFieldY.current = e.nativeEvent.layout.y, commentFieldH.current = e.nativeEvent.layout.height)}>
+        <View ref={commentFieldRef} collapsable={false} onLayout={queueFieldScroll}>
           <FormField label="Что происходило?">
             <FormInput
               value={form.comment}
@@ -540,11 +614,8 @@ export default function ReportFormScreen() {
               placeholder=""
               multiline
               editable={!submitting}
-              onFocus={() => {
-                setInputFocus('comment');
-                focusField(commentFieldY.current, commentFieldH.current);
-              }}
-              onBlur={() => setInputFocus(null)}
+              onFocus={() => focusField('comment', commentFieldRef.current)}
+              onBlur={() => blurField('comment')}
             />
           </FormField>
         </View>
@@ -556,9 +627,10 @@ export default function ReportFormScreen() {
           photos={form.photos}
           onChange={(next) => patchForm({ photos: next })}
           disabled={submitting}
-          onAfterAdd={() =>
-            setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 60)
-          }
+          onAfterAdd={() => {
+            pauseFieldScroll();
+            setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 60);
+          }}
         />
 
         {/* кнопка в потоке формы (не плавает, не перекрывает контент —
@@ -579,7 +651,7 @@ export default function ReportFormScreen() {
           Привязка к inputFocus, не к клавиатурным событиям: пикер фото
           не может спрятать кнопку (байпас бага) */}
       {inputFocus != null && keyboardHeight > 0 && (
-        <View style={[styles.panel, { paddingBottom: 8, bottom: keyboardHeight }]}>
+        <View ref={keyboardPanelRef} onLayout={queueFieldScroll} style={[styles.panel, { paddingBottom: 8, bottom: keyboardHeight }]}>
           {publishButton}
         </View>
       )}

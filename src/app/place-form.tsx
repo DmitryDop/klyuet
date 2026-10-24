@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Keyboard, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type ScrollViewInstance } from 'react-native';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, View, type KeyboardEvent, type ViewInstance, type ScrollViewInstance } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -60,11 +60,8 @@ export default function PlaceFormScreen() {
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef<ScrollViewInstance>(null);
   const nameFieldY = useRef(0);
-  /* высоты текстовых полей: низ поля над клавиатурой + панель кнопки
-     (ТЗ _x/26, задача 24.10); измеряются onLayout обёрток полей */
-  const nameFieldH = useRef(0);
-  const descriptionFieldY = useRef(0);
-  const descriptionFieldH = useRef(0);
+  const nameFieldRef = useRef<ViewInstance>(null);
+  const descriptionFieldRef = useRef<ViewInstance>(null);
 
   /* прямой вход (deep link) без шага 1 — черновик создаётся с дефолтой
      точкой Демо-центра ДО чтения (дефект 24.10: getPlaceCreateDraft()
@@ -93,68 +90,160 @@ export default function PlaceFormScreen() {
   const [speciesOpen, setSpeciesOpen] = useState(false);
   const [accessOpen, setAccessOpen] = useState(false);
 
-  /* клавиатура: кнопка висит НАД клавиатурой при фокусе поля ввода
-     (прецедент отчёта, K 87:4145: поле при фокусе всегда видно) */
+  /* Все измерения — в координатах окна, включая keyboard.screenY.
+     Команда отправляется только при готовых панели и диапазоне контента. */
+  type InputField = 'name' | 'description';
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [inputFocus, setInputFocus] = useState<'name' | 'description' | null>(null);
-  /* отражение keyboardHeight для синхронного доступа из onFocus (state
-     обновляется асинхронно после события) */
-  const keyboardHeightRef = useRef(0);
-  /* поле, тапом вызванное открытие клавиатуры: при keyboardWillShow
-     скроллится сразу с высотой события (onFocus приходит раньше) */
-  const pendingFieldRef = useRef<{ y: number; h: number } | null>(null);
-  /* текущий offset скролла (onScroll, ref — без перерисовок): скролл к полю
-     только если его низ перекрыт видимой областью */
-  const scrollOffsetRef = useRef(0);
-  const { height: screenH } = useWindowDimensions();
-  /* подскролл текстового поля над клавиатурой + панель кнопки (72 = pt 16 +
-     кнопка 48 + pb 8 — текущая панельная константа резерва); y/h —
-     координаты поля в контенте (onLayout)
-  */
-  const scrollFieldAboveKeyboard = useCallback((y: number, h: number, kb: number) => {
-    /* scrollTo — АБСОЛЮТНЫЙ offset (дефект 24.10: передавал добавку при
-       открытом клавиатурном подскролле — «показал верхушку»); target =
-       низ поля − дно видимой зоны (screenH − kb − 80: панель 72 + зазор 8);
-       скролл только когда низ поля прикрыт (учитывая текущий offset) */
-    const target = y + h - (screenH - kb - 80);
-    if (y + h - scrollOffsetRef.current - (screenH - kb - 80) > 0) {
-      scrollViewRef.current?.scrollTo({ y: Math.round(target), animated: true });
-    }
-  }, [screenH]);
-  const focusField = (y: number, h: number) => {
-    pendingFieldRef.current = { y, h };
-    if (keyboardHeightRef.current > 0) {
-      /* клавиатура уже открыта (переключение поля к полю): сразу */
-      scrollFieldAboveKeyboard(y, h, keyboardHeightRef.current);
-    }
-  };
-  useEffect(() => {
-    const show = Keyboard.addListener('keyboardWillShow', (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
-      keyboardHeightRef.current = e.endCoordinates.height;
-    });
-    const didHide = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardHeight(0);
-      keyboardHeightRef.current = 0;
-      pendingFieldRef.current = null;
-    });
-    return () => {
-      show.remove();
-      didHide.remove();
-    };
+  const [inputFocus, setInputFocus] = useState<InputField | null>(null);
+  const formRef = useRef<ViewInstance>(null);
+  const keyboardPanelRef = useRef<ViewInstance>(null);
+  const focusedFieldRef = useRef<{ id: InputField; view: ViewInstance } | null>(null);
+  const keyboardFrameRef = useRef<KeyboardEvent['endCoordinates'] | null>(null);
+  const scrollRequestRef = useRef(0);
+  const scrollFrameRef = useRef<number | null>(null);
+  const blurFrameRef = useRef<number | null>(null);
+  const lastScrollTargetRef = useRef<number | null>(null);
+  const fieldScrollPausedRef = useRef(false);
+
+  const cancelFieldScroll = useCallback(() => {
+    scrollRequestRef.current += 1;
+    if (scrollFrameRef.current != null) cancelAnimationFrame(scrollFrameRef.current);
+    scrollFrameRef.current = null;
   }, []);
 
-  /* подскролл ПОСЛЕ commit'а reserve-контента (deps: состояние клавиатуры/
-     фокуса): scrollTo внутри 60-мс таймера гонялся с рендером reserve —
-     contentSize менялся после скролла и offset сжимался (воспроизведено
-     24.10). Эффект выполняется после apply paddingBottom — maxOffset верен. */
+  const queueFieldScroll = useCallback(() => {
+    cancelFieldScroll();
+    const request = scrollRequestRef.current;
+    if (fieldScrollPausedRef.current || focusedFieldRef.current == null || keyboardFrameRef.current == null) return;
+    scrollFrameRef.current = requestAnimationFrame(() => {
+      scrollFrameRef.current = null;
+      const focused = focusedFieldRef.current;
+      const keyboard = keyboardFrameRef.current;
+      const scroll = scrollViewRef.current;
+      const content = scroll?.getInnerViewRef();
+      const panel = keyboardPanelRef.current;
+      if (focused == null || keyboard == null || scroll == null || content == null || panel == null) return;
+
+      void Promise.all([scroll, focused.view, content, panel].map((view) =>
+        new Promise<{ y: number; height: number }>((resolve) => {
+          view.measureInWindow((_x, y, _width, height) => resolve({ y, height }));
+        }),
+      )).then(([viewport, field, body, actionPanel]) => {
+        /* Фокус, frame клавиатуры или layout могли измениться за время
+           асинхронных измерений. Старый запрос больше не имеет права скроллить. */
+        if (request !== scrollRequestRef.current || focused !== focusedFieldRef.current || keyboard !== keyboardFrameRef.current) return;
+        if ([viewport, field, body, actionPanel].some((frame) => frame.height <= 0)) return;
+        /* Не используем старую позицию панели до применения нового bottom. */
+        if (Math.abs(actionPanel.y + actionPanel.height - keyboard.screenY) > 1) return;
+
+        const top = viewport.y;
+        const bottom = Math.min(viewport.y + viewport.height, keyboard.screenY, actionPanel.y) - 8;
+        if (bottom <= top) return;
+        const offset = viewport.y - body.y;
+        const fieldY = field.y - body.y;
+        let target = offset;
+        if (field.height > bottom - top) {
+          /* На компактном экране целая обёртка может не поместиться:
+             показываем её начало; TextInput сохраняет внутренний скролл. */
+          target = fieldY;
+        } else if (field.y + field.height > bottom) {
+          target = fieldY + field.height - (bottom - top);
+        } else if (field.y < top) {
+          target = fieldY;
+        }
+        target = Math.max(0, Math.ceil(target));
+        const maxOffset = Math.max(0, body.height - viewport.height);
+        /* Нативный contentSize ещё может быть прежним. Следующие
+           onContentSizeChange/onLayout повторят измерение без таймера. */
+        if (target > maxOffset + 1) return;
+        target = Math.min(target, maxOffset);
+        if (Math.abs(target - offset) <= 1 || (lastScrollTargetRef.current != null && Math.abs(target - lastScrollTargetRef.current) <= 1)) return;
+        lastScrollTargetRef.current = target;
+        scroll.scrollTo({ y: target, animated: true });
+      });
+    });
+  }, [cancelFieldScroll]);
+
+  const focusField = (id: InputField, view: ViewInstance | null) => {
+    if (blurFrameRef.current != null) cancelAnimationFrame(blurFrameRef.current);
+    blurFrameRef.current = null;
+    focusedFieldRef.current = view == null ? null : { id, view };
+    setInputFocus(id);
+    fieldScrollPausedRef.current = false;
+    queueFieldScroll();
+  };
+  const blurField = (id: InputField) => {
+    if (focusedFieldRef.current?.id !== id) return;
+    focusedFieldRef.current = null;
+    cancelFieldScroll();
+    /* При переходе между полями не убираем резерв на промежуточном blur. */
+    blurFrameRef.current = requestAnimationFrame(() => {
+      blurFrameRef.current = null;
+      if (focusedFieldRef.current == null) {
+        setInputFocus(null);
+        lastScrollTargetRef.current = null;
+      }
+    });
+  };
+  const updateKeyboardFrame = useCallback((frame: KeyboardEvent['endCoordinates']) => {
+    if (keyboardFrameRef.current == null) fieldScrollPausedRef.current = false;
+    keyboardFrameRef.current = frame;
+    cancelFieldScroll();
+    formRef.current?.measureInWindow((_x, y, _width, height) => {
+      if (keyboardFrameRef.current !== frame) return;
+      const overlap = Math.max(0, Math.min(height, y + height - frame.screenY));
+      if (overlap === 0 || frame.height === 0) {
+        keyboardFrameRef.current = null;
+        return; /* закрытие завершит keyboardDidHide */
+      }
+      setKeyboardHeight(overlap);
+      queueFieldScroll();
+    });
+  }, [cancelFieldScroll, queueFieldScroll]);
+
   useEffect(() => {
-    const field = pendingFieldRef.current;
-    if (field != null && inputFocus != null && keyboardHeight > 0) {
-      pendingFieldRef.current = null;
-      scrollFieldAboveKeyboard(field.y, field.h, keyboardHeight);
-    }
-  }, [keyboardHeight, inputFocus, scrollFieldAboveKeyboard]);
+    const change = (event: KeyboardEvent) => updateKeyboardFrame(event.endCoordinates);
+    const hide = () => {
+      keyboardFrameRef.current = null;
+      lastScrollTargetRef.current = null;
+      cancelFieldScroll();
+    };
+    const subscriptions = [
+      Keyboard.addListener('keyboardWillShow', change),
+      Keyboard.addListener('keyboardWillChangeFrame', change),
+      Keyboard.addListener('keyboardDidShow', change),
+      Keyboard.addListener('keyboardWillHide', hide),
+      Keyboard.addListener('keyboardDidHide', () => {
+        hide();
+        setKeyboardHeight(0);
+      }),
+    ];
+    const current = Keyboard.metrics();
+    if (current != null) updateKeyboardFrame(current);
+    return () => {
+      subscriptions.forEach((subscription) => subscription.remove());
+      keyboardFrameRef.current = null;
+      cancelFieldScroll();
+      if (blurFrameRef.current != null) cancelAnimationFrame(blurFrameRef.current);
+    };
+  }, [cancelFieldScroll, updateKeyboardFrame]);
+
+  useLayoutEffect(() => {
+    queueFieldScroll();
+  }, [keyboardHeight, inputFocus, queueFieldScroll]);
+
+  const pauseFieldScroll = () => {
+    /* Явный скролл валидации/фото и жест пользователя имеют приоритет. */
+    fieldScrollPausedRef.current = true;
+    cancelFieldScroll();
+    lastScrollTargetRef.current = null;
+  };
+
+  const onFormLayout = () => {
+    const frame = keyboardFrameRef.current;
+    if (frame != null) updateKeyboardFrame(frame);
+    queueFieldScroll();
+  };
 
   const patch = (next: Partial<PlaceCreatePatch>) => {
     const current = getPlaceCreateDraft();
@@ -175,6 +264,7 @@ export default function PlaceFormScreen() {
     if (submitting) return;
     /* валидация обязательного названия по нажатию (87:4065) */
     if (name.trim() === '') {
+      pauseFieldScroll();
       setNameSubmitted(true);
       scrollViewRef.current?.scrollTo({ y: Math.max(0, nameFieldY.current - 120), animated: true });
       return;
@@ -218,7 +308,7 @@ export default function PlaceFormScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View ref={formRef} onLayout={onFormLayout} style={styles.container}>
       {/* тулбар (69:2076): назад слева → шаг 1 (без подтверждения, §3.3),
           заголовок по центру */}
       <View style={[styles.toolbar, { height: insets.top + 60 }]}>
@@ -238,7 +328,10 @@ export default function PlaceFormScreen() {
         ref={scrollViewRef}
         keyboardShouldPersistTaps="handled"
         scrollEventThrottle={16}
-        onScroll={(e) => (scrollOffsetRef.current = e.nativeEvent.contentOffset.y)}
+        onLayout={queueFieldScroll}
+        onContentSizeChange={queueFieldScroll}
+        onScrollBeginDrag={pauseFieldScroll}
+        onMomentumScrollEnd={() => { lastScrollTargetRef.current = null; }}
         /* форма короткая — кнопка прижата к нижнему краю (space-between,
            Дмитрий 22.10); контент длинный — кнопка в потоке после контента;
            при фокусе поля — резерв контента = клавиатура + панель (прецедент
@@ -271,7 +364,10 @@ export default function PlaceFormScreen() {
         </View>
 
         {/* Название * (69:2264) — единственное обязательное */}
-        <View onLayout={(e) => (nameFieldY.current = e.nativeEvent.layout.y, nameFieldH.current = e.nativeEvent.layout.height)}>
+        <View ref={nameFieldRef} collapsable={false} onLayout={(e) => {
+          nameFieldY.current = e.nativeEvent.layout.y;
+          queueFieldScroll();
+        }}>
           <FormField label="Название" required errorText={nameError ? 'Это поле нужно заполнить' : undefined}>
             <FormInput
               value={name}
@@ -279,11 +375,8 @@ export default function PlaceFormScreen() {
               placeholder=" "
               editable={!submitting}
               error={nameError}
-              onFocus={() => {
-                setInputFocus('name');
-                focusField(nameFieldY.current, nameFieldH.current);
-              }}
-              onBlur={() => setInputFocus(null)}
+              onFocus={() => focusField('name', nameFieldRef.current)}
+              onBlur={() => blurField('name')}
             />
           </FormField>
         </View>
@@ -326,7 +419,7 @@ export default function PlaceFormScreen() {
         </FormField>
 
         {/* Краткое описание (71:3145) — Textarea 120 */}
-        <View onLayout={(e) => (descriptionFieldY.current = e.nativeEvent.layout.y, descriptionFieldH.current = e.nativeEvent.layout.height)}>
+        <View ref={descriptionFieldRef} collapsable={false} onLayout={queueFieldScroll}>
           <FormField label="Краткое описание (необязательно)">
             <FormInput
               value={draft.description}
@@ -334,11 +427,8 @@ export default function PlaceFormScreen() {
               placeholder=" "
               multiline
               editable={!submitting}
-              onFocus={() => {
-                setInputFocus('description');
-                focusField(descriptionFieldY.current, descriptionFieldH.current);
-              }}
-              onBlur={() => setInputFocus(null)}
+              onFocus={() => focusField('description', descriptionFieldRef.current)}
+              onBlur={() => blurField('description')}
             />
           </FormField>
         </View>
@@ -348,7 +438,10 @@ export default function PlaceFormScreen() {
           photos={draft.photos}
           onChange={(next) => patch({ photos: next })}
           disabled={submitting}
-          onAfterAdd={() => setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 60)}
+          onAfterAdd={() => {
+            pauseFieldScroll();
+            setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 60);
+          }}
         />
 
         </View>
@@ -371,7 +464,7 @@ export default function PlaceFormScreen() {
           прецедент отчёта: кнопка в контейнере с фоном, нижний запас 8;
           привязка к inputFocus: пикер фото её не прячет */}
       {inputFocus != null && keyboardHeight > 0 && (
-        <View style={[styles.panelKeyboard, { paddingBottom: 8, bottom: keyboardHeight }]}>
+        <View ref={keyboardPanelRef} onLayout={queueFieldScroll} style={[styles.panelKeyboard, { paddingBottom: 8, bottom: keyboardHeight }]}>
           <Button label={publishLabel} mode="primary" appearance="accent" loading={submitting} onPress={submitting ? undefined : publish} />
         </View>
       )}
