@@ -3,13 +3,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { BlurView } from 'expo-blur';
 
-import ButtonUi from '@/components/button-ui';
+import ButtonIcon from '@/components/button-icon';
 import { UI_ICONS } from '@/components/ui-icons';
 import { Colors, TabBarSurface } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /* Управления главной карты — компоновка с актуального макета K (49:820/243:10201).
-   Все кнопки — button-ui 44×44 (K-DS dimensions/size/2xl, коммит 31da2cd); «+» — variant action.
+   Все кнопки — Button-Icon 44×44 (K-DS dimensions/size/2xl, коммит 31da2cd); «+» — variant action.
    Поиск — заглушка (не подключено); «+» подключён; гео — фейк-возврат в
    посёлок Восход (fake user location, Дмитрий 23.10); фильтр подключён
    (задача _x/17.md); слои убраны (Дмитрий 23.10).
@@ -27,20 +27,20 @@ export default function MapControls({ onFilterPress, filterBadge, onAddPress, on
           при статус-полосе 44 → 8 от safe area); слои убраны (Дмитрий 23.10);
           поиск подключён (ТЗ _x/20.md) */}
       <View style={[styles.top, { top: insets.top + 8 }]}>
-        <ButtonUi icon="magnifyingGlass" accessibilityLabel="Поиск населённого пункта" onPress={onSearchPress} />
-        <ButtonUi icon="sliders" badge={filterBadge} accessibilityLabel="Фильтр" onPress={onFilterPress} />
+        <ButtonIcon icon="magnifyingGlass" accessibilityLabel="Поиск населённого пункта" onPress={onSearchPress} />
+        <ButtonIcon icon="sliders" badge={filterBadge} accessibilityLabel="Фильтр" onPress={onFilterPress} />
       </View>
 
       {/* геолокация / добавление места — нижняя группа (K 243:10201: top 642,
           gap 24, низ группы 746 — тот же край, что у легенды; зазор к таб-бару 24:
           в коде пилюля выше на 4 (paddingBottom insets+4) → 4+48+24 от низа) */}
       <View pointerEvents="box-none" style={[styles.bottom, { bottom: insets.bottom + 76 }]}>
-        <ButtonUi
+        <ButtonIcon
           icon="locationCrosshairs"
           accessibilityLabel="Вернуться в моё местоположение — посёлок Восход"
           onPress={onGeoPress}
         />
-        <ButtonUi
+        <ButtonIcon
           icon="plus"
           variant="action"
           accessibilityLabel="Добавить место"

@@ -3,7 +3,7 @@ import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } fr
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
-import ButtonUi from '@/components/button-ui';
+import ButtonIcon from '@/components/button-icon';
 import Button from '@/components/button';
 import Chip from '@/components/form/chip';
 import SheetModal from '@/components/ui/sheet-modal';
@@ -186,7 +186,7 @@ function SheetBody({
       {/* тулбар после граббера SheetModal: ряд 44 + pb 8 (K-DS 224:987) */}
       <View style={styles.sheetToolbar}>
         <View style={styles.toolbarRow}>
-          <ButtonUi icon="close" type="toolbar" onPress={onClose} accessibilityLabel="Закрыть" />
+          <ButtonIcon icon="close" type="toolbar" onPress={onClose} accessibilityLabel="Закрыть" />
         </View>
         <View style={styles.sheetTitleWrap} pointerEvents="none">
           <View style={styles.sheetTitleBox}>
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8, /* K-DS 224:987 (нижний py); верх — граббер SheetModal */
   },
   toolbarRow: {
-    height: 44, /* ряд кнопок (button-ui 44) */
+    height: 44, /* ряд кнопок (Button-Icon 44) */
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'flex-end',

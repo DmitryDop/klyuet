@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
-import ButtonUi from '@/components/button-ui';
+import ButtonIcon from '@/components/button-icon';
 import Button from '@/components/button';
 import Chip from '@/components/form/chip';
 import FormField from '@/components/form/form-field';
@@ -74,15 +74,11 @@ export default function PlaceFormScreen() {
     ensurePlaceCreateDraft({ coordinate: { latitude: 58.05, longitude: 38.35 } });
     return null;
   }, []);
-  /* редактирование: любое снятие формы (назад/отмена) гасит edit-черновик —
-     исходное место остаётся без изменений (сценарий Дмитрия 23.10);
-     при обычном создании черновик обязан жить для возврата в шаг 1 */
-  useEffect(() => {
-    if (!isEdit) return;
-    return () => {
-      clearPlaceCreateDraft();
-    };
-  }, [isEdit]);
+  /* назад из шага 2 возвращает шторку шага 1 и в режиме редактирования
+     (баг Дмитрия 24.10: «нажал назад — шторка пропала»; ранее cleanup гасил
+     edit-черновик при любом снятии формы — сценарий Дмитрия 23.10).
+     Отмена редактирования — только с шага 1: стрелка/свайп шторки ведёт в
+     точку решения с clearPlaceCreateDraft; публикация очищает до replace. */
 
   const [name, setName] = useState(draft.name);
   const [nameSubmitted, setNameSubmitted] = useState(false);
@@ -175,7 +171,7 @@ export default function PlaceFormScreen() {
           заголовок по центру */}
       <View style={[styles.toolbar, { height: insets.top + 60 }]}>
         <View style={[styles.toolbarButtonLeft, { top: insets.top + 8 }]}>
-          <ButtonUi icon="chevronLeft" type="toolbar" onPress={() => router.back()} accessibilityLabel="К шагу 1" />
+          <ButtonIcon icon="chevronLeft" type="toolbar" onPress={() => router.back()} accessibilityLabel="К шагу 1" />
         </View>
         <View style={[styles.toolbarTitleWrap, { top: insets.top + 8, bottom: 8 }]}>
           <View style={styles.toolbarTitleBox}>

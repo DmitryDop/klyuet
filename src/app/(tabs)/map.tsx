@@ -5,11 +5,12 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ReAnimated, { useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
 
-import ButtonUi from '@/components/button-ui';
+import ButtonIcon from '@/components/button-icon';
 import ClasterPoint from '@/components/map/claster-point';
 import LocationDot from '@/components/map/location-dot';
 import MapControls from '@/components/map/map-controls';
 import AddPlaceSheet, { Crosshair, AreaSight } from '@/components/map/add-place-sheet';
+import { SPAN_APPROX, SPAN_EXACT } from '@/components/map/place-header';
 import { demoPlaceRepo } from '@/data/repo';
 import { getAppliedMapFilter } from '@/data/filter-store';
 import { clearPendingSearchTarget, getPendingSearchTarget } from '@/data/map-search-store';
@@ -66,8 +67,10 @@ export default function MapScreen() {
      перезапуск эффекта на каждую камеру недопустим) */
   const regionRef = useRef(region);
   /* редактирование: точка места для прицеливания камеры при первом замере
-     шторки (сценарий карандаша, Дмитрий 23.10); null — не редактирование */
-  const editAimRef = useRef<GeoPoint | null>(null);
+     шторки (сценарий карандаша, Дмитрий 23.10); null — не редактирование.
+     approx — зум-канон карточки (SPAN_APPROX) вместо точного (Дмитрий 24.10:
+     карта сама зумится к точке — «меньше движений») */
+  const editAimRef = useRef<{ coordinate: GeoPoint; approx: boolean } | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [appliedFilter, setAppliedFilter] = useState(getAppliedMapFilter());
@@ -133,7 +136,7 @@ export default function MapScreen() {
       const target = getPendingSearchTarget();
       if (target) {
         clearPendingSearchTarget();
-        mapRef.current?.animateToRegion(
+        moveCameraTo(
           {
             latitude: target.coordinate.latitude,
             longitude: target.coordinate.longitude,
@@ -181,7 +184,7 @@ export default function MapScreen() {
         if (requested != null) {
           /* камера к точке места после первого замера шторки: прицел =
              точка места (та же арифметика §8 противо-сдвига) */
-          editAimRef.current = requested.kind === 'exact' ? requested.coordinate : requested.view.coordinate;
+          editAimRef.current = { coordinate: requested.kind === 'exact' ? requested.coordinate : requested.view.coordinate, approx: requested.kind !== 'exact' };
         }
         if (markersState !== 'hidden' && markersState !== 'fading-out') {
           startFadeOut();
@@ -196,17 +199,174 @@ export default function MapScreen() {
      Координата черновика = мир ПОД ПРИЦЕЛОМ (центр области над шторкой):
      карта центр + пол-высоты шторки по широте; камера при этом НЕ ДВИГАЕТСЯ
      (компенсацию камеры снял Дмитрий 23.10: бестолкова, вместо неё — зум) */
+  /* единый расчёт мировой точки под прицелом (дефект bag/point_edit.md 24.10:
+     до первого pan черновик держал центр КАРТЫ, а прицел выше на пол-шторки) */
+  const crosshairPoint = (r: typeof region, sheetHeight: number) => {
+    /* lift — метры → градусы широты: /111_320 (метров в градусе) */
+    const mpp = (r.latitudeDelta * 111_320) / screenH;
+    const liftLat = ((sheetHeight / 2) * mpp) / 111_320;
+    return { latitude: r.latitude + liftLat, longitude: r.longitude };
+  };
+  /* гард: анимация прицеливания редактирования эмитирует промежуточные
+     регионы — черновик не пересчитывать до конца полёта (критерий 3) */
+  const aimSettleUntilRef = useRef(0);
+  const aimSettling = () => Date.now() < aimSettleUntilRef.current;
+
+  /* Камерный канал (дефект 24.10): зум через ALTITUDE — параметр zoom игнор
+     (T6/T9 диагностического прогона); alt ↔ широтная дельта линейны
+     (T7/T10/T11: 0.3594°↔83 898 м, 0.0051°↔1 200, 0.0021°↔500 — ±1%):
+     alt = широтная дельта цели × 111 320 × 2.0975. Широтная дельта цели
+     = долготный span × (H/W) × cosφ (меркаторская пропорция fit'а MapKit).
+     center-only (alt undefined) сохраняет текущий зум (прецедент T1). */
+  /* alt = f(долготный span): широтная дельта цели × 111 320 × 2.0975 */
+  const altitudeForLonSpan = (lonSpan: number, lat: number) => {
+    const cosLat = Math.cos((lat * Math.PI) / 180);
+    return lonSpan * (screenH / width) * cosLat * 111_320 * 2.0975;
+  };
+  const moveCameraTo = (
+    r: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number },
+    duration = 250,
+  ) => {
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
+    const cosLat = Math.cos((r.latitude * Math.PI) / 180);
+    const latDeltaTarget = r.longitudeDelta * (screenH / width) * cosLat;
+    map.animateCamera(
+      {
+        center: { latitude: r.latitude, longitude: r.longitude },
+        altitude: latDeltaTarget * 111_320 * 2.0975,
+      },
+      { duration },
+    );
+  };
+
+  /* Прицеливание редактирования (баг bag/point_edit.md 24.10). Канальный
+     вердикт (диагностический автопрогон каналов камеры, 24.10; экран удалён):
+     - animateToRegion не работает вовсе (молча);
+     - animateCamera({center}) работает, но параметр zoom у animateCamera и
+       camera-prop игнорируется (camera-prop без altitude ещё и ломает зум —
+       дефолт 73 м);
+     - ЗУМ работает только через altitude: animateCamera({center, altitude})
+       доезжает даже в кадре ресайза MapView. alt ↔ широтная дельта линейны
+       (эмпирика: 0.3594°↔83898 м, 0.0051°↔1200 м, 0.0021°↔500 м — ±1%).
+     Решение: анимация {center, altitude} + повтор каждые 500 мс, пока
+     камера не приедет (событие с целевым центром) или не кончатся попытки.
+     Зум: канон снимка карточки (SPAN_EXACT/SPAN_APPROX, Leaflet 14/12 —
+     решение Дмитрия 24.10: «карта пусть меняет зум — меньше движений»);
+     не отъезжать, если пользователь уже зумил крупнее. Lift — на зум ПОСЛЕ
+     полёта: широтная дельта цели = долготный span × (H/W) × cosφ. */
+  type EditAim = { coordinate: GeoPoint; approx: boolean };
+  const aimStateRef = useRef<{
+    center: GeoPoint; /* центр камеры цели (место − lift) */
+    liftLat: number;
+    altitude?: number;
+    retries: number;
+  } | null>(null);
+  const aimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const stopEditAim = () => {
+    if (aimTimerRef.current != null) {
+      clearTimeout(aimTimerRef.current);
+      aimTimerRef.current = null;
+    }
+    aimStateRef.current = null;
+  };
+
+  const sendEditAim = () => {
+    const state = aimStateRef.current;
+    const map = mapRef.current;
+    if (!state || !map) {
+      return;
+    }
+    map.animateCamera(
+      { center: state.center, altitude: state.altitude },
+      { duration: 250 },
+    );
+    aimSettleUntilRef.current = Date.now() + 450;
+    /* через 500 мс анимация (250 мс) уже уложится и событие придёт: если
+       камера не приедет — цель проглочена MapKit при ресайзе (без события) */
+    if (aimTimerRef.current != null) clearTimeout(aimTimerRef.current);
+    aimTimerRef.current = setTimeout(() => {
+      const st = aimStateRef.current;
+      if (!st) return;
+      const r = regionRef.current;
+      const arrived =
+        r != null &&
+        Math.abs(r.latitude - st.center.latitude) < Math.max(st.liftLat / 3, 5e-5) &&
+        Math.abs(r.longitude - st.center.longitude) < 5e-5;
+      if (arrived) {
+        aimStateRef.current = null;
+        return;
+      }
+      if (st.retries > 0) {
+        st.retries -= 1;
+        sendEditAim();
+      } else {
+        aimStateRef.current = null;
+      }
+    }, 500);
+  };
+
+  const startEditAim = (sheetHeight: number) => {
+    stopEditAim();
+    const map = mapRef.current;
+    const aim = editAimRef.current;
+    const r = regionRef.current;
+    if (!map || !aim || !r || sheetHeight <= 0) {
+      return;
+    }
+    editAimRef.current = null;
+    const targetSpan = aim.approx ? SPAN_APPROX : SPAN_EXACT;
+    const zoomTarget = Math.log2((360 * (width / 256)) / targetSpan);
+    const zoomCurrent = Math.log2((360 * (width / 256)) / r.longitudeDelta);
+    const keepCurrentZoom = zoomCurrent > zoomTarget;
+    const cosLat = Math.cos((aim.coordinate.latitude * Math.PI) / 180);
+    const latDeltaTarget = keepCurrentZoom
+      ? r.latitudeDelta
+      : targetSpan * (screenH / width) * cosLat;
+    const mpp = (latDeltaTarget * 111_320) / screenH;
+    const liftLat = ((sheetHeight / 2) * mpp) / 111_320;
+    const center = {
+      latitude: aim.coordinate.latitude - liftLat,
+      longitude: aim.coordinate.longitude,
+    };
+    aimStateRef.current = { center, liftLat, retries: 4 };
+    /* alt↔широтная дельта линейны: эмпирика T7/T10/T11 — 0.3594°↔83 898 м,
+       0.0051°↔1 200 м, 0.0021°↔500 м (±1%) → константа MapKit
+       111_320 × 2.0975 ≈ 233 500 м на градус широты. getCamera() НЕ годится:
+       на свежесмонтированной карте отдаёт мусорный alt (4 007 105 м —
+       прогон 11:57, камера улетала на «Архангельск») */
+    const aimAltitude = keepCurrentZoom
+      ? undefined
+      : latDeltaTarget * 111_320 * 2.0975;
+    aimStateRef.current.altitude = aimAltitude;
+    sendEditAim();
+  };
+
   const handleRegionChange = (next: typeof region) => {
     setRegion((prev) => ({ ...prev, ...next }));
     regionRef.current = { ...regionRef.current, ...next };
+    /* прицеливание в полёте (баг 24.10): черновик НЕ пересчитывать —
+        он уже держит точку места; ресайз-события приходят и ПОСЛЕ гарда
+        aimSettling — пересчёт от них портил точку (58.04 вместо 57.99).
+        Приезд камеры — снять retry; не доехал — повторит таймер. */
+    const state = aimStateRef.current;
+    if (state != null) {
+      const arrived =
+        Math.abs(next.latitude - state.center.latitude) < Math.max(state.liftLat / 3, 5e-5) &&
+        Math.abs(next.longitude - state.center.longitude) < 5e-5;
+      if (arrived) {
+        stopEditAim();
+      }
+      return;
+    }
     const current = getPlaceCreateDraft();
-    if (current != null && sheetH > 0) {
-      /* lift — метры → градусы широты: /111_320 (метров в градусе) */
-      const mpp = (next.latitudeDelta * 111_320) / screenH;
-      const liftLat = ((sheetH / 2) * mpp) / 111_320;
+    if (current != null && sheetH > 0 && !aimSettling()) {
       setPlaceCreateDraft({
         ...current,
-        coordinate: { latitude: next.latitude + liftLat, longitude: next.longitude },
+        coordinate: crosshairPoint(next, sheetH),
       });
     }
   };
@@ -253,16 +413,17 @@ export default function MapScreen() {
       });
   };
 
-  /* тап по кластеру: приблизить до зума раскрытия (спека §1.1, без шторок) */
+  /* тап по кластеру: приблизить до зума раскрытия (спека §1.1, без шторок);
+     камерный канал — animateToRegion молча не работает (дефект 24.10) */
   const expand = (center: { latitude: number; longitude: number }, expansionZoom: number) => {
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
     const span = (360 / 2 ** expansionZoom) * (256 / width);
-    mapRef.current?.animateToRegion(
-      {
-        ...center,
-        latitudeDelta: span,
-        longitudeDelta: span,
-      },
-      250,
+    map.animateCamera(
+      { center, altitude: altitudeForLonSpan(span, center.latitude) },
+      { duration: 250 },
     );
   };
 
@@ -387,7 +548,7 @@ export default function MapScreen() {
           <>
             {/* назад (383:7087): отмена процесса — та же точка, что свайп граббера */}
             <View style={[styles.back, { top: insets.top + 8 }]}>
-              <ButtonUi
+              <ButtonIcon
                 icon="chevronLeft"
                 accessibilityLabel="Отменить создание места"
                 onPress={() => createExitRef.current?.()}
@@ -395,15 +556,41 @@ export default function MapScreen() {
             </View>
             {/* поиск (383:7090); слои убраны (Дмитрий 23.10) — заглушка */}
             <View style={[styles.topCol, { top: insets.top + 8 }]}>
-              <ButtonUi icon="magnifyingGlass" accessibilityLabel="Поиск (не подключено)" />
+              <ButtonIcon icon="magnifyingGlass" accessibilityLabel="Поиск (не подключено)" />
             </View>
             {/* геолокация (383:7093): следует за шторкой; фейк-гео: возврат
                 в посёлок Восход (Дмитрий 23.10) */}
             <ReAnimated.View style={[styles.geo, geoFollowShift]}>
-              <ButtonUi
+              <ButtonIcon
                 icon="locationCrosshairs"
                 accessibilityLabel="Вернуться в моё местоположение — посёлок Восход"
-                onPress={() => mapRef.current?.animateToRegion({ ...FAKE_USER_LOCATION, latitudeDelta: DEMO_REGION.latitudeDelta, longitudeDelta: DEMO_REGION.longitudeDelta }, 250)}
+                onPress={() => {
+                  /* гео в шаге 1 (383:7093): локация В ТООЧКЕ ПРИЦЕЛА
+                     (центр камеры = локация − пол-высоты шторки, Дмитрий
+                     24.10: «моя локация — сразу под прицелом»), зум и
+                     дельты — дефолтные; шторку и редактирование не прерываем;
+                     retry прицела остановить, чтобы анимации не боролись */
+                  stopEditAim();
+                  const cosLat = Math.cos((FAKE_USER_LOCATION.latitude * Math.PI) / 180);
+                  const latDeltaTarget =
+                    DEMO_REGION.longitudeDelta * (screenH / width) * cosLat;
+                  const mppTarget = (latDeltaTarget * 111_320) / screenH;
+                  const liftLat = ((sheetH / 2) * mppTarget) / 111_320;
+                  const map = mapRef.current;
+                  if (!map) {
+                    return;
+                  }
+                  map.animateCamera(
+                    {
+                      center: {
+                        latitude: FAKE_USER_LOCATION.latitude - liftLat,
+                        longitude: FAKE_USER_LOCATION.longitude,
+                      },
+                      altitude: altitudeForLonSpan(DEMO_REGION.longitudeDelta, FAKE_USER_LOCATION.latitude),
+                    },
+                    { duration: 250 },
+                  );
+                }}
               />
             </ReAnimated.View>
           </>
@@ -415,9 +602,15 @@ export default function MapScreen() {
                 смонтированной, состояние переживает закрытие (§9) */
             onSearchPress={() => router.push('/search')}
             onGeoPress={() =>
-              /* фейк-гео (Дмитрий 23.10): возврат в посёлок Восход */
-              mapRef.current?.animateToRegion(
-                { ...FAKE_USER_LOCATION, latitudeDelta: DEMO_REGION.latitudeDelta, longitudeDelta: DEMO_REGION.longitudeDelta },
+              /* фейк-гео (Дмитрий 23.10): возврат в посёлок Восход;
+                  камерный канал — animateToRegion не работает (дефект 24.10) */
+              moveCameraTo(
+                {
+                  latitude: FAKE_USER_LOCATION.latitude,
+                  longitude: FAKE_USER_LOCATION.longitude,
+                  latitudeDelta: DEMO_REGION.latitudeDelta,
+                  longitudeDelta: DEMO_REGION.longitudeDelta,
+                },
                 250,
               )
             }
@@ -438,12 +631,12 @@ export default function MapScreen() {
         {/* зум (383:7084): пара по центру области карты — следует за шторкой;
             box-none: пустые зоны колонки не перехватывают тапы (правый борт) */}
         <ReAnimated.View pointerEvents="box-none" style={[styles.controls, areaFollowShift]}>
-          <ButtonUi
+          <ButtonIcon
             icon="plus"
             accessibilityLabel="Увеличить карту"
             onPress={() => zoom(1)}
           />
-          <ButtonUi
+          <ButtonIcon
             icon="minusLight"
             accessibilityLabel="Уменьшить карту"
             onPress={() => zoom(-1)}
@@ -461,30 +654,29 @@ export default function MapScreen() {
           }}
           onHeightChange={(h) => {
             setSheetH(h);
-            /* редактирование: первая измеренная высота шторки — анимируем
-                камеру так, чтобы прицел совпал с точкой места: прецедент
-                арифметики §8, координата = точка − половина шторки */
-            const aim = editAimRef.current;
-            if (aim && h > 0) {
-              const r = regionRef.current ?? { latitudeDelta: DEMO_REGION.latitudeDelta };
-              const mpp = (r.latitudeDelta * 111_320) / screenH;
-              const liftLat = ((h / 2) * mpp) / 111_320;
-              mapRef.current?.animateToRegion(
-                {
-                  latitude: aim.latitude - liftLat,
-                  longitude: aim.longitude,
-                  latitudeDelta: r.latitudeDelta,
-                  longitudeDelta: r.longitudeDelta,
-                },
-                250,
-              );
-              editAimRef.current = null;
+            /* редактирование: прицеливание камеры на точку места (баг 24.10:
+                отправка + retry — единичные камерные анимации проглатываются
+                ресайзом MapView при маскировке таб-бара/шторке) */
+            if (editAimRef.current && h > 0) {
+              startEditAim(h);
+            } else if (h > 0 && getPlaceCreateDraft() != null && !aimSettling()) {
+              /* создание: при первом замере шторки черновик синхронизируется с
+                  точкой ПОД ПРИЦЕЛОМ — до этого он держит центр карты (дефект
+                  24.10: без pan сохранялся центр карты, смещение зависело от зума) */
+              const r = regionRef.current;
+              if (r) {
+                setPlaceCreateDraft({
+                  ...getPlaceCreateDraft()!,
+                  coordinate: crosshairPoint(r, h),
+                });
+              }
             }
           }}
           sheetShift={sheetShift}
           /* снятие шторки — событие: adding снимет store (через clear),
-              здесь только метки fade-in */
+              здесь только метки fade-in; retry прицела тоже остановить */
           onExit={() => {
+            stopEditAim();
             startFadeIn();
           }}
         />
@@ -509,7 +701,7 @@ const styles = StyleSheet.create({
   controls: {
     position: 'absolute',
     /* адаптивное позиционирование (K 243:10201): центр высоты области карты;
-       размеры/цвета/тень — K-DS button-ui */
+       размеры/цвета/тень — K-DS Button-Icon */
     top: 0,
     bottom: 0,
     right: 16,

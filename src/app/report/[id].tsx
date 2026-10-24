@@ -7,7 +7,7 @@ import {
 } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import ButtonUi from '@/components/button-ui';
+import ButtonIcon from '@/components/button-icon';
 import Button from '@/components/button';
 import AuthorReportsSheet from '@/components/report/author-sheet';
 import ReportContent from '@/components/report/report-content';
@@ -131,7 +131,7 @@ export default function ReportScreen() {
           Toolbar - Top - iPhone (K 156:8410): py 8 px 16, кнопки 44 */}
       <View style={[styles.toolbar, { height: insets.top + 60 }]}>
         <View style={[styles.toolbarButton, { top: insets.top + 8 }]}>
-          <ButtonUi
+          <ButtonIcon
             icon="chevronLeft"
             type="toolbar"
             onPress={router.back}
@@ -151,7 +151,7 @@ export default function ReportScreen() {
         </View>
         {isMine && (
           <View style={[styles.toolbarButtonRight, { top: insets.top + 8 }]}>
-            <ButtonUi
+            <ButtonIcon
               icon="pen"
               type="toolbar"
               accessibilityLabel="Редактировать отчёт"

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import ButtonUi from '@/components/button-ui';
+import ButtonIcon from '@/components/button-icon';
 import Button from '@/components/button';
 import ReportItem from '@/components/place/report-item';
 import ReportContent from '@/components/report/report-content';
@@ -105,7 +105,7 @@ function SheetBody({
           {/* назад — только в полном отчёте; X всегда справа.
               У листа Left-слот пуст (224:1005) */}
           {openReport != null ? (
-            <ButtonUi
+            <ButtonIcon
               icon="chevronLeft"
               type="toolbar"
               onPress={() => setOpenReport(null)}
@@ -115,7 +115,7 @@ function SheetBody({
             <View style={styles.leftSpacer} />
           )}
           <View style={styles.flex} />
-          <ButtonUi icon="close" type="toolbar" onPress={onClose} accessibilityLabel="Закрыть" />
+          <ButtonIcon icon="close" type="toolbar" onPress={onClose} accessibilityLabel="Закрыть" />
         </View>
         <View style={styles.titleWrap} pointerEvents="none">
           <View style={styles.titleBox}>

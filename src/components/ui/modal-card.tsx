@@ -107,7 +107,7 @@ export default function ModalCard({
   );
 }
 
-/* крестик button-ui 44×44 (308:1379): absolute right/top 0 угла карточки */
+/* крестик Button-Icon 44×44 (308:1379): absolute right/top 0 угла карточки */
 function ModalCardClose({ onClose }: { onClose: () => void }) {
   return (
     <Pressable

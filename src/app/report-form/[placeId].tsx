@@ -15,7 +15,7 @@ import {
   usePreventRemove /* SDK 58: beforeRemove удалён — блокировка через usePreventRemove (reports.md §6) */,
 } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import ButtonUi from '@/components/button-ui';
+import ButtonIcon from '@/components/button-icon';
 import Button from '@/components/button';
 import Chip from '@/components/form/chip';
 import FormField from '@/components/form/form-field';
@@ -306,7 +306,7 @@ export default function ReportFormScreen() {
           кнопки absolute на top insets.top+8 (правило slice 4) */}
       <View style={[styles.toolbar, { height: insets.top + 60 }]}>
         <View style={[styles.toolbarButtonLeft, { top: insets.top + 8 }]}>
-          <ButtonUi
+          <ButtonIcon
             icon="chevronLeft"
             type="toolbar"
             onPress={router.back}
@@ -541,7 +541,7 @@ export default function ReportFormScreen() {
         <View style={[styles.flex, { paddingBottom: 8 + insets.bottom }]}>
           <View style={styles.dateSheetToolbar}>
             <View style={styles.toolbarRow}>
-              <ButtonUi
+              <ButtonIcon
                 icon="close"
                 type="toolbar"
                 onPress={() => setCalendarOpen(false)}

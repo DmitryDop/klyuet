@@ -1,6 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
 import MapView from 'react-native-maps';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 
 import LocationDot from '@/components/map/location-dot';
@@ -25,12 +24,13 @@ const HEADER_HEIGHT = 320;
 export const DIMMING_BACKDROP = '#181d1c';
 
 /* Зум мини-карты — как в прототипе (app.js initCardMap): Leaflet-уровень
-   14 точное / 12 приблизительное → долготный span = 360/2^z * (393/256) */
-const SPAN_EXACT = (360 / 2 ** 14) * (393 / 256);
-const SPAN_APPROX = (360 / 2 ** 12) * (393 / 256);
+   14 точное / 12 приблизительное → долготный span = 360/2^z * (393/256).
+   Экспорт: тот же канон зумит прицел редактирования (Дмитрий 24.10:
+   «карта пусть меняет зум — меньше движений»; max с текущим зумом). */
+export const SPAN_EXACT = (360 / 2 ** 14) * (393 / 256);
+export const SPAN_APPROX = (360 / 2 ** 12) * (393 / 256);
 
 export function PlaceHeader({ place, scrollY }: { place: Place; scrollY?: SharedValue<number> }) {
-  const insets = useSafeAreaInsets();
   /* плашка едет вместе с листом (translateY = −scrollY, K 328:3096);
      без scrollY — статичная шапка */
   const badgeAnim = useAnimatedStyle(() => {
@@ -59,15 +59,10 @@ export function PlaceHeader({ place, scrollY }: { place: Place; scrollY?: Shared
           longitudeDelta: isExact ? SPAN_EXACT : SPAN_APPROX,
         }}
       />
-      {/* маркер: по центру; в макете y=53 (точный) / 80 (область) от шапки,
-          статус-бар 44 → insets.top + 9 / + 36 */}
-      <View
-        style={
-          isExact
-            ? [styles.markerExact, { top: insets.top + 9 }]
-            : [styles.markerApprox, { top: insets.top + 36 }]
-        }
-        pointerEvents="none">
+      {/* маркер: кончик пина — центр снимка, куда MapView проецирует
+          координату (макет 135:330:5034: instance y=104, tip=160=центр 320);
+          x — по ширине экрана, не константа 393 (дефект 24.10 на 430 dp) */}
+      <View style={isExact ? styles.markerExact : styles.markerApprox} pointerEvents="none">
         {isExact ? <LocationDot /> : <ApproximateMarker />}
       </View>
       {/* плашка-подпись: едет вместе с листом (translateY = −scrollY,
@@ -101,11 +96,20 @@ const styles = StyleSheet.create({
   },
   markerExact: {
     position: 'absolute',
-    left: (393 - 56) / 2,
+    /* y=104 макета 135:330:5034 (от края шапки, включая строку состояния);
+       tip пина = 160 = центр снимка */
+    top: 104,
+    left: '50%',
+    marginLeft: -28, /* 56/2 */
   },
   markerApprox: {
     position: 'absolute',
-    left: (393 - 105) / 2,
+    /* центр области = координата, проецируется в центр снимка: top = 160 − 52,5.
+       В макете 125:520:320:11299 y=80 (центр 132,5) — ручное размещение;
+       центрирование принято Дмитрием 24.10 (как у пина точного места) */
+    top: 107.5,
+    left: '50%',
+    marginLeft: -52.5, /* 105/2 */
   },
   approxMarker: {
     width: 105,

@@ -4,7 +4,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { Colors } from '@/constants/theme';
 import { UI_ICONS } from '@/components/ui-icons';
 
-/* Кнопка поверх карты по K-DS button-ui: md 44×44 (dimensions/size/2xl),
+/* Кнопка поверх карты по K-DS Button-Icon: md 44×44 (dimensions/size/2xl),
    sm 40×40 (size/xl — кнопки при полях поиска; Дмитрий 23.10: ширина 44 в
    K-макете поиска — его баг, верен sm), radius/sm = 12 (кривая continuous).
    Вариантные фоны — переменные коллекции «button_small» (K-DS, привязки
@@ -27,7 +27,7 @@ export type IconButtonVariant = 'default' | 'action';
 export type IconButtonType = 'map' | 'toolbar';
 export type IconButtonSize = 'md' | 'sm';
 
-export default function ButtonUi({
+export default function ButtonIcon({
   icon,
   variant = 'default',
   type = 'map',

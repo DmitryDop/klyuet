@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import ButtonUi from '@/components/button-ui';
+import ButtonIcon from '@/components/button-icon';
 import ReportItem from '@/components/place/report-item';
 import { SkeletonCards } from '@/components/ui/skeleton';
 import { demoPlaceRepo, displayName } from '@/data/repo';
@@ -74,7 +74,7 @@ export default function AuthorReportsScreen() {
       {/* тулбар: назад + заголовок с подзаголовком-автором (K 210:9935) */}
       <View style={[styles.toolbar, { height: insets.top + 60 }]}>
         <View style={[styles.toolbarButton, { top: insets.top + 8 }]}>
-          <ButtonUi
+          <ButtonIcon
             icon="chevronLeft"
             type="toolbar"
             onPress={router.back}

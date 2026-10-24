@@ -26,7 +26,7 @@ import {
 import { setPendingSearchTarget } from '@/data/map-search-store';
 import { FAKE_USER_LOCATION } from '@/data/user-location';
 import { UI_ICONS } from '@/components/ui-icons';
-import ButtonUi from '@/components/button-ui';
+import ButtonIcon from '@/components/button-icon';
 import { Colors } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
@@ -220,7 +220,7 @@ export default function SearchScreen() {
             </View>
             {/* кнопка закрытия поиска (§4.1): крестик close 71:573;
                 sm 40×40 (K-DS button_sm, Дмитрий 23.10 — ширина 44 была багом) */}
-            <ButtonUi
+            <ButtonIcon
               icon="close"
               size="sm"
               type="toolbar"

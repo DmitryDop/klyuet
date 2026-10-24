@@ -11,7 +11,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
-import ButtonUi from '@/components/button-ui';
+import ButtonIcon from '@/components/button-icon';
 import { CURRENT_USER_ID, demoPlaceRepo } from '@/data/repo';
 import { requestAddPlaceStart } from '@/data/add-request-store';
 import type { Place, Report } from '@/data/types';
@@ -206,7 +206,7 @@ export default function PlaceScreen() {
       {!sheetUp && (
         <Animated.View style={[StyleSheet.absoluteFill, headerAnim]} pointerEvents="box-none">
           <View style={[styles.headerButtonWrap, { top: insets.top + 8, left: 16 }]}>
-            <ButtonUi
+            <ButtonIcon
               icon="chevronLeft"
               onPress={router.back}
               accessibilityLabel="Назад"
@@ -219,7 +219,7 @@ export default function PlaceScreen() {
               применяются только в конце. Кнопки поиска в карточке нет. */}
           {canEdit && (
             <View style={[styles.headerButtonWrap, { top: insets.top + 8, right: 16 }]}>
-              <ButtonUi
+              <ButtonIcon
                 icon="pen"
                 accessibilityLabel="Редактировать место"
                 onPress={() => {
@@ -235,11 +235,11 @@ export default function PlaceScreen() {
 
       {/* тулбар: непрозрачен до самого верха (статус-зона тоже bg-primary).
           K 329:3598 (Скролл-02): обе кнопки остаются — внутри тулбара,
-          button-ui Shadows=No, y = панель +8 (инстансы 312:3300) */}
+          Button-Icon Shadows=No, y = панель +8 (инстансы 312:3300) */}
       {sheetUp && (
         <View style={[styles.toolbar, { height: insets.top + 60 }]}>
           <View style={[styles.toolbarButton, { top: insets.top + 8, left: 16 }]}>
-            <ButtonUi
+            <ButtonIcon
               icon="chevronLeft"
               type="toolbar"
               onPress={router.back}
@@ -257,15 +257,22 @@ export default function PlaceScreen() {
               </Text>
             </View>
           </View>
-          <View style={[styles.toolbarButton, { top: insets.top + 8, right: 16 }]}>
-            <ButtonUi
-              icon={canEdit ? 'pen' : 'magnifyingGlass'}
-              type="toolbar"
-              accessibilityLabel={
-                canEdit ? 'Редактировать место (не подключено)' : 'Поиск (не подключено)'
-              }
-            />
-          </View>
+          {/* правая кнопка тулбара: карандаш у СВОИХ мест без отчётов —
+              запуск редактирования (та же точка, что в шапке); поиск убран
+              из карточки навсегда (макет K обновлён Дмитрием 24.10) */}
+          {canEdit && (
+            <View style={[styles.toolbarButton, { top: insets.top + 8, right: 16 }]}>
+              <ButtonIcon
+                icon="pen"
+                type="toolbar"
+                accessibilityLabel="Редактировать место"
+                onPress={() => {
+                  requestAddPlaceStart(place);
+                  router.navigate('/(tabs)/map');
+                }}
+              />
+            </View>
+          )}
         </View>
       )}
 

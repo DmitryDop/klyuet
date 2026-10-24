@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 import Button from '@/components/button';
-import ButtonUi from '@/components/button-ui';
+import ButtonIcon from '@/components/button-icon';
 import Chip from '@/components/form/chip';
 import FormSelect from '@/components/form/form-select';
 import SelectSheet from '@/components/form/select-sheet';
@@ -85,7 +85,7 @@ export default function FilterScreen() {
       {/* тулбар: крестик справа, заголовок по центру ряда (K 101:6981) */}
       <View style={[styles.toolbar, { height: insets.top + 60 }]}>
         <View style={[styles.toolbarButtonRight, { top: insets.top + 8 }]}>
-          <ButtonUi
+          <ButtonIcon
             icon="close"
             type="toolbar"
             onPress={close}
