@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
   ScrollView,
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
   /* RN 0.88 (Strict TypeScript API): ref — ScrollViewInstance (миграция SDK 58) */
   type ScrollViewInstance,
 } from 'react-native';
@@ -111,6 +112,13 @@ export default function ReportFormScreen() {
   /* скролл к полю с ошибкой (K 87:4145: поле с ошибкой должно быть видно) */
   const scrollViewRef = useRef<ScrollViewInstance | null>(null);
   const speciesFieldY = useRef(0);
+  /* высоты текстовых полей: низ поля над клавиатурой + панель кнопки
+     (ТЗ _x/26, задача 24.10); измеряются onLayout обёрток полей */
+  const baitFieldY = useRef(0);
+  const baitFieldH = useRef(0);
+  const commentFieldY = useRef(0);
+  const commentFieldH = useRef(0);
+  const { height: screenH } = useWindowDimensions();
 
   /* высота клавиатуры (K 87:4145: поле при фокусе всегда видно).
      Панель поднимается ТОЛЬКО при фокусе поля ввода (гонка «фокус→ref»
@@ -118,19 +126,67 @@ export default function ReportFormScreen() {
      событиях, решение о подъёме принимает фокус); пикер фото не спрятает
      кнопку: без фокуса панель всегда внизу, застрявшая высота не двигает. */
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [diag, setDiag] = useState(''); /* TEMP: диагностическая строка в тулбаре */
+  const [diagOff, setDiagOff] = useState(''); /* TEMP: достигнутый offset */
   const [inputFocus, setInputFocus] = useState<'bait' | 'comment' | null>(null);
+  /* отражение keyboardHeight для синхронного доступа из onFocus (state
+     обновляется асинхронно после события) */
+  const keyboardHeightRef = useRef(0);
+  /* поле, вызвавшее открытие клавиатуры: при keyboardWillShow скроллится
+     сразу с высотой события (onFocus приходит раньше события) */
+  const pendingFieldRef = useRef<{ y: number; h: number } | null>(null);
+  /* текущий offset скролла (onScroll, ref — без перерисовок): скролл к полю
+     только если его низ перекрыт видимой областью */
+  const scrollOffsetRef = useRef(0);
+  /* подскролл текстового поля над клавиатурой + панель кнопки (ТЗ _x/26):
+     72 = pt 16 + кнопка 48 + pb 8 — панельная константа резерва контента;
+     y/h — координаты поля в контенте (onLayout) */
+  const scrollFieldAboveKeyboard = useCallback((y: number, h: number, kb: number) => {
+    /* scrollTo — АБСОЛЮТНЫЙ offset (дефект 24.10: передавал добавку при
+       открытом клавиатурном подскролле — «показал верхушку»);
+       target = низ поля − дно видимой зоны (screenH − kb − 72) */
+    const target = y + h - (screenH - kb - 80); /* 72 панель + 8 зазор */
+    /* скролл только если поле прикрыто: сколько низа поля ниже дна зоны
+       с учётом текущего offset */
+    if (y + h - scrollOffsetRef.current - (screenH - kb - 72) > 0) {
+      scrollViewRef.current?.scrollTo({ y: Math.round(target), animated: true });
+    }
+    setDiag(`t=${Math.round(target)} kb=${Math.round(kb)} scr=${Math.round(screenH)} y=${Math.round(y)}`); /* TEMP */
+  }, [screenH]); /* TEMP: без скролл-лога */
+  const focusField = (y: number, h: number) => {
+    pendingFieldRef.current = { y, h };
+    if (keyboardHeightRef.current > 0) {
+      /* клавиатура уже открыта (переключение поля к полю): сразу */
+      scrollFieldAboveKeyboard(y, h, keyboardHeightRef.current);
+    }
+  };
   useEffect(() => {
     const show = Keyboard.addListener('keyboardWillShow', (e) => {
       setKeyboardHeight(e.endCoordinates.height);
+      keyboardHeightRef.current = e.endCoordinates.height;
     });
     const didHide = Keyboard.addListener('keyboardDidHide', () => {
       setKeyboardHeight(0);
+      keyboardHeightRef.current = 0;
+      pendingFieldRef.current = null;
     });
     return () => {
       show.remove();
       didHide.remove();
     };
   }, []);
+
+  /* подскролл ПОСЛЕ commit'а reserve-контента (deps: состояние клавиатуры/
+     фокуса): scrollTo внутри 60-мс таймера гонялся с рендером reserve —
+     contentSize менялся после скролла и offset сжимался (воспроизведено
+     24.10). Эффект выполняется после apply paddingBottom — maxOffset верен. */
+  useEffect(() => {
+    const field = pendingFieldRef.current;
+    if (field != null && inputFocus != null && keyboardHeight > 0) {
+      pendingFieldRef.current = null;
+      scrollFieldAboveKeyboard(field.y, field.h, keyboardHeight);
+    }
+  }, [keyboardHeight, inputFocus, scrollFieldAboveKeyboard]);
 
   /* Загрузка: место обязательно; для правки — значения отчёта (§8: не
      показывать недостоверную пустую форму) */
@@ -318,6 +374,13 @@ export default function ReportFormScreen() {
           <View style={styles.toolbarTitleBox}>
             <Text style={styles.toolbarTitle} numberOfLines={1}>
               {isEdit ? 'Редактирование отчета' : 'Новый отчёт'}
+              <Text style={{ fontSize: 10 }}>
+                {'  ' + diag}
+                {' / ' + diagOff}
+              </Text>
+            </Text>
+            <Text style={{ fontSize: 9 }}>
+              {diagOff}
             </Text>
           </View>
         </View>
@@ -326,6 +389,11 @@ export default function ReportFormScreen() {
       <ScrollView
         ref={scrollViewRef}
         keyboardShouldPersistTaps="handled"
+        scrollEventThrottle={16}
+        onScroll={(e) => {
+          scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
+          setDiagOff(`off=${Math.round(e.nativeEvent.contentOffset.y)} kb=${keyboardHeightRef.current}`); /* TEMP */
+        }}
         /* контент доскипится до активного поля над клавиатурой: запас
            по высоте клавиатуры динамический */
         contentContainerStyle={{
@@ -447,29 +515,39 @@ export default function ReportFormScreen() {
         </FormField>
 
         {/* Приманка (206:9636) — Input 48 (K-DS 353:9851) */}
-        <FormField label="Приманка (необязательно)">
-          <FormInput
-            value={form.bait}
-            onChangeText={(t) => patchForm({ bait: t })}
-            placeholder="" /* макет: пустое поле (placeholder=Off) */
-            editable={!submitting}
-            onFocus={() => setInputFocus('bait')}
-            onBlur={() => setInputFocus(null)}
-          />
-        </FormField>
+        <View onLayout={(e) => (baitFieldY.current = e.nativeEvent.layout.y, baitFieldH.current = e.nativeEvent.layout.height)}>
+          <FormField label="Приманка (необязательно)">
+            <FormInput
+              value={form.bait}
+              onChangeText={(t) => patchForm({ bait: t })}
+              placeholder="" /* макет: пустое поле (placeholder=Off) */
+              editable={!submitting}
+              onFocus={() => {
+                setInputFocus('bait');
+                focusField(baitFieldY.current, baitFieldH.current);
+              }}
+              onBlur={() => setInputFocus(null)}
+            />
+          </FormField>
+        </View>
 
         {/* Что происходило? (206:9637) — Textarea 120 (K-DS 227:6352) */}
-        <FormField label="Что происходило?">
-          <FormInput
-            value={form.comment}
-            onChangeText={(t) => patchForm({ comment: t })}
-            placeholder=""
-            multiline
-            editable={!submitting}
-            onFocus={() => setInputFocus('comment')}
-            onBlur={() => setInputFocus(null)}
-          />
-        </FormField>
+        <View onLayout={(e) => (commentFieldY.current = e.nativeEvent.layout.y, commentFieldH.current = e.nativeEvent.layout.height)}>
+          <FormField label="Что происходило?">
+            <FormInput
+              value={form.comment}
+              onChangeText={(t) => patchForm({ comment: t })}
+              placeholder=""
+              multiline
+              editable={!submitting}
+              onFocus={() => {
+                setInputFocus('comment');
+                focusField(commentFieldY.current, commentFieldH.current);
+              }}
+              onBlur={() => setInputFocus(null)}
+            />
+          </FormField>
+        </View>
 
         {/* фото-превью (206:9709): только при наличии; px 16, py 8 */}
         {/* фото: общий блок (photo-add.tsx, задача _x/18.md) — пикер,

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Keyboard, Pressable, ScrollView, StyleSheet, Text, View, type ScrollViewInstance } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type ScrollViewInstance } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -60,20 +60,26 @@ export default function PlaceFormScreen() {
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef<ScrollViewInstance>(null);
   const nameFieldY = useRef(0);
-
-  /* порядок: режим определяется ДО эффектов — черновик (карта префиллит
-     его до перехода) доступен на первом рендере */
-  const draft = getPlaceCreateDraft()!;
-  const isEdit = draft.editPlaceId != null;
-  const publishLabel = isEdit ? 'Сохранить изменения' : 'Опубликовать';
+  /* высоты текстовых полей: низ поля над клавиатурой + панель кнопки
+     (ТЗ _x/26, задача 24.10); измеряются onLayout обёрток полей */
+  const nameFieldH = useRef(0);
+  const descriptionFieldY = useRef(0);
+  const descriptionFieldH = useRef(0);
 
   /* прямой вход (deep link) без шага 1 — черновик создаётся с дефолтой
-     точкой Демо-центра; рабочий сценарий всегда начинается с шага 1 */
+     точкой Демо-центра ДО чтения (дефект 24.10: getPlaceCreateDraft()
+     давал null — «editPlaceId of null», LogBox); рабочий сценарий всегда
+     начинается с шага 1: черновик уже есть, ensure не переизлучает */
   const [, setVersion] = useState(0);
   useMemo(() => {
     ensurePlaceCreateDraft({ coordinate: { latitude: 58.05, longitude: 38.35 } });
     return null;
   }, []);
+  /* порядок: режим определяется ДО эффектов — черновик (карта префиллит
+     его до перехода) доступен на первом рендере */
+  const draft = getPlaceCreateDraft()!;
+  const isEdit = draft.editPlaceId != null;
+  const publishLabel = isEdit ? 'Сохранить изменения' : 'Опубликовать';
   /* назад из шага 2 возвращает шторку шага 1 и в режиме редактирования
      (баг Дмитрия 24.10: «нажал назад — шторка пропала»; ранее cleanup гасил
      edit-черновик при любом снятии формы — сценарий Дмитрия 23.10).
@@ -91,18 +97,64 @@ export default function PlaceFormScreen() {
      (прецедент отчёта, K 87:4145: поле при фокусе всегда видно) */
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [inputFocus, setInputFocus] = useState<'name' | 'description' | null>(null);
+  /* отражение keyboardHeight для синхронного доступа из onFocus (state
+     обновляется асинхронно после события) */
+  const keyboardHeightRef = useRef(0);
+  /* поле, тапом вызванное открытие клавиатуры: при keyboardWillShow
+     скроллится сразу с высотой события (onFocus приходит раньше) */
+  const pendingFieldRef = useRef<{ y: number; h: number } | null>(null);
+  /* текущий offset скролла (onScroll, ref — без перерисовок): скролл к полю
+     только если его низ перекрыт видимой областью */
+  const scrollOffsetRef = useRef(0);
+  const { height: screenH } = useWindowDimensions();
+  /* подскролл текстового поля над клавиатурой + панель кнопки (72 = pt 16 +
+     кнопка 48 + pb 8 — текущая панельная константа резерва); y/h —
+     координаты поля в контенте (onLayout)
+  */
+  const scrollFieldAboveKeyboard = useCallback((y: number, h: number, kb: number) => {
+    /* scrollTo — АБСОЛЮТНЫЙ offset (дефект 24.10: передавал добавку при
+       открытом клавиатурном подскролле — «показал верхушку»); target =
+       низ поля − дно видимой зоны (screenH − kb − 80: панель 72 + зазор 8);
+       скролл только когда низ поля прикрыт (учитывая текущий offset) */
+    const target = y + h - (screenH - kb - 80);
+    if (y + h - scrollOffsetRef.current - (screenH - kb - 80) > 0) {
+      scrollViewRef.current?.scrollTo({ y: Math.round(target), animated: true });
+    }
+  }, [screenH]);
+  const focusField = (y: number, h: number) => {
+    pendingFieldRef.current = { y, h };
+    if (keyboardHeightRef.current > 0) {
+      /* клавиатура уже открыта (переключение поля к полю): сразу */
+      scrollFieldAboveKeyboard(y, h, keyboardHeightRef.current);
+    }
+  };
   useEffect(() => {
     const show = Keyboard.addListener('keyboardWillShow', (e) => {
       setKeyboardHeight(e.endCoordinates.height);
+      keyboardHeightRef.current = e.endCoordinates.height;
     });
     const didHide = Keyboard.addListener('keyboardDidHide', () => {
       setKeyboardHeight(0);
+      keyboardHeightRef.current = 0;
+      pendingFieldRef.current = null;
     });
     return () => {
       show.remove();
       didHide.remove();
     };
   }, []);
+
+  /* подскролл ПОСЛЕ commit'а reserve-контента (deps: состояние клавиатуры/
+     фокуса): scrollTo внутри 60-мс таймера гонялся с рендером reserve —
+     contentSize менялся после скролла и offset сжимался (воспроизведено
+     24.10). Эффект выполняется после apply paddingBottom — maxOffset верен. */
+  useEffect(() => {
+    const field = pendingFieldRef.current;
+    if (field != null && inputFocus != null && keyboardHeight > 0) {
+      pendingFieldRef.current = null;
+      scrollFieldAboveKeyboard(field.y, field.h, keyboardHeight);
+    }
+  }, [keyboardHeight, inputFocus, scrollFieldAboveKeyboard]);
 
   const patch = (next: Partial<PlaceCreatePatch>) => {
     const current = getPlaceCreateDraft();
@@ -185,6 +237,8 @@ export default function PlaceFormScreen() {
       <ScrollView
         ref={scrollViewRef}
         keyboardShouldPersistTaps="handled"
+        scrollEventThrottle={16}
+        onScroll={(e) => (scrollOffsetRef.current = e.nativeEvent.contentOffset.y)}
         /* форма короткая — кнопка прижата к нижнему краю (space-between,
            Дмитрий 22.10); контент длинный — кнопка в потоке после контента;
            при фокусе поля — резерв контента = клавиатура + панель (прецедент
@@ -217,7 +271,7 @@ export default function PlaceFormScreen() {
         </View>
 
         {/* Название * (69:2264) — единственное обязательное */}
-        <View onLayout={(e) => (nameFieldY.current = e.nativeEvent.layout.y)}>
+        <View onLayout={(e) => (nameFieldY.current = e.nativeEvent.layout.y, nameFieldH.current = e.nativeEvent.layout.height)}>
           <FormField label="Название" required errorText={nameError ? 'Это поле нужно заполнить' : undefined}>
             <FormInput
               value={name}
@@ -225,7 +279,10 @@ export default function PlaceFormScreen() {
               placeholder=" "
               editable={!submitting}
               error={nameError}
-              onFocus={() => setInputFocus('name')}
+              onFocus={() => {
+                setInputFocus('name');
+                focusField(nameFieldY.current, nameFieldH.current);
+              }}
               onBlur={() => setInputFocus(null)}
             />
           </FormField>
@@ -269,17 +326,22 @@ export default function PlaceFormScreen() {
         </FormField>
 
         {/* Краткое описание (71:3145) — Textarea 120 */}
-        <FormField label="Краткое описание (необязательно)">
-          <FormInput
-            value={draft.description}
-            onChangeText={(t) => patch({ description: t })}
-            placeholder=" "
-            multiline
-            editable={!submitting}
-            onFocus={() => setInputFocus('description')}
-            onBlur={() => setInputFocus(null)}
-          />
-        </FormField>
+        <View onLayout={(e) => (descriptionFieldY.current = e.nativeEvent.layout.y, descriptionFieldH.current = e.nativeEvent.layout.height)}>
+          <FormField label="Краткое описание (необязательно)">
+            <FormInput
+              value={draft.description}
+              onChangeText={(t) => patch({ description: t })}
+              placeholder=" "
+              multiline
+              editable={!submitting}
+              onFocus={() => {
+                setInputFocus('description');
+                focusField(descriptionFieldY.current, descriptionFieldH.current);
+              }}
+              onBlur={() => setInputFocus(null)}
+            />
+          </FormField>
+        </View>
 
         {/* фото — общий блок (73:3170); реальные URI → createPlace */}
         <PhotoAdd
