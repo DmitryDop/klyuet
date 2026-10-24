@@ -394,9 +394,13 @@ function PlaceActionsSheet({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  /* шторка без нижних кнопок: отступ от домашней полосы (решение Дмитрия 24.10) */
+  const insets = useSafeAreaInsets();
   return (
     <SheetModal visible={visible} onClose={onClose} fullHeight={false}>
-      <View style={styles.actionsSlot}>
+      {/* Slot pb 16 + safe bottom (решение Дмитрия 24.10, обновление
+          макета 484:16223 Bottom Action 27) */}
+      <View style={[styles.actionsSlot, { paddingBottom: 16 + insets.bottom }]}>
         <PressableCell
           icon="pen"
           label="Изменить"

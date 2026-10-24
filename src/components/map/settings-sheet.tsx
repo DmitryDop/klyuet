@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ButtonIcon from '@/components/button-icon';
 import SheetModal from '@/components/ui/sheet-modal';
@@ -33,6 +34,9 @@ const VARIANTS: { kind: MapViewKind; label: string }[] = [
 
 export default function MapSettingsSheet({ visible }: { visible: boolean }) {
   const kind = useMapViewKind();
+  /* нижняя безопасная зона (обновление макета 24.10: Bottom Action 393×27
+      пустой — шторки без нижних кнопок отступают от домашней полосы) */
+  const insets = useSafeAreaInsets();
   return (
     <SheetModal visible={visible} onClose={closeMapSettings} fullHeight={false}>
       {/* тулбар после граббера SheetModal: ряд 44 + pb 8 (K-DS 224:987) */}
@@ -49,8 +53,8 @@ export default function MapSettingsSheet({ visible }: { visible: boolean }) {
           </Text>
         </View>
       </View>
-      {/* Slot: 3 ячейки-варианта, pb 16 */}
-      <View style={styles.slot}>
+      {/* Slot: 3 ячейки-варианта, pb 16 + safe bottom (решение Дмитрия 24.10) */}
+      <View style={[styles.slot, { paddingBottom: 16 + insets.bottom }]}>
         {VARIANTS.map((variant) => (
           <Pressable
             key={variant.kind}
@@ -123,7 +127,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   slot: {
-    paddingBottom: 16,
+    paddingBottom: 16, /* переопределяется insets.bottom (safe zone) */
   },
   cell: {
     /* Cell 484:16219: px 16, py 3xs 2, высота 44 */
