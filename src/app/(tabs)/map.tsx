@@ -14,6 +14,8 @@ import { SPAN_APPROX, SPAN_EXACT } from '@/components/map/place-header';
 import { demoPlaceRepo } from '@/data/repo';
 import { getAppliedMapFilter } from '@/data/filter-store';
 import { clearPendingSearchTarget, getPendingSearchTarget } from '@/data/map-search-store';
+import { useMapSettingsOpen, useMapViewKind } from '@/data/map-settings-store';
+import MapSettingsSheet from '@/components/map/settings-sheet';
 import { consumeAddPlaceRequest, useAddPlaceRequest } from '@/data/add-request-store';
 import { FAKE_USER_LOCATION } from '@/data/user-location';
 import {
@@ -81,6 +83,9 @@ export default function MapScreen() {
       «Cannot read property 'privacy' of null»; подписка делает снятие
       атомарным с clearPlaceCreateDraft) */
   const adding = usePlaceCreateActive();
+  /* вид карты и шторка настроек (ТЗ _x/24.md) */
+  const mapType = useMapViewKind();
+  const settingsOpen = useMapSettingsOpen();
   const createExitRef = useRef<(() => void) | null>(null);
   /* высота шторки шага 1 (замер) и её экранный сдвиг (общее value со шторкой):
       зум-пара/гео/прицел/следят за верхней границей шторкой синхронно
@@ -490,6 +495,10 @@ export default function MapScreen() {
       <MapView
         ref={mapRef}
         style={styles.map}
+        /* вид карты — «Настройки карты» (ТЗ _x/24.md §4): standard /
+            satellite / hybrid — нативные режимы MapKit, хранилище
+            map-settings-store (переживает перезапуск) */
+        mapType={mapType}
         userInterfaceStyle="light"
         initialRegion={region}
         onPress={handleMapPress}
@@ -683,6 +692,11 @@ export default function MapScreen() {
           }}
         />
       )}
+
+      {/* «Настройки карты» (ТЗ _x/24.md, шестерёнка таббара): RN Modal
+          SheetModal — поверх любых экранов/вкладок; на шаге 1 недоступна,
+          таббар скрыт (драфт) */}
+      <MapSettingsSheet visible={settingsOpen && !adding} />
     </View>
   );
 }

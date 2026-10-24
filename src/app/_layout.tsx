@@ -7,6 +7,7 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import { Colors } from '@/constants/theme';
 import ToastHost from '@/components/ui/toast';
+import { loadMapViewKind } from '@/data/map-settings-store';
 
 /* GestureHandlerRootView — свайп-закрытие шторок (граббер SheetModal;
    детектор жестов работает только внутри root view gesture-handler). */
@@ -39,6 +40,11 @@ export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     Onest: require('../../assets/fonts/Onest-Variable.ttf'),
   });
+
+  useEffect(() => {
+    /* вид карты из прошлого запуска (ТЗ _x/24.md §5) */
+    void loadMapViewKind();
+  }, []);
 
   useEffect(() => {
     if (fontsLoaded) {

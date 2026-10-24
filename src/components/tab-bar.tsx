@@ -7,6 +7,7 @@ import Svg, { Path } from 'react-native-svg';
 import { Colors, TabBarSurface } from '@/constants/theme';
 import { ADD_PLACE_ICON, SETTINGS_ICON, TAB_ICONS } from '@/components/tab-icons';
 import { requestAddPlaceStart } from '@/data/add-request-store';
+import { requestOpenMapSettings } from '@/data/map-settings-store';
 
 /* Таб-бар по K-DS (компонент tab_bar 68:327, обновление 24.10 — ТЗ _x/23.md):
    стеклянная пилюля поверх контента, 5 элементов icon-only
@@ -18,8 +19,8 @@ import { requestAddPlaceStart } from '@/data/add-request-store';
    Центральный «+» (510:1120) — ДЕЙСТВИЕ, не вкладка: запускает существующий
    сценарий добавления места (запрос в add-request-store; шаг 1 открывает
    map.tsx, механика не меняется) и никогда не получает активную плашку.
-   Шестерёнка (502:1093) — тоже не вкладка: сценария настроек карты пока нет,
-   тап без действия (ТЗ _x/23.md §4, без экранов-заглушек). */
+   Шестерёнка (502:1093) — тоже не вкладка: открывает шторку «Настройки
+   карты» (ТЗ _x/24.md), активной вкладкой не становится. */
 
 const TABS = [
   { name: 'map', path: '/map', label: 'Карта' },
@@ -75,8 +76,17 @@ export default function TabBar() {
             <Path d={ADD_PLACE_ICON} fill={Colors.light.accent} />
           </Svg>
         </Pressable>
-        {/* настройки карты — без сценария, тап без действия (ТЗ _x/23.md §4) */}
-        <Pressable accessibilityRole="button" accessibilityLabel="Настройки карты" style={styles.tab}>
+        {/* настройки карты (ТЗ _x/24.md): шторка поверх текущей вкладки;
+            переход на карту, под шторкой будет карта. Не вкладка,
+            активное состояние не получает (К-DS 502:1093) */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Настройки карты"
+          onPress={() => {
+            requestOpenMapSettings();
+            router.navigate('/map');
+          }}
+          style={styles.tab}>
           <Svg width={28} height={28} viewBox="0 0 28 28">
             <Path d={SETTINGS_ICON} fill={Colors.light.text} />
           </Svg>
