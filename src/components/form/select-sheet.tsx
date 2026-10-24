@@ -315,14 +315,14 @@ function SheetBody({
       <View style={[styles.actions, mode === 'single' && styles.actionsHidden]}>
         <Button
           label="Очистить"
-          variant="outline"
+          mode="secondary" appearance="outline"
           flex
           disabled={clearDisabled}
           onPress={() => commit([])}
         />
         <Button
           label="Применить"
-          variant="primary"
+          mode="primary" appearance="accent"
           flex
           disabled={applyDisabled}
           /* выбор уже закоммичен тапами/Очистить — Применить закрывает */

@@ -254,7 +254,7 @@ export default function ReportFormScreen() {
        схлопывал кнопку в 0 при рендере с фото (диагностика h=58) */
     <Button
       label={submitLabel}
-      variant="primary"
+      mode="primary" appearance="accent"
       loading={submitting}
       onPress={submit}
     />
@@ -292,7 +292,7 @@ export default function ReportFormScreen() {
     return (
       <View style={[styles.container, styles.errorWrap]}>
         <Text style={styles.errorText}>Не удалось загрузить место. Проверьте соединение и попробуйте ещё раз.</Text>
-        <Button label="Повторить" variant="primary" flex onPress={() => retryLoad()} />
+        <Button label="Повторить" mode="primary" appearance="accent" flex onPress={() => retryLoad()} />
       </View>
     );
   }
@@ -579,7 +579,7 @@ export default function ReportFormScreen() {
           <View style={styles.dateApplyWrap}>
             <Button
               label="Применить"
-              variant="primary"
+              mode="primary" appearance="accent"
               flex
               onPress={() => {
                 patchForm({ fishingDate: isoDate(calendarValue) });

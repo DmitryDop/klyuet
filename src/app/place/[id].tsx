@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   interpolate,
   runOnJS,
@@ -19,6 +19,9 @@ import { PlaceHeader, DIMMING_BACKDROP } from '@/components/map/place-header';
 import InfoRow from '@/components/place/info-row';
 import ReportItem from '@/components/place/report-item';
 import Button from '@/components/button';
+import SheetModal from '@/components/ui/sheet-modal';
+import ModalCard from '@/components/ui/modal-card';
+import { showToast } from '@/components/ui/toast';
 import { UI_ICONS } from '@/components/ui-icons';
 import { Colors } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
@@ -37,6 +40,15 @@ import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 const SHEET_TOP = 280; /* лист стартует на y=280: перекрытие шапки на 40 */
 
+/* Род названия места — по конечной букве (соглашение Дмитрия 24.10:
+   «Затока» → «удалена»): а/я → ж. р., о/е → ср. р., иначе м. р. */
+function endingsByGender(name: string) {
+  const last = name.trim().slice(-1).toLowerCase();
+  if (last === 'а' || last === 'я') return 'удалена';
+  if (last === 'о' || last === 'е') return 'удалено';
+  return 'удалён';
+}
+
 export default function PlaceScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -45,6 +57,11 @@ export default function PlaceScreen() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [sheetUp, setSheetUp] = useState(false);
+  /* действия места: шторка (K 436:12522) + удаление (ТЗ _x/22.md §9) */
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteErrorModal, setDeleteErrorModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   /* скролл-анимация K 328:3096 (Дмитрий 22.10, механика макета): подложка
      шапки «ovelay map» — сплошной #181D1C; на блоке шапки (dimming block:
      карта+маркер+плашка+кнопки) альфа-канал по кадрам 05/04/03 — перекрытие
@@ -92,12 +109,35 @@ export default function PlaceScreen() {
     return <View style={[styles.container, styles.stub]} />;
   }
 
-  /* Правило Дмитрия: pencil → только у СВОИХ мест и только пока в них нет
-     отчётов (появился любой отчёт — карандаша нет). Кнопки поиска в
-     карточке нет (убрана Дмитрием 23.10). Касается всех мест. */
+  /* Правило Дмитрия: действия места (more → «Изменить»/«Удалить») → только
+     у СВОИХ мест и только пока в них нет отчётов (появился любой отчёт —
+     more нет). Кнопки поиска в карточке нет (убрана навсегда, макет 24.10). */
   const canEdit = place.ownerId === CURRENT_USER_ID && reports.length === 0;
   const subtitle =
     place.placeType === 'wild' ? 'Дикое место · Бесплатно' : 'Платное место';
+
+  /* удаление (ТЗ _x/22.md §9): подтверждение уже принято; запрет при отчётах
+      проверяет репо ('forbidden'); ошибка — остаёмся в карточке; успех —
+      тост только после подтверждённого удаления, возврат на карту (камера
+      сохраняется — карточка камеру не трогает), маркер исчезнет при
+      перечитании списка картой */
+  const confirmDelete = () => {
+    if (deleting) return; /* блокировка повторного нажатия (ТЗ §9) */
+    setDeleting(true);
+    setDeleteModal(false);
+    demoPlaceRepo
+      .deletePlace(id, CURRENT_USER_ID)
+      .then((res) => {
+        if (res === 'deleted') {
+          showToast('Место удалено');
+          router.back();
+        } else {
+          setDeleteErrorModal(true);
+        }
+      })
+      .catch(() => setDeleteErrorModal(true))
+      .finally(() => setDeleting(false));
+  };
 
   const rows: [string, string][] = [
     ['Какая рыба здесь ловилась', place.fishSpecies.join(', ') || '—'],
@@ -189,7 +229,7 @@ export default function PlaceScreen() {
                   <View style={styles.ctaWrap}>
                     <Button
                       label={`Все отчеты (${reports.length})`}
-                      variant="outline"
+                      mode="secondary" appearance="outline"
                       onPress={() => router.navigate(`/place-reports/${id}`)}
                     />
                   </View>
@@ -212,21 +252,16 @@ export default function PlaceScreen() {
               accessibilityLabel="Назад"
             />
           </View>
-          {/* правый угол: только у СВОИХ мест без отчётов — карандаш
-              (правило Дмитрия 22.10: pencil → только пока нет отчётов).
-              Сценарий редактирования (Дмитрий 23.10): шаг 1 на карте с
-              точкой места → шаг 2 — «Сохранить изменения»; изменения
-              применяются только в конце. Кнопки поиска в карточке нет. */}
+          {/* правый угол: только у СВОИХ мест без отчётов — more (меню действий:
+              «Изменить»/«Удалить» в шторке, K 436:12518/12519; правило
+              Дмитрия 22.10-23.10: пока нет отчётов). Кнопки поиска в карточке
+              нет (убрана навсегда, макет 24.10). */}
           {canEdit && (
             <View style={[styles.headerButtonWrap, { top: insets.top + 8, right: 16 }]}>
               <ButtonIcon
-                icon="pen"
-                accessibilityLabel="Редактировать место"
-                onPress={() => {
-                  requestAddPlaceStart(place);
-                  /* переход на карту: шаг 1 откроется поверх (интент-стор) */
-                  router.navigate('/(tabs)/map');
-                }}
+                icon="more"
+                accessibilityLabel="Действия по месту"
+                onPress={() => setActionsOpen(true)}
               />
             </View>
           )}
@@ -257,37 +292,154 @@ export default function PlaceScreen() {
               </Text>
             </View>
           </View>
-          {/* правая кнопка тулбара: карандаш у СВОИХ мест без отчётов —
-              запуск редактирования (та же точка, что в шапке); поиск убран
-              из карточки навсегда (макет K обновлён Дмитрием 24.10) */}
+          {/* правая кнопка тулбара: more у СВОИХ мест без отчётов — меню
+              действий (та же шторка, что из шапки); поиск убран из карточки
+              навсегда (макет K обновлён Дмитрием 24.10) */}
           {canEdit && (
             <View style={[styles.toolbarButton, { top: insets.top + 8, right: 16 }]}>
               <ButtonIcon
-                icon="pen"
+                icon="more"
                 type="toolbar"
-                accessibilityLabel="Редактировать место"
-                onPress={() => {
-                  requestAddPlaceStart(place);
-                  router.navigate('/(tabs)/map');
-                }}
+                accessibilityLabel="Действия по месту"
+                onPress={() => setActionsOpen(true)}
               />
             </View>
           )}
         </View>
       )}
 
+      {/* шторка действий места (K 436:12522 = K-DS Sheet 246:4605: граббер +
+          Slot 2Cell, без тулбара): «Изменить» → сценарий редактирования
+          (та же точка, что карандаш); «Удалить» → подтверждение. Закрытие —
+          тап вне/свайп/системная «назад» (SheetModal). */}
+      {canEdit && (
+        <PlaceActionsSheet
+          visible={actionsOpen}
+          onClose={() => setActionsOpen(false)}
+          onEdit={() => {
+            /* RN-Modal поверх RN-Modal при одновременном переходе не
+               поднимается (репро 13:12: модалка не выезжает и висит
+               прозрачным блокиратором) — закрыть шторку и на 320 мс позже
+               (exit 250 мс + запас) выполнить действие */
+            setActionsOpen(false);
+            setTimeout(() => {
+              requestAddPlaceStart(place);
+              router.navigate('/(tabs)/map');
+            }, 320);
+          }}
+          onDelete={() => {
+            /* блокировка на время операции (ТЗ §9); переход Шторка → модалка
+               — с паузой 320 мс (репро одновременного перехода 13:12) */
+            if (deleting) return;
+            setActionsOpen(false);
+            setTimeout(() => setDeleteModal(true), 320);
+          }}
+        />
+      )}
+
+      {/* подтверждение удаления (решение Дмитрия 24.10): «Удалить» /
+          «Оставить»; первая — Outline, вторая Primary (K-DS ModalCard) */}
+      <ModalCard
+        visible={deleteModal}
+        icon="warn"
+        title="Удалить место?"
+        body={`«${place.name}» будет ${endingsByGender(place.name)} без возможности восстановления.`}
+        actions={[
+          { label: 'Оставить', onPress: () => setDeleteModal(false) },
+          { label: 'Удалить', mode: 'primary', appearance: 'negative', onPress: confirmDelete },
+        ]}
+        onClose={() => setDeleteModal(false)}
+      />
+
+      {/* ошибка удаления (прецедент формы места): остаёмся в карточке,
+          повторить можно без потери места */}
+      <ModalCard
+        visible={deleteErrorModal}
+        icon="warn"
+        title="Не удалось удалить место"
+        body="Попробуйте ещё раз."
+        actions={[
+          { label: 'Готово', onPress: () => setDeleteErrorModal(false) },
+          { label: 'Повторить', onPress: confirmDelete },
+        ]}
+        onClose={() => setDeleteErrorModal(false)}
+      />
+
       {/* Bottom Action (K 135:6279): панель прилипает к низу, bg bg-primary;
           «Добавить отчёт» → форма отчёта с привязкой placeId (reports.md §2) */}
       <View style={[styles.panel, { paddingBottom: 8 + insets.bottom }]}>
         <Button
           label="Добавить отчёт"
-          variant="outline"
+          mode="secondary" appearance="outline"
           flex
           onPress={() => router.push(`/report-form/${id}`)}
         />
-        <Button label="Маршрут" variant="primary" flex />
+        <Button label="Маршрут" mode="primary" appearance="accent" flex />
       </View>
     </View>
+  );
+}
+
+/* Шторка действий места (K 436:12522; модал K-DS Sheet 246:4605): граббер —
+   SheetModal; Slot pb 16; Cell: px 16, py 2, Left p 8 (иконка 24), текст
+   py 8, Body 16/22. Тексты — «Изменить»/«Удалить» (макет 24.10). */
+function PlaceActionsSheet({
+  visible,
+  onClose,
+  onEdit,
+  onDelete,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <SheetModal visible={visible} onClose={onClose} fullHeight={false}>
+      <View style={styles.actionsSlot}>
+        <PressableCell
+          icon="pen"
+          label="Изменить"
+          onPress={onEdit}
+          accessibilityLabel="Изменить место"
+        />
+        <PressableCell
+          icon="delete"
+          label="Удалить"
+          onPress={onDelete}
+          accessibilityLabel="Удалить место"
+        />
+      </View>
+    </SheetModal>
+  );
+}
+
+function PressableCell({
+  icon,
+  label,
+  onPress,
+  accessibilityLabel,
+}: {
+  icon: 'pen' | 'delete';
+  label: string;
+  onPress: () => void;
+  accessibilityLabel: string;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      onPress={onPress}
+      style={styles.actionCell}>
+      <View style={styles.actionCellLeft}>
+        <Svg width={24} height={24} viewBox="0 0 24 24">
+          <Path d={UI_ICONS[icon].d} fill={Colors.light.text} />
+        </Svg>
+      </View>
+      <View style={styles.actionCellTextWrap}>
+        <Text style={styles.actionCellText}>{label}</Text>
+      </View>
+    </Pressable>
   );
 }
 
@@ -475,5 +627,33 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.background,
     flexDirection: 'row',
     gap: 8,
+  },
+  /* шторка действий (K 436:12522;237:3907): Slot pb md 16 */
+  actionsSlot: {
+    paddingBottom: 16,
+  },
+  actionCell: {
+    /* Cell (436:12518): ряд (иконка слева, текст справа), px 16, py 3xs 2 */
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 2,
+  },
+  actionCellLeft: {
+    /* Left (459:736): p xs 8, иконка 24 */
+    padding: 8,
+  },
+  actionCellTextWrap: {
+    /* Layuot Txt (268:1023): py 8 у текстовой колонки */
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: '0%',
+    paddingVertical: 8,
+    alignItems: 'flex-start',
+  },
+  actionCellText: {
+    ...rnTextStyle(TEXT.body),
+    fontFamily: FONT_FAMILY,
+    color: Colors.light.text,
   },
 });

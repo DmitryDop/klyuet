@@ -16,7 +16,7 @@ import ModalCard from '@/components/ui/modal-card';
 import { showToast } from '@/components/ui/toast';
 import { UI_ICONS } from '@/components/ui-icons';
 import { SPECIES_CATALOG } from '@/data/catalog';
-import { demoPlaceRepo, type PlaceDraft } from '@/data/repo';
+import { CURRENT_USER_ID, demoPlaceRepo, type PlaceDraft } from '@/data/repo';
 import {
   clearPlaceCreateDraft,
   ensurePlaceCreateDraft,
@@ -145,11 +145,11 @@ export default function PlaceFormScreen() {
       photos: [...current.photos],
     };
     void (isEdit
-      ? demoPlaceRepo.updatePlace(draft.editPlaceId as string, placeDraft)
+      ? demoPlaceRepo.updatePlace(draft.editPlaceId as string, placeDraft, CURRENT_USER_ID)
       : demoPlaceRepo.createPlace(placeDraft)
     )
       .then((place) => {
-        if (place == null) {
+        if (place == null || place === 'forbidden') {
           setErrorModal(true);
           return;
         }
@@ -301,7 +301,7 @@ export default function PlaceFormScreen() {
             { paddingBottom: 8 + insets.bottom },
             inputFocus != null && keyboardHeight > 0 && styles.hiddenKb,
           ]}>
-          <Button label={publishLabel} variant="primary" loading={submitting} onPress={submitting ? undefined : publish} />
+          <Button label={publishLabel} mode="primary" appearance="accent" loading={submitting} onPress={submitting ? undefined : publish} />
         </View>
       </ScrollView>
 
@@ -310,7 +310,7 @@ export default function PlaceFormScreen() {
           привязка к inputFocus: пикер фото её не прячет */}
       {inputFocus != null && keyboardHeight > 0 && (
         <View style={[styles.panelKeyboard, { paddingBottom: 8, bottom: keyboardHeight }]}>
-          <Button label={publishLabel} variant="primary" loading={submitting} onPress={submitting ? undefined : publish} />
+          <Button label={publishLabel} mode="primary" appearance="accent" loading={submitting} onPress={submitting ? undefined : publish} />
         </View>
       )}
 

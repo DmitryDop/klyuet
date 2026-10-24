@@ -88,7 +88,7 @@ export default function ReportScreen() {
         <Text style={styles.errorText}>
           Отчёт недоступен. Проверьте соединение и попробуйте ещё раз.
         </Text>
-        <Button label="Повторить" variant="primary" flex onPress={retry} />
+        <Button label="Повторить" mode="primary" appearance="accent" flex onPress={retry} />
       </View>
     );
   }
@@ -176,7 +176,7 @@ export default function ReportScreen() {
           <View style={styles.ctaWrap}>
             <Button
               label={`Все отчеты рыбака (${authorCount})`}
-              variant="outline"
+              mode="secondary" appearance="outline"
               onPress={() => setSheetOpen(true)}
             />
           </View>
@@ -191,7 +191,7 @@ export default function ReportScreen() {
         <View style={[styles.panel, { paddingBottom: 8 + insets.bottom }]}>
           <Button
             label="Перейти в место"
-            variant="primary"
+            mode="primary" appearance="accent"
             flex
             onPress={() => router.navigate(`/place/${report.placeId}`)}
           />

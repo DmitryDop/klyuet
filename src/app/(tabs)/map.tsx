@@ -94,6 +94,39 @@ export default function MapScreen() {
   const [markersState, setMarkersState] = useState<'shown' | 'fading-out' | 'hidden' | 'fading-in'>('shown');
   const markerOpacity = useMemo(() => new Animated.Value(1), []);
 
+  /* Камерный канал (дефект 24.10): зум через ALTITUDE — параметр zoom игнор
+     (T6/T9 диагностического прогона); alt ↔ широтная дельта линейны
+     (T7/T10/T11: 0.3594°↔83 898 м, 0.0051°↔1 200, 0.0021°↔500 — ±1%):
+     alt = широтная дельта цели × 111 320 × 2.0975. Широтная дельта цели
+     = долготный span × (H/W) × cosφ (меркаторская пропорция fit'а MapKit).
+     center-only (alt undefined) сохраняет текущий зум (прецедент T1). */
+  /* alt = f(долготный span): широтная дельта цели × 111 320 × 2.0975 */
+  const altitudeForLonSpan = (lonSpan: number, lat: number) => {
+    const cosLat = Math.cos((lat * Math.PI) / 180);
+    return lonSpan * (screenH / width) * cosLat * 111_320 * 2.0975;
+  };
+  const moveCameraTo = useCallback(
+    (
+      r: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number },
+      duration = 250,
+    ) => {
+      const map = mapRef.current;
+      if (!map) {
+        return;
+      }
+      const cosLat = Math.cos((r.latitude * Math.PI) / 180);
+      const latDeltaTarget = r.longitudeDelta * (screenH / width) * cosLat;
+      map.animateCamera(
+        {
+          center: { latitude: r.latitude, longitude: r.longitude },
+          altitude: latDeltaTarget * 111_320 * 2.0975,
+        },
+        { duration },
+      );
+    },
+    [screenH, width],
+  );
+
   const startFadeOut = useCallback(() => {
     markerOpacity.setValue(1);
     setMarkersState('fading-out');
@@ -190,7 +223,7 @@ export default function MapScreen() {
           startFadeOut();
         }
       }
-    }, [markersState, startFadeIn, startFadeOut]),
+    }, [markersState, startFadeIn, startFadeOut, moveCameraTo]),
   );
 
   /* точка = центр карты: live в шторку и в черновик. onRegionChangeComplete,
@@ -212,35 +245,6 @@ export default function MapScreen() {
   const aimSettleUntilRef = useRef(0);
   const aimSettling = () => Date.now() < aimSettleUntilRef.current;
 
-  /* Камерный канал (дефект 24.10): зум через ALTITUDE — параметр zoom игнор
-     (T6/T9 диагностического прогона); alt ↔ широтная дельта линейны
-     (T7/T10/T11: 0.3594°↔83 898 м, 0.0051°↔1 200, 0.0021°↔500 — ±1%):
-     alt = широтная дельта цели × 111 320 × 2.0975. Широтная дельта цели
-     = долготный span × (H/W) × cosφ (меркаторская пропорция fit'а MapKit).
-     center-only (alt undefined) сохраняет текущий зум (прецедент T1). */
-  /* alt = f(долготный span): широтная дельта цели × 111 320 × 2.0975 */
-  const altitudeForLonSpan = (lonSpan: number, lat: number) => {
-    const cosLat = Math.cos((lat * Math.PI) / 180);
-    return lonSpan * (screenH / width) * cosLat * 111_320 * 2.0975;
-  };
-  const moveCameraTo = (
-    r: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number },
-    duration = 250,
-  ) => {
-    const map = mapRef.current;
-    if (!map) {
-      return;
-    }
-    const cosLat = Math.cos((r.latitude * Math.PI) / 180);
-    const latDeltaTarget = r.longitudeDelta * (screenH / width) * cosLat;
-    map.animateCamera(
-      {
-        center: { latitude: r.latitude, longitude: r.longitude },
-        altitude: latDeltaTarget * 111_320 * 2.0975,
-      },
-      { duration },
-    );
-  };
 
   /* Прицеливание редактирования (баг bag/point_edit.md 24.10). Канальный
      вердикт (диагностический автопрогон каналов камеры, 24.10; экран удалён):
@@ -257,7 +261,6 @@ export default function MapScreen() {
      решение Дмитрия 24.10: «карта пусть меняет зум — меньше движений»);
      не отъезжать, если пользователь уже зумил крупнее. Lift — на зум ПОСЛЕ
      полёта: широтная дельта цели = долготный span × (H/W) × cosφ. */
-  type EditAim = { coordinate: GeoPoint; approx: boolean };
   const aimStateRef = useRef<{
     center: GeoPoint; /* центр камеры цели (место − lift) */
     liftLat: number;
@@ -284,6 +287,7 @@ export default function MapScreen() {
       { center: state.center, altitude: state.altitude },
       { duration: 250 },
     );
+    /* eslint-disable-next-line react-hooks/purity -- таймер в обработчике события, не render */
     aimSettleUntilRef.current = Date.now() + 450;
     /* через 500 мс анимация (250 мс) уже уложится и событие придёт: если
        камера не приедет — цель проглочена MapKit при ресайзе (без события) */

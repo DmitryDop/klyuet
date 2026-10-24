@@ -10,7 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
-import Button from '@/components/button';
+import Button, { type ButtonAppearance, type ButtonMode } from '@/components/button';
 import { UI_ICONS } from '@/components/ui-icons';
 import { Colors } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
@@ -30,9 +30,13 @@ import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
  */
 export type ModalCardIcon = 'info' | 'warn';
 
+/** Кнопки: левая/правая канонично Outline/Accent; вариант переопределяется
+ *  mode/appearance (K-DS пропсы, 24.10) — например Negative для «Удалить». */
 export type ModalCardAction = {
   label: string;
   onPress: () => void;
+  mode?: ButtonMode;
+  appearance?: ButtonAppearance;
 };
 
 export default function ModalCard({
@@ -97,8 +101,20 @@ export default function ModalCard({
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.body}>{body}</Text>
           <View style={styles.actions}>
-            <Button label={left.label} variant="outline" flex onPress={left.onPress} />
-            <Button label={right.label} variant="primary" flex onPress={right.onPress} />
+            <Button
+              label={left.label}
+              mode={left.mode ?? 'secondary'}
+              appearance={left.appearance ?? 'outline'}
+              flex
+              onPress={left.onPress}
+            />
+            <Button
+              label={right.label}
+              mode={right.mode ?? 'primary'}
+              appearance={right.appearance ?? 'accent'}
+              flex
+              onPress={right.onPress}
+            />
           </View>
           <ModalCardClose onClose={onClose} />
         </Animated.View>

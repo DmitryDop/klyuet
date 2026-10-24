@@ -168,7 +168,7 @@ function SheetBody({
             <View style={styles.panel}>
               <Button
                 label="Перейти в место"
-                variant="primary"
+                mode="primary" appearance="accent"
                 flex
                 onPress={() => onGoToPlace(openReport.placeId)}
               />

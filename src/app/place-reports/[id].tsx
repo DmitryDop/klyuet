@@ -82,7 +82,7 @@ export default function PlaceReportsScreen() {
         <Text style={styles.errorText}>
           Отчеты недоступны. Проверьте соединение и попробуйте ещё раз.
         </Text>
-        <Button label="Повторить" variant="primary" flex onPress={retry} />
+        <Button label="Повторить" mode="primary" appearance="accent" flex onPress={retry} />
       </View>
     );
   }
@@ -138,7 +138,7 @@ export default function PlaceReportsScreen() {
       <View style={[styles.panel, { paddingBottom: 8 + insets.bottom }]}>
         <Button
           label="Добавить отчет"
-          variant="primary"
+          mode="primary" appearance="accent"
           flex
           onPress={() => router.push(`/report-form/${id}`)}
         />

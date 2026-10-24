@@ -52,6 +52,10 @@ export const Colors = {
     grabber: 'rgba(24, 29, 28, 0.2)',
     /** --color-danger-text — обязательные поля «*» (K 206:9632, 22.10) */
     dangerText: '#a83f37',
+    /** --color-danger-default / --danger/pressed — Button Appearance=Negative
+     *  (K-DS 491:1022/491:1028, 24.10): норма #b84a42, пресс #3d2523 */
+    dangerDefault: '#b84a42',
+    dangerPressed: '#3d2523',
     /** --color-surface-raised — плашки поверх снимков (подтверждено K 135:6237) */
     surfaceRaised: '#ffffff',
     /**

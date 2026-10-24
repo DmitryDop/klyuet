@@ -37,7 +37,7 @@ export default function EmptyBlock({
         {actionLabel != null && (
           <View style={styles.actionGroup}>
             {/* кнопка primary 48 во всю ширину блока 329 (K 313:1698/240:4483) */}
-            <Button label={actionLabel} variant="primary" onPress={onAction} />
+            <Button label={actionLabel} mode="primary" appearance="accent" onPress={onAction} />
           </View>
         )}
       </View>

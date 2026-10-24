@@ -29,8 +29,13 @@ export interface PlaceRepo {
    * применение черновика в финальном сохранении — координаты/точность/
    * приватность пересобирают публичное представление, как в createPlace;
    * createdAt не меняется. До сохранения исходное место без изменений.
+   *
+   * Бизнес-проверка в репо (ТЗ _x/22.md §1: не только интерфейсом):
+   * ownerId обязателен; чужое место или место с отчётами → 'forbidden'.
    */
-  updatePlace(id: string, draft: PlaceDraft): Promise<Place | null>;
+  updatePlace(id: string, draft: PlaceDraft, ownerId: string): Promise<Place | 'forbidden' | null>;
+  /** Удаление места (ТЗ _x/22.md §9): только автор и без отчётов — в репо. */
+  deletePlace(id: string, ownerId: string): Promise<'deleted' | 'forbidden' | null>;
 }
 
 /** Черновик создания места: шаги 1–2 в двух сториях (task _x/18.md). */
@@ -98,7 +103,9 @@ function byFishingDateDesc(a: Report, b: Report): number {
 /** Демо-реализация до появления бэкенда. */
 export const demoPlaceRepo: PlaceRepo = {
   async getPlaces() {
-    return state.places;
+    /* копия: хранилище мутится (splice/unshift, удаление/создание);
+       один и тот же ref не перерендерит карту на setPlaces */
+    return [...state.places];
   },
 
   async getPlace(id) {
@@ -114,7 +121,8 @@ export const demoPlaceRepo: PlaceRepo = {
   },
 
   async getAllReports() {
-    return state.reports;
+    /* копия: как getPlaces — ref для фильтрации на карте */
+    return [...state.reports];
   },
 
   async getReport(id) {
@@ -185,11 +193,16 @@ export const demoPlaceRepo: PlaceRepo = {
     return place;
   },
 
-  async updatePlace(id, draft) {
+  async updatePlace(id, draft, ownerId) {
     await new Promise((r) => setTimeout(r, NET_MS));
     const i = state.places.findIndex((p) => p.id === id);
     if (i < 0) return null;
     const prev = state.places[i];
+    /* бизнес-правило (ТЗ _x/22.md §1/§7.7): не автор или уже есть отчёты —
+       правка запрещена ('forbidden'), интерфейсу остаётся показать ошибку */
+    if (prev.ownerId !== ownerId || state.reports.some((r) => r.placeId === id)) {
+      return 'forbidden';
+    }
     /* представление пересобирается как в createPlace («серверная» сторона):
        приблизительное место получает округлённый центр области, свой
        прежний радиус; точное — координату черновика */
@@ -229,5 +242,20 @@ export const demoPlaceRepo: PlaceRepo = {
           };
     state.places[i] = rebuilt;
     return rebuilt;
+  },
+
+  async deletePlace(id, ownerId) {
+    await new Promise((r) => setTimeout(r, NET_MS));
+    const i = state.places.findIndex((p) => p.id === id);
+    if (i < 0) return null;
+    const place = state.places[i];
+    /* бизнес-правило (ТЗ _x/22.md §1/§9): чужое или с отчётами — запрещено;
+       у удалённого места отчётов нет по определению (правило §7.8),
+       отчёты не трогаются */
+    if (place.ownerId !== ownerId || state.reports.some((r) => r.placeId === id)) {
+      return 'forbidden';
+    }
+    state.places.splice(i, 1);
+    return 'deleted';
   },
 };

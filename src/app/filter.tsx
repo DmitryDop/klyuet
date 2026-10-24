@@ -157,11 +157,11 @@ export default function FilterScreen() {
       <View style={[styles.actions, { paddingBottom: 8 + insets.bottom }]}>
         <Button
           label="Сбросить"
-          variant="outline"
+          mode="secondary" appearance="outline"
           flex
           onPress={() => setDraft(DEFAULT_MAP_FILTER)}
         />
-        <Button label="Показать" variant="primary" flex onPress={apply} />
+        <Button label="Показать" mode="primary" appearance="accent" flex onPress={apply} />
       </View>
 
       {/* шторка вида рыбы: мульти, чипсы-категории, поиск (K 434:4402),

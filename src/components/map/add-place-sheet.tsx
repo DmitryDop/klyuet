@@ -324,19 +324,24 @@ export default function AddPlaceSheet({
         <View style={[styles.publishStretch, { paddingBottom: 8 + insets.bottom }]}>
           <Button
             label="Дальше"
-            variant="primary"
+            mode="primary" appearance="accent"
             onPress={() => router.push('/place-form')}
           />
         </View>
         </Animated.View>
       </GestureDetector>
 
-      {/* отмена при изменениях (map-place-flows-mvp.md §3.3):
-          «Продолжить» — основная, «Выйти» — вторичная */}
+      {/* отмена при изменениях (map-place-flows-mvp.md §3.3): механика общая,
+          текст по режиму (ТЗ _x/22.md §6: «создание» в редактировании вводит
+          в заблуждение): «Продолжить» — основная, «Выйти» — вторичная */}
       <ModalCard
         visible={cancelModal}
         icon="info"
-        title="Отменить создание места?"
+        title={
+          draft.editPlaceId != null
+            ? 'Отменить редактирование места?'
+            : 'Отменить создание места?'
+        }
         body="Введённые данные будут потеряны."
         actions={[
           { label: 'Продолжить', onPress: () => setCancelModal(false) },
