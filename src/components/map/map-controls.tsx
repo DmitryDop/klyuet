@@ -9,15 +9,18 @@ import { Colors, TabBarSurface } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /* Управления главной карты — компоновка с актуального макета K (49:820/243:10201).
-   Все кнопки — Button-Icon 44×44 (K-DS dimensions/size/2xl, коммит 31da2cd); «+» — variant action.
-   Поиск — заглушка (не подключено); «+» подключён; гео — фейк-возврат в
-   посёлок Восход (fake user location, Дмитрий 23.10); фильтр подключён
-   (задача _x/17.md); слои убраны (Дмитрий 23.10).
+   Все кнопки — Button-Icon 44×44 (K-DS dimensions/size/2xl, коммит 31da2cd).
+   Поиск — заглушка (не подключено); гео — фейк-возврат в посёлок Восход
+   (fake user location, Дмитрий 23.10); фильтр подключён (задача _x/17.md);
+   слои убраны (Дмитрий 23.10). «+» добавления места убран с карты (ТЗ _x/23.md §3):
+   запуск сценария — центральный «+» таббара; нижняя группа — только гео (K 243:10201:
+   кнопка y=702, низ 746 — тот же край, что у легенды; зазор к таб-бару 24:
+   в коде пилюля выше на 4 (paddingBottom insets+4) → 4+48+24 от низа).
    Легенда точности: панель tab_bar/default + блюр, padding 8, radius 12;
    «Точно» — location-pin 16×16 акцентом, «Примерно» — круг 12×12
    (заливка и пунктирная граница #176b52). Текст — Onest/Caption 12/16. */
 
-export default function MapControls({ onFilterPress, filterBadge, onAddPress, onGeoPress, onSearchPress }: { onFilterPress?: () => void; filterBadge?: boolean; onAddPress?: () => void; onGeoPress?: () => void; onSearchPress?: () => void }) {
+export default function MapControls({ onFilterPress, filterBadge, onGeoPress, onSearchPress }: { onFilterPress?: () => void; filterBadge?: boolean; onGeoPress?: () => void; onSearchPress?: () => void }) {
   const insets = useSafeAreaInsets();
   const pin = UI_ICONS.locationPin;
 
@@ -31,20 +34,14 @@ export default function MapControls({ onFilterPress, filterBadge, onAddPress, on
         <ButtonIcon icon="sliders" badge={filterBadge} accessibilityLabel="Фильтр" onPress={onFilterPress} />
       </View>
 
-      {/* геолокация / добавление места — нижняя группа (K 243:10201: top 642,
-          gap 24, низ группы 746 — тот же край, что у легенды; зазор к таб-бару 24:
-          в коде пилюля выше на 4 (paddingBottom insets+4) → 4+48+24 от низа) */}
+      {/* геолокация — нижняя кнопка (K 243:10201: y=702, низ группы 746 —
+          тот же край, что у легенды; зазор к таб-бару 24: в коде пилюля выше
+          на 4 (paddingBottom insets+4) → 4+48+24 от низа) */}
       <View pointerEvents="box-none" style={[styles.bottom, { bottom: insets.bottom + 76 }]}>
         <ButtonIcon
           icon="locationCrosshairs"
           accessibilityLabel="Вернуться в моё местоположение — посёлок Восход"
           onPress={onGeoPress}
-        />
-        <ButtonIcon
-          icon="plus"
-          variant="action"
-          accessibilityLabel="Добавить место"
-          onPress={onAddPress}
         />
       </View>
 
@@ -79,7 +76,6 @@ const styles = StyleSheet.create({
   bottom: {
     position: 'absolute',
     right: 16,
-    gap: 24,
     alignItems: 'center',
   },
   legend: {

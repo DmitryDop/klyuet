@@ -5,13 +5,21 @@ import { BlurView } from 'expo-blur';
 import Svg, { Path } from 'react-native-svg';
 
 import { Colors, TabBarSurface } from '@/constants/theme';
-import { TAB_ICONS } from '@/components/tab-icons';
+import { ADD_PLACE_ICON, SETTINGS_ICON, TAB_ICONS } from '@/components/tab-icons';
+import { requestAddPlaceStart } from '@/data/add-request-store';
 
-/* Таб-бар по K-DS (компонент tab_bar 68:327): стеклянная пилюля поверх контента,
-   3 таба icon-only. Активный таб — плашка --color-selection-bg (#d8e8df), radius 12.
-   Поверхность — tab_bar/default: rgba(250,250,246,0.90) + блюр (Figma radius 2 ≈ 1px CSS).
-   Точный радиус 1px expo-blur API не задаёт — интенсивность минимальная,
-   расхождение проверить визуально (при фоне 90% влияние блюра пренебрежимо). */
+/* Таб-бар по K-DS (компонент tab_bar 68:327, обновление 24.10 — ТЗ _x/23.md):
+   стеклянная пилюля поверх контента, 5 элементов icon-only
+   Карта · Журнал · [+] · Настройки · Профиль. Активный таб — плашка
+   --color-selection-bg (#d8e8df), radius 12. Поверхность — tab_bar/default:
+   rgba(250,250,246,0.90) + блюр (Figma radius 2 ≈ 1px CSS; точный радиус 1px
+   expo-blur API не задаёт — интенсивность минимальная, при фоне 90% влияние
+   блюра пренебрежимо).
+   Центральный «+» (510:1120) — ДЕЙСТВИЕ, не вкладка: запускает существующий
+   сценарий добавления места (запрос в add-request-store; шаг 1 открывает
+   map.tsx, механика не меняется) и никогда не получает активную плашку.
+   Шестерёнка (502:1093) — тоже не вкладка: сценария настроек карты пока нет,
+   тап без действия (ТЗ _x/23.md §4, без экранов-заглушек). */
 
 const TABS = [
   { name: 'map', path: '/map', label: 'Карта' },
@@ -24,6 +32,24 @@ export default function TabBar() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  const navTab = (tab: (typeof TABS)[number]) => {
+    const active = pathname === tab.path;
+    const icon = active ? TAB_ICONS[tab.name].solid : TAB_ICONS[tab.name].light;
+    return (
+      <Pressable
+        key={tab.name}
+        accessibilityRole="tab"
+        accessibilityState={{ selected: active }}
+        accessibilityLabel={tab.label}
+        onPress={() => router.navigate(tab.path)}
+        style={[styles.tab, active && styles.tabActive]}>
+        <Svg width={28} height={28} viewBox="0 0 28 28">
+          <Path d={icon} fill={active ? Colors.light.accent : Colors.light.text} />
+        </Svg>
+      </Pressable>
+    );
+  };
+
   return (
     <View
       pointerEvents="box-none"
@@ -32,26 +58,30 @@ export default function TabBar() {
         {/* слои стекла не перехватывают тапы */}
         <BlurView intensity={10} tint="light" style={styles.layer} pointerEvents="none" />
         <View style={[styles.layer, styles.glass]} pointerEvents="none" />
-        {TABS.map((tab) => {
-          const active = pathname === tab.path;
-          const icon = active ? TAB_ICONS[tab.name].solid : TAB_ICONS[tab.name].light;
-          return (
-            <Pressable
-              key={tab.name}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-              accessibilityLabel={tab.label}
-              onPress={() => router.navigate(tab.path)}
-              style={[styles.tab, active && styles.tabActive]}>
-              <Svg width={28} height={28} viewBox="0 0 28 28">
-                <Path
-                  d={icon}
-                  fill={active ? Colors.light.accent : Colors.light.text}
-                />
-              </Svg>
-            </Pressable>
-          );
-        })}
+        {navTab(TABS[0])}
+        {navTab(TABS[1])}
+        {/* центральный «+» — действие «Добавить место», не вкладка */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Добавить место"
+          onPress={() => {
+            /* тот же вход, что «Добавить» в Журнале (ТЗ _x/21.md §6):
+                карта перечитывает запрос и открывает шаг 1 */
+            requestAddPlaceStart();
+            router.navigate('/map');
+          }}
+          style={styles.tab}>
+          <Svg width={44} height={44} viewBox="0 0 44 44">
+            <Path d={ADD_PLACE_ICON} fill={Colors.light.accent} />
+          </Svg>
+        </Pressable>
+        {/* настройки карты — без сценария, тап без действия (ТЗ _x/23.md §4) */}
+        <Pressable accessibilityRole="button" accessibilityLabel="Настройки карты" style={styles.tab}>
+          <Svg width={28} height={28} viewBox="0 0 28 28">
+            <Path d={SETTINGS_ICON} fill={Colors.light.text} />
+          </Svg>
+        </Pressable>
+        {navTab(TABS[2])}
       </View>
     </View>
   );

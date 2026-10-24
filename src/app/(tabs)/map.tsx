@@ -14,7 +14,7 @@ import { SPAN_APPROX, SPAN_EXACT } from '@/components/map/place-header';
 import { demoPlaceRepo } from '@/data/repo';
 import { getAppliedMapFilter } from '@/data/filter-store';
 import { clearPendingSearchTarget, getPendingSearchTarget } from '@/data/map-search-store';
-import { consumeAddPlaceRequest } from '@/data/add-request-store';
+import { consumeAddPlaceRequest, useAddPlaceRequest } from '@/data/add-request-store';
 import { FAKE_USER_LOCATION } from '@/data/user-location';
 import {
   clearPlaceCreateDraft,
@@ -153,6 +153,13 @@ export default function MapScreen() {
   /* загрузка и актуализация на возврате (createPlace добавил место,
       фильтр коммитится до back; возврат/успех шага 2) — перечитать и
       шторку шага 1: draft жив → шторка открыта, null → снята */
+  /* запрос запуска сценария извне: «Добавить» из Журнала (ТЗ _x/21.md §6),
+      центральный «+» таббара (ТЗ _x/23.md) и карандаш/«Изменить» карточки
+      (сценарий Дмитрия 23.10). Реактивный pending из add-request-store в deps
+      фокус-эффекта: раньше запросы перечитывались только на входе на карту —
+      «+» с уже открытой карты терялся (navigate на текущий маршрут фокус не
+      перезапускает). Логика шага 1 ниже не изменена. */
+  const pendingAddRequest = useAddPlaceRequest();
   useFocusEffect(
     useCallback(() => {
       setAppliedFilter(getAppliedMapFilter());
@@ -179,12 +186,11 @@ export default function MapScreen() {
           500,
         );
       }
-      /* «Добавить» из Журнала (ТЗ _x/21.md §6) и карандаш карточки (сценарий
-          Дмитрия 23.10): СУЩЕСТВУЮЩИЙ двухшаговый сценарий; place из запроса
-          — редактирование: префилл черновика, применение только при
-          финальном сохранении. Координата: новое место — центр карты,
-          редактирование — точка места. */
-      const request = consumeAddPlaceRequest();
+      /* СУЩЕСТВУЮЩИЙ двухшаговый сценарий; place из запроса — редактирование:
+          префилл черновика, применение только при финальном сохранении.
+          Координата: новое место — центр карты, редактирование — точка места.
+          consume сбрасывает запрос (повторы deps без дела — no-op). */
+      const request = pendingAddRequest ? consumeAddPlaceRequest() : null;
       if (request) {
         const requested = request.place;
         const editCoordinate =
@@ -223,7 +229,7 @@ export default function MapScreen() {
           startFadeOut();
         }
       }
-    }, [markersState, startFadeIn, startFadeOut, moveCameraTo]),
+    }, [pendingAddRequest, markersState, startFadeIn, startFadeOut, moveCameraTo]),
   );
 
   /* точка = центр карты: live в шторку и в черновик. onRegionChangeComplete,
@@ -558,9 +564,11 @@ export default function MapScreen() {
                 onPress={() => createExitRef.current?.()}
               />
             </View>
-            {/* поиск (383:7090); слои убраны (Дмитрий 23.10) — заглушка */}
+            {/* поиск (383:7090); слои убраны (Дмитрия 23.10) — State=Disabled
+                (K 383:7125, К-DS 461:810/813/816/819): тап во время добавления
+                места недоступен, opacity 40% */}
             <View style={[styles.topCol, { top: insets.top + 8 }]}>
-              <ButtonIcon icon="magnifyingGlass" accessibilityLabel="Поиск (не подключено)" />
+              <ButtonIcon icon="magnifyingGlass" disabled accessibilityLabel="Поиск недоступен — добавление места" />
             </View>
             {/* геолокация (383:7093): следует за шторкой; фейк-гео: возврат
                 в посёлок Восход (Дмитрий 23.10) */}
@@ -618,18 +626,8 @@ export default function MapScreen() {
                 250,
               )
             }
-            onAddPress={() => {
-              /* новый процесс создания: черновик сбрасывается и заново ensured —
-                  переход хранит adding (store, реактивно); карту не двигаем */
-              clearPlaceCreateDraft();
-              ensurePlaceCreateDraft({
-                coordinate: { latitude: region.latitude, longitude: region.longitude },
-              });
-              setSheetH(0);
-              if (markersState !== 'hidden' && markersState !== 'fading-out') {
-                startFadeOut();
-              }
-            }}
+            /* «+» добавления места убран с карты (ТЗ _x/23.md §3): запуск
+                сценария — центральный «+» таббара (tab-bar.tsx) */
           />
         )}
         {/* зум (383:7084): пара по центру области карты — следует за шторкой;
