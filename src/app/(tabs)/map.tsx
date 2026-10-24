@@ -8,6 +8,7 @@ import ReAnimated, { useAnimatedStyle, useSharedValue, type SharedValue } from '
 import ButtonIcon from '@/components/button-icon';
 import ClasterPoint from '@/components/map/claster-point';
 import LocationDot from '@/components/map/location-dot';
+import LocationPulse from '@/components/map/location-pulse';
 import MapControls from '@/components/map/map-controls';
 import AddPlaceSheet, { Crosshair, AreaSight } from '@/components/map/add-place-sheet';
 import { SPAN_APPROX, SPAN_EXACT } from '@/components/map/place-header';
@@ -552,6 +553,14 @@ export default function MapScreen() {
               );
           }
         })}
+
+        {/* геоточка пользователя (ТЗ _x/25.md): пульс по FAKE_USER_LOCATION
+            (временные координаты сохранены, §3). ВНЕ fade-подсистемы меток —
+            на шаге 1 остаётся (K 383:7114). tracksViewChanges default true:
+            снапшот children обновляется нативным циклом */}
+        <Marker coordinate={FAKE_USER_LOCATION} tracksViewChanges>
+          <LocationPulse />
+        </Marker>
       </MapView>
         {/* прицел шага 1 (K 383:7080/7114/7152): центр области карты над
             шторкой, следит за ней; камера не трогается (§5/§6) */}

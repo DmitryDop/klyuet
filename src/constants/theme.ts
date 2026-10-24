@@ -66,6 +66,9 @@ export const Colors = {
     /** --color-overlay-point с альфой — полупрозрачная зелёная заливка
         приблизительных областей и кластеров (привязка K-DS 321:1835, 21.10.2026) */
     pointAlpha: '#176b5233',
+    /** --color-overlay-catch — пульс геоточки (задача _x/25.md, K-DS
+        main_location 532:2218; Light = amber.050, Dark = amber.040) */
+    catch: '#d18a24',
   },
 } as const;
 
