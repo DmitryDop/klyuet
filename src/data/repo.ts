@@ -34,9 +34,29 @@ export interface PlaceRepo {
    * ownerId обязателен; чужое место или место с отчётами → 'forbidden'.
    */
   updatePlace(id: string, draft: PlaceDraft, ownerId: string): Promise<Place | 'forbidden' | null>;
-  /** Удаление места (ТЗ _x/22.md §9): только автор и без отчётов — в репо. */
-  deletePlace(id: string, ownerId: string): Promise<'deleted' | 'forbidden' | null>;
+  /** Удаление места (ТЗ _x/22.md §9): только автор и без отчётов — в репо.
+      Возврат — снимок позиции (FIX-07) для «Вернуть». */
+  deletePlace(id: string, ownerId: string): Promise<DeleteSnapshot<Place> | 'forbidden' | null>;
+  /**
+   * Удаление отчёта (саммари QA-08/B, решение Дмитрия 25.10 — снимает
+   * ограничение reports.md §1 «удаление отчёта в MVP не реализовывать»):
+   * только автор; чужой отчёт → 'forbidden'. Связанное место не трогается.
+   */
+  deleteReport(id: string, authorId: string): Promise<DeleteSnapshot<Report> | 'forbidden' | null>;
+  /**
+   * Восстановление после Undo (FIX-07 §3–4, решение Дмитрия 25.10):
+   * снимок удалённой сущности возвращается на прежнюю позицию списка,
+   * ID не меняются; существующий объект не дублируется (повторное
+   * нажатие безопасно — 'exists'). Ограничения авторства не обходятся:
+   * снимок доступен только успешному удалению.
+   */
+  restorePlace(snapshot: Place, orderIndex: number): Promise<'restored' | 'exists'>;
+  restoreReport(snapshot: Report, orderIndex: number): Promise<'restored' | 'exists'>;
 }
+
+/** Снимок успешного удаления (FIX-07 §4): сущность целиком + позиция в списке
+    для восстановления «Вернуть»; ID не меняется. */
+export type DeleteSnapshot<T> = { snapshot: T; orderIndex: number };
 
 /** Черновик создания места: шаги 1–2 в двух сториях (task _x/18.md). */
 export type PlaceDraft = {
@@ -79,6 +99,30 @@ const state: RepoState = (globalRef.__klyuetRepoState ??= {
 
 /** Данные появляются не мгновенно — имитация сети для loading-состояний спеки §8. */
 const NET_MS = 400;
+
+/* Версия данных (FIX-07): восстановление из тоста должно доехать до экранов,
+   УЖЕ находящихся в фокусе (карта после «Назад» из карточки), — они
+   перечитывают списки не только на фокусе, но и на смене версии. */
+let dataVersion = 0;
+const dataListeners = new Set<() => void>();
+
+/** Подписка на смену данных репо (успешные create/update/delete/restore). */
+export function subscribeDataVersion(cb: () => void): () => void {
+  dataListeners.add(cb);
+  return () => {
+    dataListeners.delete(cb);
+  };
+}
+
+/** Текущая версия данных (deps для перечитывания списков). */
+export function getDataVersion(): number {
+  return dataVersion;
+}
+
+function bumpDataVersion(): void {
+  dataVersion += 1;
+  dataListeners.forEach((l) => l());
+}
 
 /** Демо-авторизация: текущий пользователь демо-сессии (до появления бэкенда). */
 export const CURRENT_USER_ID = 'me';
@@ -145,6 +189,7 @@ export const demoPlaceRepo: PlaceRepo = {
       updatedAt: now,
     };
     state.reports.unshift(created);
+    bumpDataVersion();
     return created;
   },
 
@@ -153,6 +198,7 @@ export const demoPlaceRepo: PlaceRepo = {
     const i = state.reports.findIndex((r) => r.id === id);
     if (i < 0) return null;
     state.reports[i] = { ...state.reports[i], ...patch, updatedAt: new Date().toISOString() };
+    bumpDataVersion();
     return state.reports[i];
   },
 
@@ -190,6 +236,7 @@ export const demoPlaceRepo: PlaceRepo = {
           }
         : { ...base, kind: 'exact', coordinate: draft.coordinate };
     state.places.unshift(place);
+    bumpDataVersion();
     return place;
   },
 
@@ -241,6 +288,7 @@ export const demoPlaceRepo: PlaceRepo = {
             coordinate: draft.coordinate,
           };
     state.places[i] = rebuilt;
+    bumpDataVersion();
     return rebuilt;
   },
 
@@ -256,6 +304,45 @@ export const demoPlaceRepo: PlaceRepo = {
       return 'forbidden';
     }
     state.places.splice(i, 1);
-    return 'deleted';
+    /* FIX-07: снимок для «Вернуть» — место целиком и позиция в списке */
+    bumpDataVersion();
+    return { snapshot: place, orderIndex: i };
+  },
+
+  async deleteReport(id, authorId) {
+    await new Promise((r) => setTimeout(r, NET_MS));
+    const i = state.reports.findIndex((r) => r.id === id);
+    if (i < 0) return null;
+    /* бизнес-правило (саммари QA-08/B): чужой отчёт удалить нельзя */
+    if (state.reports[i].authorId !== authorId) {
+      return 'forbidden';
+    }
+    const report = state.reports[i];
+    state.reports.splice(i, 1);
+    /* FIX-07: снимок для «Вернуть» — отчёт целиком и позиция в списке */
+    bumpDataVersion();
+    return { snapshot: report, orderIndex: i };
+  },
+
+  /* FIX-07 §3–4: восстановление снимка на прежней позиции, ID не меняются;
+     повторное нажатие (снапшот уже восстановлен) — 'exists', без дубликата. */
+  async restorePlace(snapshot, orderIndex) {
+    if (state.places.some((p) => p.id === snapshot.id)) {
+      return 'exists';
+    }
+    const index = Math.max(0, Math.min(orderIndex, state.places.length));
+    state.places.splice(index, 0, snapshot);
+    bumpDataVersion();
+    return 'restored';
+  },
+
+  async restoreReport(snapshot, orderIndex) {
+    if (state.reports.some((r) => r.id === snapshot.id)) {
+      return 'exists';
+    }
+    const index = Math.max(0, Math.min(orderIndex, state.reports.length));
+    state.reports.splice(index, 0, snapshot);
+    bumpDataVersion();
+    return 'restored';
   },
 };

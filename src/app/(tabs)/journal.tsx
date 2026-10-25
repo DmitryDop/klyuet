@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,7 +7,6 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withDelay,
   withTiming,
 } from 'react-native-reanimated';
 import type { ReactNode } from 'react';
@@ -16,8 +15,9 @@ import JournalCard from '@/components/journal/card';
 import Chip from '@/components/form/chip';
 import EmptyBlock from '@/components/ui/empty';
 import { SkeletonCards } from '@/components/ui/skeleton';
-import { demoPlaceRepo, CURRENT_USER_ID } from '@/data/repo';
-import { removeFromFavorites, useFavorites } from '@/data/favorites-store';
+import { demoPlaceRepo, CURRENT_USER_ID, subscribeDataVersion, getDataVersion } from '@/data/repo';
+import { removeFromFavorites, useFavorites, restoreFavorite } from '@/data/favorites-store';
+import { showToast } from '@/components/ui/toast';
 import { requestAddPlaceStart } from '@/data/add-request-store';
 import {
   myPlaces,
@@ -55,24 +55,34 @@ import { useTheme } from '@/data/theme-store';
 
 type Tab = 'places' | 'reports' | 'favorites';
 
-/* Общая длительность анимации удаления карточки (ТЗ _x/30.md §4). */
+/* FIX-07 §3 (решение Дмитрия 25.10): удаление — Opacity/Scale 1→0/0.96
+   240 мс, свёртывание высоты 200 мс (параллельно); восстановление — раскрытие
+   высоты 200 мс + Opacity/Scale 0.96→1 240 мс. REMOVE_MS — конец анимации. */
 const REMOVE_MS = 240;
 
 /**
- * Обёртка удаления строки «Избранного» (ТЗ _x/30.md §4): анимируется ВСЁ
- * содержимое карточки целиком; height схлопывает измеренную высоту — соседние
- * строки едут вверх; onComplete срабатывает ПОСЛЕ завершения (240 мс).
+ * Обёртка исчезновения/возврата строки «Избранного» (ТЗ _x/30.md §4 +
+ * FIX-07): анимируется ВСЁ содержимое карточки целиком; высота схлопывается/
+ * раскрывается, соседние строки едут вверх/вниз; замер — по ребёнку (высота
+ * обёртки во время анимации уже не достоверна). onComplete — после анимации.
  */
 function RemovableCard({
   removing,
+  restoring,
   onComplete,
   children,
 }: {
   removing: boolean;
+  restoring: boolean;
   onComplete: () => void;
   children: ReactNode;
 }) {
   const measured = useRef<number | null>(null);
+  /* FIX-07 §6: Reduce Motion — без анимаций, мгновенный итог */
+  const reduceMotion = useReducedMotion();
+  /* обратная анимация — одноразовый запуск из первого замера ребёнка:
+     строка восстанавливается на mount — замера в effect ещё нет */
+  const restoreStartedRef = useRef(false);
   const opacity = useSharedValue(1);
   const scale = useSharedValue(1);
   const height = useSharedValue(-1); /* −1 = высота не тронута (auto) */
@@ -80,38 +90,77 @@ function RemovableCard({
     opacity: opacity.value,
     transform: [{ scale: scale.value }],
     height: height.value < 0 ? undefined : height.value,
-    /* при схлопывании контент не вылезает за уменьшающуюся высоту */
+    /* при схлопывании/раскрытии контент не вылезает за анимируемую высоту */
     overflow: 'hidden',
   }));
 
   useEffect(() => {
     if (!removing) return;
+    if (reduceMotion) {
+      onComplete();
+      return;
+    }
     const easing = Easing.inOut(Easing.ease);
-    /* присвоение SharedValue в волклет-таймингах — не React state
+    /* присвоение SharedValue в ворклет-таймингах — не React state
         (прецедент place/[id].tsx, disable react-hooks/immutability) */
     // eslint-disable-next-line react-hooks/immutability
-    opacity.value = withTiming(0, { duration: 180, easing }); /* §4.3 */
+    opacity.value = withTiming(0, { duration: 240, easing }); /* FIX-07 §3 */
     // eslint-disable-next-line react-hooks/immutability
-    scale.value = withTiming(0.97, { duration: 180, easing });
+    scale.value = withTiming(0.96, { duration: 240, easing });
     const h = measured.current;
-    if (h != null) {
-      /* присвоение SharedValue — не React state (см. выше) */
+    if (h != null && h > 0) {
+      /* FIX-07 §3: свёртывание высоты 200 мс, параллельно растворению */
       // eslint-disable-next-line react-hooks/immutability
       height.value = h;
-      /* §4.4: 100–240 мс — высота до 0 (не React state, как выше) */
-      height.value = withDelay(100, withTiming(0, { duration: 140, easing }));
+       
+      height.value = withTiming(0, { duration: 200, easing });
     }
     const timer = setTimeout(onComplete, REMOVE_MS);
     return () => clearTimeout(timer);
-  }, [removing, onComplete, opacity, scale, height]);
+  }, [removing, reduceMotion, onComplete, opacity, scale, height]);
+
+  /* FIX-07 §3: обратный возврат: начальный кадр — высота 0, scale 0.96;
+     сама анимация стартует одноразово из первого замера ребёнка (startRestore) */
+  useEffect(() => {
+    if (!restoring || reduceMotion) return;
+    restoreStartedRef.current = false;
+    // eslint-disable-next-line react-hooks/immutability
+    opacity.value = 0;
+    // eslint-disable-next-line react-hooks/immutability
+    scale.value = 0.96;
+    // eslint-disable-next-line react-hooks/immutability
+    height.value = 0;
+  }, [restoring, reduceMotion, opacity, scale, height]);
+
+  const startRestore = (h: number) => {
+    if (restoreStartedRef.current) return;
+    restoreStartedRef.current = true;
+    const easing = Easing.inOut(Easing.ease);
+    // eslint-disable-next-line react-hooks/immutability
+    height.value = withTiming(h, { duration: 200, easing }); /* FIX-07 §3 */
+    // eslint-disable-next-line react-hooks/immutability
+    opacity.value = withTiming(1, { duration: 240, easing });
+    // eslint-disable-next-line react-hooks/immutability
+    scale.value = withTiming(1, { duration: 240, easing });
+    setTimeout(() => {
+      /* после возврата высота снова auto (measured актуально по onLayout) */
+      height.value = -1;
+      onComplete();
+    }, REMOVE_MS);
+  };
 
   return (
-    <Animated.View
-      style={removing ? anim : undefined}
-      onLayout={(e) => {
-        measured.current = e.nativeEvent.layout.height;
-      }}>
-      {children}
+    <Animated.View style={removing || restoring ? anim : undefined}>
+      <View
+        onLayout={(e) => {
+          const h = e.nativeEvent.layout.height;
+          measured.current = h;
+          if (restoring && h > 0) {
+            startRestore(h);
+          }
+        }}>
+        {children}
+      </View>
     </Animated.View>
   );
 }
@@ -141,12 +190,18 @@ export default function JournalScreen() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   /* удаление из «Избранного» (ТЗ §4): id строки, анимация которой идёт;
-      повторные нажатия иконок блокируются до завершения анимации */
+      повторные нажатия иконок блокируются до завершения анимации.
+      restoringId (FIX-07 §3): строка, возврат которой анимируется */
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
   const reduceMotion = useReducedMotion();
   const favoriteIds = useFavorites();
 
-  /* перечитать на входе и на возврате из карточек (§7; navigation.md) */
+  /* FIX-07: восстановление из тоста доехало в журнал, пока он в фокусе */
+  const dataVersion = useSyncExternalStore(subscribeDataVersion, getDataVersion, getDataVersion);
+
+  /* перечитать на входе и на возврате из карточек (§7; navigation.md),
+      на смене данных репо (FIX-07: Undo из тоста в этом же экране) */
   useFocusEffect(
     useCallback(() => {
       let alive = true;
@@ -161,7 +216,9 @@ export default function JournalScreen() {
       return () => {
         alive = false;
       };
-    }, []),
+      /* deps с dataVersion намеренно: перечитывание по версии данных (FIX-07) */
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dataVersion]),
   );
 
   const myPlacesList = useMemo(() => myPlaces(places, CURRENT_USER_ID), [places]);
@@ -186,16 +243,13 @@ export default function JournalScreen() {
     router.push('/(tabs)/map');
   };
 
-  /* удаление из «Избранного» (ТЗ §4): повторное нажатие во время анимации
-      заблокировано; Reduce Motion — без анимации */
-  const removeFavorite = useCallback((id: string) => {
-    if (removingId != null) return;
-    if (reduceMotion) {
-      removeFromFavorites(id);
-      return;
-    }
+  /* удаление из «Избранного» (ТЗ §4): анимация растворения; по завершении —
+      данные убраны и показан тост с Undo (FIX-07 §2–3). Повторные нажатия
+      иконок блокируются до завершения анимации. */
+  const removeFavoriteRow = useCallback((id: string) => {
+    if (removingId != null || restoringId != null) return;
     setRemovingId(id);
-  }, [removingId, reduceMotion]);
+  }, [removingId, restoringId]);
 
   return (
     <View style={styles.container}>
@@ -279,9 +333,24 @@ export default function JournalScreen() {
                 <RemovableCard
                   key={p.id}
                   removing={removingId === p.id}
+                  restoring={restoringId === p.id}
                   onComplete={() => {
-                    removeFromFavorites(p.id);
-                    setRemovingId(null);
+                    if (removingId === p.id) {
+                      /* FIX-07 §2: данные после анимации + тост с Undo */
+                      removeFromFavorites(p.id);
+                      const idx = favoriteIds.indexOf(p.id);
+                      setRemovingId(null);
+                      showToast('Место удалено из избранного', {
+                        label: 'Вернуть',
+                        onPress: () => {
+                          restoreFavorite(p.id, idx);
+                          if (!reduceMotion) setRestoringId(p.id);
+                        },
+                      });
+                    } else if (restoringId === p.id) {
+                      /* FIX-07 §3: обратная анимация завершена */
+                      setRestoringId(null);
+                    }
                   }}>
                   <JournalCard
                     title={p.name}
@@ -290,7 +359,7 @@ export default function JournalScreen() {
                     date={p.createdAt ? formatRuDate(p.createdAt) : '—'}
                     onPress={() => router.push(`/place/${p.id}`)}
                     accessibilityLabel={`Избранное место: ${p.name}`}
-                    onBookmarkPress={() => removeFavorite(p.id)}
+                    onBookmarkPress={() => removeFavoriteRow(p.id)}
                   />
                 </RemovableCard>
               ))}

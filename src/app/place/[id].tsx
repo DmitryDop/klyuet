@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   interpolate,
@@ -12,8 +12,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import ButtonIcon from '@/components/button-icon';
-import { CURRENT_USER_ID, demoPlaceRepo } from '@/data/repo';
-import { removeFromFavorites, toggleFavorite, useIsFavorite } from '@/data/favorites-store';
+import { CURRENT_USER_ID, demoPlaceRepo, subscribeDataVersion, getDataVersion } from '@/data/repo';
+import { toggleFavorite, removeFromFavorites, removeFavorite, restoreFavorite, useFavorites, useIsFavorite } from '@/data/favorites-store';
 import { requestAddPlaceStart } from '@/data/add-request-store';
 import type { Place, Report } from '@/data/types';
 import { PlaceHeader, DIMMING_BACKDROP } from '@/components/map/place-header';
@@ -26,6 +26,7 @@ import { photoSource } from '@/logic/photos';
 import ModalCard from '@/components/ui/modal-card';
 import { showToast } from '@/components/ui/toast';
 import { UI_ICONS } from '@/components/ui-icons';
+import { setBottomReserve, clearBottomReserve } from '@/data/bottom-reserve-store';
 import type { Palette } from '@/constants/theme';
 import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
@@ -71,6 +72,8 @@ export default function PlaceScreen() {
   /* избранное (ТЗ _x/30.md §2): единый стор; кнопка видна только у ЧУЖИХ
      мест (Дмитрий 25.10 — свои не добавляются в избранное) */
   const isFavorite = useIsFavorite(id);
+  /* порядок избранного — для позиции «Вернуть» (FIX-07 §3) */
+  const favoritesOrder = useFavorites();
   /* скролл-анимация K 328:3096 (Дмитрий 22.10, механика макета): подложка
      шапки «ovelay map» — сплошной #181D1C; на блоке шапки (dimming block:
      карта+маркер+плашка+кнопки) альфа-канал по кадрам 05/04/03 — перекрытие
@@ -100,7 +103,10 @@ export default function PlaceScreen() {
   }, [id]);
 
   /* отчёты обновляются при возврате: публикация из формы меняет список
-     «Свежие отчеты» (reports.md §2: текущие списки обновлять при возврате) */
+     «Свежие отчеты» (reports.md §2: текущие списки обновлять при возврате);
+     FIX-07: и по версии данных — восстановление отчёта тостом «Вернуть»
+     доезжает на открытую карточку */
+  const dataVersion = useSyncExternalStore(subscribeDataVersion, getDataVersion, getDataVersion);
   useFocusEffect(
     useCallback(() => {
       let alive = true;
@@ -111,8 +117,17 @@ export default function PlaceScreen() {
       return () => {
         alive = false;
       };
-    }, [id]),
+      /* deps с dataVersion намеренно: перечитывание по версии данных (FIX-07) */
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id, dataVersion]),
   );
+
+  /* FIX-07: тост на 8 px над нижней панелью карточки (hook — до ранних
+     возвратов; панель фиксированной высоты) */
+  useEffect(() => {
+    setBottomReserve('place-panel', 16 + 48 + 8 + insets.bottom);
+    return () => clearBottomReserve('place-panel');
+  }, [insets.bottom]);
 
   if (!loaded || !place) {
     return <View style={[styles.container, styles.stub]} />;
@@ -125,13 +140,23 @@ export default function PlaceScreen() {
   const subtitle =
     place.placeType === 'wild' ? 'Дикое место · Бесплатно' : 'Платное место';
 
-  /* избранное (ТЗ §2): переключение в сторе; тосты на оба действия:
-     добавление / удаление (Дмитрий 25.10) */
+  /* избранное (ТЗ §2; решение Дмитрия 26.10 — тосты возвращены, FIX-07):
+      тап закладки — тост над нижними кнопками карточки;
+      добавление — «Место добавлено в избранное» без действия;
+      удаление — «Место удалено из избранного» + «Вернуть» (позиция строка
+      сохраняется — restoreFavorite(index)); повторный тап — новый тост
+      вытесняет предыдущий (FIX-07 §5) */
   const togglePlaceFavorite = () => {
-    if (toggleFavorite(place.id) === 'added') {
-      showToast('Место добавлено в избранное');
+    const before = favoritesOrder.indexOf(place.id);
+    if (before >= 0) {
+      removeFavorite(place.id);
+      showToast('Место удалено из избранного', {
+        label: 'Вернуть',
+        onPress: () => restoreFavorite(place.id, before),
+      });
     } else {
-      showToast('Место удалено из избранного');
+      toggleFavorite(place.id);
+      showToast('Место добавлено в избранное');
     }
   };
 
@@ -147,10 +172,26 @@ export default function PlaceScreen() {
     demoPlaceRepo
       .deletePlace(id, CURRENT_USER_ID)
       .then((res) => {
-        if (res === 'deleted') {
+        if (res !== 'forbidden' && res != null) {
           /* место удалено — не оставить его в избранном (ТЗ §5) */
           removeFromFavorites(id);
-          showToast('Место удалено');
+          /* FIX-07 §2: тост с Undo — возврат на прежнюю позицию списка;
+             карта перечитает список по версии данных (restore из тоста) */
+          showToast('Место удалено', {
+            label: 'Вернуть',
+            onPress: () => {
+              void demoPlaceRepo.restorePlace(res.snapshot, res.orderIndex).catch(() => {
+                /* FIX-07 §6: ошибка восстановления — тост с повтором
+                   (решение Дмитрия 25.10; снимок сохранён в замыкании) */
+                showToast('Не удалось восстановить', {
+                  label: 'Повторить',
+                  onPress: () => {
+                    void demoPlaceRepo.restorePlace(res.snapshot, res.orderIndex);
+                  },
+                });
+              });
+            },
+          });
           router.back();
         } else {
           setDeleteErrorModal(true);

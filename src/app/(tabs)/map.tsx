@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Animated, StyleSheet, View, useWindowDimensions } from 'react-native';
 import MapView, { Circle, MapPressEvent, Marker } from 'react-native-maps';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -12,7 +12,7 @@ import LocationPulse from '@/components/map/location-pulse';
 import MapControls from '@/components/map/map-controls';
 import AddPlaceSheet, { Crosshair, AreaSight } from '@/components/map/add-place-sheet';
 import { SPAN_APPROX, SPAN_EXACT } from '@/components/map/place-header';
-import { demoPlaceRepo } from '@/data/repo';
+import { demoPlaceRepo, subscribeDataVersion, getDataVersion } from '@/data/repo';
 import { getAppliedMapFilter } from '@/data/filter-store';
 import { clearPendingSearchTarget, getPendingSearchTarget } from '@/data/map-search-store';
 import { useMapSettingsOpen, useMapViewKind } from '@/data/map-settings-store';
@@ -239,6 +239,14 @@ export default function MapScreen() {
       }
     }, [pendingAddRequest, markersState, startFadeIn, startFadeOut, moveCameraTo]),
   );
+
+  /* FIX-07: восстановление из тоста «Вернуть» доезжает на карту, пока она
+     в фокусе (перечитывание по версии данных, не только на фокусе) */
+  const dataVersion = useSyncExternalStore(subscribeDataVersion, getDataVersion, getDataVersion);
+  useEffect(() => {
+    demoPlaceRepo.getPlaces().then(setPlaces);
+    demoPlaceRepo.getAllReports().then(setReports);
+  }, [dataVersion]);
 
   /* точка = центр карты: live в шторку и в черновик. onRegionChangeComplete,
      а не onRegionChange: при инициализации MapKit эмитирует промежуточные

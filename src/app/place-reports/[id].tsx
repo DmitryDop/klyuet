@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useSyncExternalStore } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,7 +7,7 @@ import ButtonIcon from '@/components/button-icon';
 import Button from '@/components/button';
 import ReportItem from '@/components/place/report-item';
 import { SkeletonCards } from '@/components/ui/skeleton';
-import { demoPlaceRepo, displayName } from '@/data/repo';
+import { demoPlaceRepo, displayName, subscribeDataVersion, getDataVersion } from '@/data/repo';
 import type { Report } from '@/data/types';
 import type { Palette } from '@/constants/theme';
 import { useTheme } from '@/data/theme-store';
@@ -40,7 +40,9 @@ export default function PlaceReportsScreen() {
   const [attempt, setAttempt] = useState(0);
 
   /* на фокус и при retry — повторная загрузка: списки актуальны при возврате
-     из формы/деталей (reports.md §2) */
+     из формы/деталей (reports.md §2); FIX-07: и по версии данных —
+     восстановление отчёта тостом «Вернуть» доезжает на открытый список */
+  const dataVersion = useSyncExternalStore(subscribeDataVersion, getDataVersion, getDataVersion);
   useFocusEffect(
     useCallback(() => {
       let alive = true;
@@ -61,7 +63,7 @@ export default function PlaceReportsScreen() {
       };
       /* useFocusEffect перезапускается при изменении deps (рефетч после retry) */
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id, attempt]),
+    }, [id, attempt, dataVersion]),
   );
 
   const retry = () => {

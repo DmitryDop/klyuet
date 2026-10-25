@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { usePathname, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +10,7 @@ import { ADD_PLACE_ICON, SETTINGS_ICON, TAB_ICONS } from '@/components/tab-icons
 import { requestAddPlaceStart } from '@/data/add-request-store';
 import { requestOpenMapSettings } from '@/data/map-settings-store';
 import { useTheme, useThemeMode } from '@/data/theme-store';
+import { setBottomReserve, clearBottomReserve } from '@/data/bottom-reserve-store';
 
 /* Таб-бар по K-DS (компонент tab_bar 68:327, обновление 24.10 — ТЗ _x/23.md):
    стеклянная пилюля поверх контента, 5 элементов icon-only
@@ -37,6 +39,13 @@ export default function TabBar() {
   const palette = useTheme();
   const themeMode = useThemeMode();
   const styles = makeStyles(palette);
+
+  /* FIX-07 позиция тоста: нижний блок таб-экранов = пилюля 48 + отступ 4
+     + home-зона; резерв включает safe-зону (тост — reserve + 8) */
+  useEffect(() => {
+    setBottomReserve('tab-bar', insets.bottom + 52);
+    return () => clearBottomReserve('tab-bar');
+  }, [insets.bottom]);
 
   const navTab = (tab: (typeof TABS)[number]) => {
     const active = pathname === tab.path;

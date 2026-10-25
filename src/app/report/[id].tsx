@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import {
   useLocalSearchParams,
   useNavigation,
@@ -11,8 +12,13 @@ import ButtonIcon from '@/components/button-icon';
 import Button from '@/components/button';
 import AuthorReportsSheet from '@/components/report/author-sheet';
 import ReportContent from '@/components/report/report-content';
+import SheetModal from '@/components/ui/sheet-modal';
+import ModalCard from '@/components/ui/modal-card';
+import { showToast } from '@/components/ui/toast';
 import { SkeletonReportDetails } from '@/components/ui/skeleton';
+import { UI_ICONS } from '@/components/ui-icons';
 import { CURRENT_USER_ID, demoPlaceRepo } from '@/data/repo';
+import { setBottomReserve, clearBottomReserve } from '@/data/bottom-reserve-store';
 import type { Place, Report } from '@/data/types';
 import type { Palette } from '@/constants/theme';
 import { useTheme } from '@/data/theme-store';
@@ -20,8 +26,11 @@ import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /* Детали отчёта (slice 4 + шторка отчётов рыбака, navigation.md 22.10) —
    K 156:8408 / 157:8531 / 199:9347 / 199:9262 / 199:9421:
-   - тулбар статичный: назад + «Отчёт о рыбалке» (Headline 16/20); pen справа
-     только у СВОЕГО отчёта (§5) → форма правки /report-form;
+   - тулбар статичный: назад + «Отчёт о рыбалке» (Headline 16/20); «⋯» справа
+     только у СВОЕГО отчёта (§5; макет обновлён Дмитрием 25.10 — был pen)
+     → шторка действий «Изменить»/«Удалить» по паттерну карточки места
+     (K 436:12522, саммари QA-08/B); «Изменить» → /report-form;
+     «Удалить» → подтверждение ModalCard;
    - контент — общий ReportContent (галерея/place/about/комментарий);
    - чужой отчёт: Outline «Все отчеты рыбака (N)» (K 201:9550) → ШТОРКА
      (navigation.md): список отчётов автора и полный отчёт — вложенный
@@ -42,6 +51,10 @@ export default function ReportScreen() {
   const [place, setPlace] = useState<Place | null>(null);
   const [authorCount, setAuthorCount] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteErrorModal, setDeleteErrorModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
@@ -75,6 +88,14 @@ export default function ReportScreen() {
     setAttempt((a) => a + 1);
   };
 
+  /* FIX-07: тост на 8 px над нижней панелью отчёта (или над home-зоной).
+     Hook — до ранних возвратов skeleton/error; панель появляется только
+     когда кнопка есть (enteredFromSamePlace считает до данных). */
+  useEffect(() => {
+    setBottomReserve('report-panel', 16 + 48 + 8 + insets.bottom);
+    return () => clearBottomReserve('report-panel');
+  }, [insets.bottom]);
+
   /* детали без данных: skeleton (§8), при провале — ошибка с Повторить */
 
   if (report == null && !failed) {
@@ -97,6 +118,43 @@ export default function ReportScreen() {
   }
 
   const isMine = report.authorId === CURRENT_USER_ID;
+
+  /* удаление отчёта (саммари QA-08/B): подтверждение ModalCard; успех —
+      тост (прецедент удаления места) и возврат к источнику (карточка отчёта
+      больше не существует); связанные списки обновятся при возврате
+      (спека reports.md §2: текущие списки обновлять при возврате).
+      «Изменить» — прежняя точка карандаша: форма с ?report=ID. */
+  const confirmDeleteReport = () => {
+    if (deleting) return; /* блокировка повторного нажатия */
+    setDeleting(true);
+    setDeleteModal(false);
+    demoPlaceRepo
+      .deleteReport(report.id, CURRENT_USER_ID)
+      .then((res) => {
+        if (res !== 'forbidden' && res != null) {
+          /* FIX-07 §2: тост с Undo; журнал/карточка места обновятся при
+             возврате и по версии данных (restore из тоста) */
+          showToast('Отчёт удалён', {
+            label: 'Вернуть',
+            onPress: () => {
+              void demoPlaceRepo.restoreReport(res.snapshot, res.orderIndex).catch(() => {
+                showToast('Не удалось восстановить', {
+                  label: 'Повторить',
+                  onPress: () => {
+                    void demoPlaceRepo.restoreReport(res.snapshot, res.orderIndex);
+                  },
+                });
+              });
+            },
+          });
+          router.back();
+        } else {
+          setDeleteErrorModal(true);
+        }
+      })
+      .catch(() => setDeleteErrorModal(true))
+      .finally(() => setDeleting(false));
+  };
 
   /* Вход из карточки этого же места (решение Дмитрия 22.10): отчёт открыт
      напрямую из карточки или из её «Отчеты места» → кнопки «Перейти в место»
@@ -152,13 +210,15 @@ export default function ReportScreen() {
             </Text>
           </View>
         </View>
+        {/* «⋯» — только у своего отчёта (макет 156:8408 обновлён 25.10:
+            был pen); меню действий — шторка «Изменить»/«Удалить» */}
         {isMine && (
           <View style={[styles.toolbarButtonRight, { top: insets.top + 8 }]}>
             <ButtonIcon
-              icon="pen"
+              icon="more"
               type="toolbar"
-              accessibilityLabel="Редактировать отчёт"
-              onPress={() => router.push(`/report-form/${report.placeId}?report=${report.id}`)}
+              accessibilityLabel="Действия по отчёту"
+              onPress={() => setActionsOpen(true)}
             />
           </View>
         )}
@@ -210,7 +270,126 @@ export default function ReportScreen() {
         onClose={() => setSheetOpen(false)}
         onGoToPlace={goToPlaceFromSheet}
       />
+
+      {/* шторка действий отчёта (паттерн K 436:12522, саммари QA-08/B):
+          «Изменить» → форма правки; «Удалить» → подтверждение.
+          Закрытие — тап вне/свайп/системная «назад» (SheetModal). */}
+      <ReportActionsSheet
+        visible={actionsOpen}
+        onClose={() => setActionsOpen(false)}
+        onEdit={() => {
+          /* RN-Modal поверх RN-Modal не поднимается при одновременном
+             переходе (репро 13:12) — закрыть шторку, действие позже */
+          setActionsOpen(false);
+          setTimeout(() => {
+            router.push(`/report-form/${report.placeId}?report=${report.id}`);
+          }, 320);
+        }}
+        onDelete={() => {
+          if (deleting) return;
+          setActionsOpen(false);
+          /* пауза 320 мс: та же репро-модалка одновременного перехода */
+          setTimeout(() => setDeleteModal(true), 320);
+        }}
+      />
+
+      {/* подтверждение удаления отчёта (паттерн ModalCard удаления места,
+          решение Дмитрия 24.10): «Оставить» Outline / «Удалить» Negative */}
+      <ModalCard
+        visible={deleteModal}
+        icon="delete"
+        title="Удалить отчёт?"
+        body="Отчёт будет удалён без возможности восстановления."
+        actions={[
+          { label: 'Оставить', onPress: () => setDeleteModal(false) },
+          { label: 'Удалить', mode: 'primary', appearance: 'negative', onPress: confirmDeleteReport },
+        ]}
+        onClose={() => setDeleteModal(false)}
+      />
+
+      {/* ошибка удаления (прецедент места): остаёмся в отчёте, «Повторить» */}
+      <ModalCard
+        visible={deleteErrorModal}
+        icon="warn"
+        title="Не удалось удалить отчёт"
+        body="Попробуйте ещё раз."
+        actions={[
+          { label: 'Готово', onPress: () => setDeleteErrorModal(false) },
+          { label: 'Повторить', onPress: confirmDeleteReport },
+        ]}
+        onClose={() => setDeleteErrorModal(false)}
+      />
     </View>
+  );
+}
+
+/* Шторка действий отчёта (паттерн K 436:12522 карточки места, саммари
+   QA-08/B; модал K-DS Sheet 246:4605): граббер — SheetModal; Slot pb 16;
+   Cell: px 16, py 2, Left p 8 (иконка 24), текст py 8, Body 16/22.
+   Тексты — «Изменить»/«Удалить» (как в шторке места). */
+function ReportActionsSheet({
+  visible,
+  onClose,
+  onEdit,
+  onDelete,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  /* шторка без нижних кнопок: отступ от домашней полосы (решение Дмитрия 24.10) */
+  const insets = useSafeAreaInsets();
+  const palette = useTheme();
+  const styles = makeStyles(palette);
+  return (
+    <SheetModal visible={visible} onClose={onClose} fullHeight={false}>
+      <View style={[styles.actionsSlot, { paddingBottom: 16 + insets.bottom }]}>
+        <PressableCell
+          icon="pen"
+          label="Изменить"
+          onPress={onEdit}
+          accessibilityLabel="Изменить отчёт"
+        />
+        <PressableCell
+          icon="delete"
+          label="Удалить"
+          onPress={onDelete}
+          accessibilityLabel="Удалить отчёт"
+        />
+      </View>
+    </SheetModal>
+  );
+}
+
+function PressableCell({
+  icon,
+  label,
+  onPress,
+  accessibilityLabel,
+}: {
+  icon: 'pen' | 'delete';
+  label: string;
+  onPress: () => void;
+  accessibilityLabel: string;
+}) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      onPress={onPress}
+      style={styles.actionCell}>
+      <View style={styles.actionCellLeft}>
+        <Svg width={24} height={24} viewBox="0 0 24 24">
+          <Path d={UI_ICONS[icon].d} fill={palette.text} />
+        </Svg>
+      </View>
+      <View style={styles.actionCellTextWrap}>
+        <Text style={styles.actionCellText}>{label}</Text>
+      </View>
+    </Pressable>
   );
 }
 
@@ -248,6 +427,33 @@ const makeStyles = (palette: Palette) =>
     position: 'absolute',
     right: 16,
     overflow: 'hidden',
+  },
+  actionsSlot: {
+    paddingBottom: 16,
+  },
+  actionCell: {
+    /* Cell (436:12518): ряд (иконка слева, текст справа), px 16, py 3xs 2 */
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 2,
+  },
+  actionCellLeft: {
+    /* Left (459:736): p xs 8, иконка 24 */
+    padding: 8,
+  },
+  actionCellTextWrap: {
+    /* Layout Txt (268:1023): py 8 у текстовой колонки */
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: '0%',
+    paddingVertical: 8,
+    alignItems: 'flex-start',
+  },
+  actionCellText: {
+    ...rnTextStyle(TEXT.body),
+    fontFamily: FONT_FAMILY,
+    color: palette.text,
   },
   toolbarTitleWrap: {
     position: 'absolute',

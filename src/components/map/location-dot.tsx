@@ -4,8 +4,10 @@ import { useTheme } from '@/data/theme-store';
 
 /**
  * Пин точного места — K-DS location-dot (мастер 73:804, 56×56).
- * Зелёная заливка — токен --color-overlay-point (ключ палитры `accent`),
- * внутренний круг белой заливкой --color-overlay-point-on (`accentIcon`).
+ * Зелёная заливка — токен --color-action-default (ключ палитры `accent`),
+ * внутренний круг — инвариантно белый (K-DS: fill white без темы;
+ * ключ палитры `pointOnInvariable` — #ffffff в Light и Dark,
+ * Дарk-фикс 25.10 по саммари QA-11 D; было accentIcon — тёмная в Dark).
  * Якорь маркера — нижняя точка пина (default anchor 0.5, 1).
  */
 export default function LocationDot() {
@@ -18,7 +20,7 @@ export default function LocationDot() {
       />
       <Path
         d="M35 22.3C35 26.4422 31.6421 29.8 27.5 29.8C23.3579 29.8 20 26.4422 20 22.3C20 18.1579 23.3579 14.8 27.5 14.8C31.6421 14.8 35 18.1579 35 22.3Z"
-        fill={palette.accentIcon}
+        fill={palette.pointOnInvariable}
       />
     </Svg>
   );

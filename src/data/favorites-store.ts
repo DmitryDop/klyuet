@@ -58,6 +58,27 @@ export function toggleFavorite(placeId: string): 'added' | 'removed' {
   return 'added';
 }
 
+/**
+ * Удалить из избранного, вернув исходную позицию (FIX-07 §3: карточка
+ * восстанавливается на прежнем месте списка). undefined — места нет.
+ */
+export function removeFavorite(placeId: string): number | undefined {
+  const favorites = getFavorites();
+  const index = favorites.indexOf(placeId);
+  if (index < 0) return undefined;
+  update(favorites.filter((id) => id !== placeId));
+  return index;
+}
+
+/** Восстановить на исходной позиции (FIX-07); повтор — без дубликата. */
+export function restoreFavorite(placeId: string, index: number): void {
+  const favorites = getFavorites();
+  if (favorites.includes(placeId)) return;
+  const next = [...favorites];
+  next.splice(Math.max(0, Math.min(index, next.length)), 0, placeId);
+  update(next);
+}
+
 /** Исключить место из избранного (в т. ч. после удаления самого места). */
 export function removeFromFavorites(placeId: string): void {
   const favorites = getFavorites();

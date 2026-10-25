@@ -26,6 +26,9 @@ const light = {
   selection: '#d8e8df',
   /** --color-overlay-point-on — иконка на зелёной кнопке */
   accentIcon: '#ffffff',
+  /** --action/thint (Light #62c397; Dark #176b52 — задано Дмитрием,
+      дамп _x/04_25_2026; «Вернуть» на тосте, FIX-07) */
+  actionHint: '#62c397',
   /** --color-overlay-marker-halo — обводка/гало пина */
   markerHalo: '#fafaf6',
   /** --color-text-secondary — подписи полей/метаданные (привязка 135:6246) */
@@ -116,6 +119,9 @@ const dark = {
   selection: '#173d30',
   /** (stone/170) */
   accentIcon: '#101714',
+  /** action/thint (Light #62c397 / Dark #176b52 — задано Дмитрием,
+      дамп _x/04_25_2026; «Вернуть» на тосте, FIX-07) */
+  actionHint: '#176b52',
   /** (stone/170) */
   markerHalo: '#101714',
   /** (stone/060) */
