@@ -24,19 +24,23 @@ const clusterViews = (palette: Palette): Record<ClusterKind, { bg: string; digit
   exact: {
     bg: palette.accent,
     digit: palette.accentIcon,
-    border: palette.markerHalo,
+    /* граница — cluster_on_invariably: всегда белая (новый токен K-DS 25.10;
+       было markerHalo: Light #fafaf6, Dark #101714 тёмное кольцо) */
+    border: palette.clusterOnInvariable,
     dashed: false,
   },
   approximate: {
     bg: palette.pointAlpha, // --color-overlay-point #176b5233 (привязка K-DS 321:1835)
     digit: palette.text,
-    border: palette.accent,
+    /* пунктир — point_on_invariably: всегда белый (K-DS 25.10; было accent) */
+    border: palette.pointOnInvariable,
     dashed: true,
   },
   mixed: {
     bg: palette.accent,
     digit: palette.accentIcon,
-    border: palette.accentIcon,
+    /* пунктир — point_on_invariably: всегда белый (K-DS 25.10; было accentIcon) */
+    border: palette.pointOnInvariable,
     dashed: true,
   },
 });

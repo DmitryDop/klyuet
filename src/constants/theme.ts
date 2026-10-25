@@ -70,6 +70,16 @@ const light = {
   /** --overlay/point_alpha_20 — полупрозрачная зелёная заливка
       приблизительных областей и кластеров (привязка K-DS 321:1835, 21.10.2026) */
   pointAlpha: '#176b5233',
+  /** --overlay/point_contrast — пунктир области «Примерно» на карте
+      (новый токен K-DS 25.10.2026: Light forest/080, Dark stone/000 —
+      в Dark белая линия, решает бледность областей на тёмной карте) */
+  pointContrast: '#176b52',
+  /** --overlay/point-on-invariably — пунктир кластера approximate/mixed:
+      всегда белый в обеих темах (новый токен K-DS 25.10, бордер-изменения) */
+  pointOnInvariable: '#ffffff',
+  /** --overlay/cluster-on-invariably — граница кластера exact:
+      всегда белая в обеих темах (новый токен K-DS 25.10) */
+  clusterOnInvariable: '#ffffff',
   /** --color-overlay-catch — пульс геоточки (задача _x/25.md, K-DS
       main_location 532:2218; Light = amber.050, Dark = amber.040) */
   catch: '#d18a24',
@@ -136,6 +146,12 @@ const dark = {
   scrim: '#10171466',
   /** (forest/050 @ 20%) */
   pointAlpha: '#62c39733',
+  /** (point_contrast Dark = stone/000 — белая линия, K-DS 25.10) */
+  pointContrast: '#ffffff',
+  /** (point-on-invariably = #ffffff в обеих темах, K-DS 25.10) */
+  pointOnInvariable: '#ffffff',
+  /** (cluster-on-invariably = #ffffff в обеих темах, K-DS 25.10) */
+  clusterOnInvariable: '#ffffff',
   /** (amber/040) */
   catch: '#e2a647',
   /** (forest/050) */

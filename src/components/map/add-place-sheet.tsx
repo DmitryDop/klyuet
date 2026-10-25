@@ -52,13 +52,14 @@ import { useTheme } from '@/data/theme-store';
  */
 
 /* Прицел «Точно» (K-DS exact location 413:15601, крест 109×109, stroke 2):
-   цвет — токен акцента (Дмитрий 23.10: прицелу назначен цвет) */
+   цвет — point_contrast (Дмитрий 25.10: в Dark белая обводка; Light
+   #176b52 — как был акцент) */
 export function Crosshair() {
   const palette = useTheme();
   return (
     <Svg width={109} height={109} viewBox="0 0 109 109">
-      <Line x1={54.495} y1={0} x2={54.495} y2={109} stroke={palette.accent} strokeWidth={2} />
-      <Line x1={0} y1={54.495} x2={109} y2={54.495} stroke={palette.accent} strokeWidth={2} />
+      <Line x1={54.495} y1={0} x2={54.495} y2={109} stroke={palette.pointContrast} strokeWidth={2} />
+      <Line x1={0} y1={54.495} x2={109} y2={54.495} stroke={palette.pointContrast} strokeWidth={2} />
     </Svg>
   );
 }
@@ -78,7 +79,7 @@ export function AreaSight({ diameter }: { diameter: number }) {
   const c = box / 2;
   const inner = diameter / 2 + 2;
   const outer = diameter / 2 + 14;
-  const tick = { stroke: palette.accent, strokeWidth: 0.5 }; /* stroke/05 */
+  const tick = { stroke: palette.pointContrast, strokeWidth: 0.5 }; /* stroke/05 */
   return (
     <Svg width={box} height={box} viewBox={`0 0 ${box} ${box}`}>
       <SvgCircle
@@ -86,7 +87,8 @@ export function AreaSight({ diameter }: { diameter: number }) {
         cy={c}
         r={diameter / 2}
         fill={palette.pointAlpha} /* --color-overlay-point */
-        stroke={palette.accent} /* --color-action-default, dashed */
+        /* обводка: point_contrast (в Dark белая, Дмитрий 25.10) */
+        stroke={palette.pointContrast}
         strokeWidth={0.5}
         strokeDasharray="5 4"
       />
@@ -105,7 +107,7 @@ export function SightApprox() {
     <Svg width={49} height={49} viewBox="0 0 49 49">
       <Path
         d="M24.5 36.5V49M24.5 0V12.5M12.5 24.5H0M49 24.5H36.5"
-        stroke={palette.accent}
+        stroke={palette.pointContrast}
         strokeWidth={0.5} /* dimensions/stroke/05 */
       />
       <SvgCircle
@@ -113,7 +115,8 @@ export function SightApprox() {
         cy={24.5}
         r={10}
         fill={palette.pointAlpha} /* --color-overlay-point */
-        stroke={palette.accent} /* --color-action-default */
+        /* обводка: point_contrast (в Dark белая, Дмитрий 25.10) */
+        stroke={palette.pointContrast}
         strokeWidth={0.5}
         strokeDasharray="5 4"
       />

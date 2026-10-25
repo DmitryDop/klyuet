@@ -9,21 +9,21 @@ import Animated, {
 
 import { useTheme } from '@/data/theme-store';
 
-/* Toggle K-DS 517:1143 (регулярные Default/Disabled снимок от 24.10.2026).
-   Использован на профиле K 500:11242 в переключателе «Тёмная тема» (Off).
-   Геометрия, снятая по рендерам мастеров Off 517:1148 / On 517:1144 (png):
-   трек 40×20 (dimensions/size/xl), radius full; бегунок 24×16, радиус —
-   кламп full к половине высоты; в Off бегунок с отступом 2 слева, в On —
-   с отступом 2 справа, ход 12 (в K-DS авто-лейаут pl/pr MCP не разрешает
-   в размер трека 40 однозначно — измерено по растру). Цвета — переменные:
-   --toggle/surface_off #b8d3b9, --toggle/surface_on #35916b,
-   --toggle/knob (Light = stone/000 белый; Dark = forest/110 #263f34) —
-   токены Colors.light / Colors.dark через palette (25.10).
+/* Toggle K-DS 517:1143 (геометрия ОБНОВЛЕНА 25.10.2026 — актуализировано по
+   get_design_context мастеров 517:1148/1150, 517:1144/1145, 518:1186/1187):
+   - трек 44×22 (dimensions/size/2xl), radius full, py 2;
+   - Off: bg --toggle/surface_off (#b8d3b9), бегунок отступ 2 слева (pl 2/pr 16);
+   - On: bg --toggle/surface_on (#35916b), бегунок отступ 2 справа (pl 16/pr 2);
+   - бегунок 24×18 (радиус sm=12 клампит к 9), ход 18−2=16 (было 40×20/24×16, ход 12);
+   disabled-варианты 518:1186/1188 (opacity 40%) в задаче не востребованы — не строю.
+   Использован на профиле K 500:11242 в переключателе «Тёмная тема».
+   Цвета — переменные: --toggle/surface_off #b8d3b9, --toggle/surface_on
+   #35916b, --toggle/knob (Light = stone/000 белый; Dark = forest/110
+   #263f34) — токены Colors.light / Colors.dark через palette (25.10).
    Анимация — Reanimated withTiming 200ms (задача: 180–220): ход бегунка
    и цвет трека на UI-треде; при быстрых повторных нажатиях value
    ретаргетится с текущего положения, без скачков. Дополнительных
-   эффектов (масштаб/подпрыгивание) по требованию задачи нет.
-   Disabled-вариант K-DS (opacity 40%) в задаче не востребован — не строю. */
+   эффектов (масштаб/подпрыгивание) по требованию задачи нет. */
 export default function Toggle({
   value,
   onChange,
@@ -49,13 +49,13 @@ export default function Toggle({
     ),
   }));
   const knobStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: progress.value * 12 }],
+    transform: [{ translateX: progress.value * 16 /* ход 44−24−2·2 */ }],
   }));
 
   return (
     <Pressable
-      /* зона нажатия: 40×20 + hitSlop 12 → 64×44 (минимум 44dp) */
-      hitSlop={12}
+      /* зона нажатия: 44×22 + hitSlop 11 → 66×44 (минимум 44dp) */
+      hitSlop={11}
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
       accessibilityLabel={accessibilityLabel}
@@ -69,18 +69,18 @@ export default function Toggle({
 
 const staticStyles = StyleSheet.create({
   track: {
-    width: 40,
-    height: 20,
-    borderRadius: 10,
+    width: 44, /* dimensions/size/2xl (517:1143) */
+    height: 22,
+    borderRadius: 11,
   },
 });
 
 const knob = (surface: string) => ({
   position: 'absolute' as const,
-  left: 2,
-  top: 2,
-  width: 24,
-  height: 16,
-  borderRadius: 8,
+  left: 2, /* Off: pl 2 (517:1148) */
+  top: 2, /* py 2 (трек 22 − бегунок 18) */
+  width: 24, /* (517:1150) */
+  height: 18,
+  borderRadius: 9, /* radius/sm кламп к высоте */
   backgroundColor: surface,
 });

@@ -123,7 +123,8 @@ const makeStyles = (palette: Palette) => StyleSheet.create({
     borderRadius: 52.5,
     borderCurve: 'continuous',
     backgroundColor: palette.pointAlpha,
-    borderColor: palette.accent,
+    /* пунктир области: point_contrast (в Dark белый, K-DS 25.10) */
+    borderColor: palette.pointContrast,
     borderWidth: 0.5,
     borderStyle: 'dashed',
   },

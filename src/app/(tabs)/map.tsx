@@ -548,7 +548,9 @@ export default function MapScreen() {
                   center={o.place.view.coordinate}
                   radius={o.place.view.radiusMeters}
                   fillColor={palette.pointAlpha}
-                  strokeColor={palette.accent}
+                  /* штрих пунктира области: point_contrast в Dark белый
+                     (новый токен K-DS 25.10; Light #176b52 — как был accent) */
+                  strokeColor={palette.pointContrast}
                   /* 1 (K-DS stroke/05 = 0.5 — заменено Дмитрием 25.10: тонкая линия «шумит» на карте) */
                   strokeWidth={1}
                   lineDashPattern={DASH_PATTERN}
