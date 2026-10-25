@@ -7,15 +7,16 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Colors } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 
 /**
  * Skeleton (reports.md §8 / journal.md §6): геометрия повторяет реальный
  * контент (height/borderRadius — через style), цвет — cardSurface текущей
  * темы, мягкая пульсация opacity 0.5 → 1 через Reanimated (нативный драйвер,
- * без shimmer и без искусственных задержек).
+ * без shimmer и без искусственных задержек). Тёмная тема — cardSurface Dark.
  */
 export default function SkeletonBox({ style }: { style?: StyleProp<ViewStyle> }) {
+  const palette = useTheme();
   const pulse = useSharedValue(0.5);
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export default function SkeletonBox({ style }: { style?: StyleProp<ViewStyle> })
 
   return (
     <Animated.View
-      style={[styles.box, style, pulseStyle]}
+      style={[box(palette.cardSurface), style, pulseStyle]}
       accessibilityLabel="Загрузка"
       accessible />
   );
@@ -57,12 +58,13 @@ export function SkeletonReportDetails() {
   );
 }
 
+const box = (surface: string) => ({
+  backgroundColor: surface,
+  borderRadius: 12,
+  borderCurve: 'continuous' as const,
+});
+
 const styles = StyleSheet.create({
-  box: {
-    backgroundColor: Colors.light.cardSurface,
-    borderRadius: 12,
-    borderCurve: 'continuous',
-  },
   cards: {
     paddingHorizontal: 16,
     paddingTop: 4,

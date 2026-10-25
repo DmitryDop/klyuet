@@ -1,7 +1,8 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
-import { Colors } from '@/constants/theme';
+import { type Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { UI_ICONS } from '@/components/ui-icons';
 
 /* Кнопка поверх карты по K-DS Button-Icon: md 44×44 (dimensions/size/2xl),
@@ -12,8 +13,8 @@ import { UI_ICONS } from '@/components/ui-icons';
    get_variable_defs 23.10):
    - Light:  default #ffffffe5 (белый 90%), pressed #ffffff80 (белый 50%),
      иконка --color-text-primary #181d1c;
-   - Dark (для будущего режима, сейчас не применяется): default #222c27e5,
-     pressed #222c274d, иконка #f8f9f5.
+   - Dark: button_small/default = stone/130 90% (rgba(34,44,39,.90)),
+     pressed Dark 30% (rgba(34,44,39,.30)), иконка #f8f9f5.
    variant="action" — зелёный (Inverce): bg --color-action-default #176b52,
    иконка белая --color-overlay-point-on; мастер 232:3632/3633; Pressed —
    --color-action-pressed #0d4735 (K-DS 461:880/883/892/895).
@@ -49,8 +50,10 @@ export default function ButtonIcon({
   onPress?: () => void;
   accessibilityLabel: string;
 }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const iconEntry = UI_ICONS[icon];
-  const fill = variant === 'action' ? Colors.light.accentIcon : Colors.light.text;
+  const fill = variant === 'action' ? palette.accentIcon : palette.text;
   const iconSize = 24;
 
   const glyph = (
@@ -63,12 +66,12 @@ export default function ButtonIcon({
   );
 
   const boxStyle = (pressed: boolean) => [
-    styles.button,
-    size === 'sm' && styles.buttonSm,
-    type === 'toolbar' && styles.buttonToolbar,
-    variant === 'action' && styles.buttonAction,
+    staticStyles.button,
+    size === 'sm' && staticStyles.buttonSm,
+    type === 'toolbar' && staticStyles.buttonToolbar,
+    variant === 'action' ? styles.buttonAction : styles.buttonBg,
     pressed && (variant === 'action' ? styles.buttonActionPressed : styles.buttonPressed),
-    disabled && styles.buttonDisabled,
+    disabled && staticStyles.buttonDisabled,
   ];
 
   if (!onPress) {
@@ -94,27 +97,29 @@ export default function ButtonIcon({
   );
 }
 
-/* Бейдж активности (K-DS bage 438:588): круг 14×14 — заливка r6 #D18A24
-   (литерал SVG мастера), обводка 2 white; тень 0,3,4 rgba(0,0,0,0.24) —
-   feFlood-фильтр SVG мастера, RN-тень того же вида. */
+/* Бейдж активности (K-DS bage 438:588): круг 14×14 — заливка r6
+   --color-overlay-catch (bite/default = overlay/catch: Light #d18a24,
+   Dark #e2a647), обводка 2 --border/clipping (Light stone/000, Dark
+   stone/170); тень 0,3,4 rgba(0,0,0,0.24) — feFlood-фильтр SVG мастера,
+   RN-тень того же вида. */
 function Bage() {
+  const palette = useTheme();
   return (
-    <View style={styles.bage}>
+    <View style={staticStyles.bage}>
       <Svg width={14} height={14} viewBox="0 0 14 14">
-        <Circle cx={7} cy={7} r={6} fill="#d18a24" stroke="#ffffff" strokeWidth={2} />
+        <Circle cx={7} cy={7} r={6} fill={palette.catch} stroke={palette.clipping} strokeWidth={2} />
       </Svg>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const staticStyles = StyleSheet.create({
   button: {
-    /* md: dimensions/size/2xl; фон — переменная button_small/default (Light) */
+    /* md: dimensions/size/2xl; размеры/тень — геометрия (Shadows вне темы) */
     width: 44,
     height: 44,
     borderRadius: 12,
     borderCurve: 'continuous',
-    backgroundColor: 'rgba(255,255,255,0.90)',
     boxShadow: '0 2px 4px 0 rgba(0,0,0,0.16)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -127,17 +132,6 @@ const styles = StyleSheet.create({
   buttonToolbar: {
     /* тулбар-вариант Shadows=No (K-DS 312:3300): без тени, остальное то же */
     boxShadow: '0 0 0 rgba(0,0,0,0)',
-  },
-  buttonPressed: {
-    /* Pressed/Hover белой: button_small/pressed (Light) — белый 50% */
-    backgroundColor: 'rgba(255,255,255,0.50)',
-  },
-  buttonAction: {
-    backgroundColor: Colors.light.accent,
-  },
-  buttonActionPressed: {
-    /* Pressed/Hover зелёной: --color-action-pressed (K-DS 461:880 и др.) */
-    backgroundColor: Colors.light.actionPressed,
   },
   buttonDisabled: {
     /* State=Disabled: opacity 40% (K-DS 461:810 и др.) */
@@ -155,3 +149,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
   },
 });
+
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
+    /* default: button_small/default (Light белый 90% / Dark stone/130 90%) */
+    buttonBg: {
+      backgroundColor: palette.buttonSurface,
+    },
+    buttonPressed: {
+      /* Pressed/Hover белой: button_small/pressed (Light белый 50% / Dark stone/130 30%) */
+      backgroundColor: palette.buttonPressed,
+    },
+    buttonAction: {
+      backgroundColor: palette.accent,
+    },
+    buttonActionPressed: {
+      /* Pressed/Hover зелёной: --color-action-pressed (K-DS 461:880 и др.) */
+      backgroundColor: palette.actionPressed,
+    },
+  });

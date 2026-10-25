@@ -18,8 +18,9 @@ import {
 } from '@/logic/journal';
 import { formatRuDate } from '@/logic/dates';
 import type { Place, Report } from '@/data/types';
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
+import { useTheme } from '@/data/theme-store';
 
 /**
  * Экран «Журнал» (ТЗ _x/21.md; docs/journal.md). Две вкладки чипсами:
@@ -41,6 +42,8 @@ type Tab = 'places' | 'reports';
 export default function JournalScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const palette = useTheme();
+  const styles = makeStyles(palette);
 
   const [tab, setTab] = useState<Tab>('places');
   const [loading, setLoading] = useState(true);
@@ -163,10 +166,10 @@ export default function JournalScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (palette: Palette) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: palette.background,
   },
   toolbar: {
     /* Toolbar - Top - iPhone, Page Title (K 455:5111/465:543): после
@@ -180,7 +183,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...rnTextStyle(TEXT.title1),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
     textAlignVertical: 'top',
   },
   chipGroup: {

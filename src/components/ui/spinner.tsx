@@ -8,8 +8,7 @@ import Reanimated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-
-import { Colors } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 
 /**
  * Spinner (K-DS 309:1416 «Spinner», мастера 309:1417…309:1531): кольцо
@@ -17,7 +16,8 @@ import { Colors } from '@/constants/theme';
  * Реализация: SVG-кольцо со stroke-width 2 и дугой ~72% окружности
  * (хвост по-простому: прерывистая дуга), непрерывное вращение.
  * Размеры: Small 16 / Medium 20 / Large 24 / XLarge 40 (309:1417, 1441,
- * 1477, 1483). Появления: Brand #176b52, White #fff, Black — text-primary.
+ * 1477, 1483). Появления: Brand #176b52, White #fff, Black — text-primary
+ * (бел. на тёмной теме — палитра Dark, 25.10).
  * В кнопке (165:22 loading): Medium 20, White на primary; Brand на outline.
  */
 export type SpinnerSize = 'small' | 'medium' | 'large' | 'xlarge';
@@ -37,6 +37,7 @@ export default function Spinner({
   size?: SpinnerSize;
   appearance?: SpinnerAppearance;
 }) {
+  const palette = useTheme();
   const spin = useSharedValue(0);
 
   useEffect(() => {
@@ -54,10 +55,10 @@ export default function Spinner({
   const px = SIZES[size];
   const color =
     appearance === 'white'
-      ? Colors.light.accentIcon
+      ? palette.accentIcon
       : appearance === 'black'
-        ? Colors.light.text
-        : Colors.light.accent;
+        ? palette.text
+        : palette.accent;
   /* половина stroke=2 → средний радиус кольца */
   const r = px / 2 - 1;
   const c = 2 * Math.PI * r;

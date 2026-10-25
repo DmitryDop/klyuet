@@ -30,13 +30,13 @@ import {
 import type { GeoPoint, Place, Report } from '@/data/types';
 import { applyMapFilter, isFilterActive } from '@/logic/filter';
 import { PlaceClusterIndex } from '@/logic/clustering';
-import { Colors } from '@/constants/theme';
+import { useTheme, useThemeMode } from '@/data/theme-store';
 
 /* Карта — главный экран (docs/map-place-flows-mvp.md §1).
    Движок react-native-maps, на iOS по умолчанию Apple Maps (MapKit) без API-ключа;
    Expo Go поддержан. Кнопки +/− по K 243:10201: пара по вертикальному центру
    области карты, справа 16, зазор 12; зум — через нативную камеру
-   (getCamera → animateCamera). userInterfaceStyle="light" — светлая тема V1,
+   (getCamera → animateCamera). userInterfaceStyle={themeMode} — светлая тема V1,
    в будущем переключается из «Профиль → Настройки → Оформление».
    Места — через PlaceClusterIndex (только PUBLIC-данные); приблизительные
    области — географические окружности радиуса 1500 м; пин скрытой точки
@@ -65,6 +65,8 @@ export default function MapScreen() {
   const mapRef = useRef<MapView>(null);
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const palette = useTheme();
+  const themeMode = useThemeMode();
   const [region, setRegion] = useState(DEMO_REGION);
   /* зеркало региона для useFocusEffect (регион в deps не вносится —
      перезапуск эффекта на каждую камеру недопустим) */
@@ -500,7 +502,7 @@ export default function MapScreen() {
             satellite / hybrid — нативные режимы MapKit, хранилище
             map-settings-store (переживает перезапуск) */
         mapType={mapType}
-        userInterfaceStyle="light"
+        userInterfaceStyle={themeMode}
         initialRegion={region}
         onPress={handleMapPress}
         onRegionChangeComplete={handleRegionChange}>
@@ -545,8 +547,8 @@ export default function MapScreen() {
                   key={o.place.id}
                   center={o.place.view.coordinate}
                   radius={o.place.view.radiusMeters}
-                  fillColor={Colors.light.pointAlpha}
-                  strokeColor={Colors.light.accent}
+                  fillColor={palette.pointAlpha}
+                  strokeColor={palette.accent}
                   strokeWidth={0.5} /* dimensions/stroke/05 (K-DS approximate location) */
                   lineDashPattern={DASH_PATTERN}
                 />

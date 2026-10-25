@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { type Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /**
@@ -29,20 +30,22 @@ export default function Chip({
   disabled?: boolean;
   onPress?: () => void;
 }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected, disabled }}
       onPress={disabled ? undefined : onPress}
       style={[
-        size === 'lg' ? styles.baseLg : styles.baseSm,
+        size === 'lg' ? staticStyles.baseLg : staticStyles.baseSm,
         selected ? styles.selected : styles.default,
-        flex && styles.flexLg,
+        flex && staticStyles.flexLg,
       ]}>
       <Text
         style={[
-          styles.label,
-          { color: selected ? Colors.light.selectionText : Colors.light.text },
+          staticStyles.label,
+          { color: selected ? palette.selectionText : palette.text },
         ]}>
         {label}
       </Text>
@@ -50,7 +53,7 @@ export default function Chip({
   );
 }
 
-const styles = StyleSheet.create({
+const staticStyles = StyleSheet.create({
   baseLg: {
     height: 44,
     paddingHorizontal: 16,
@@ -67,21 +70,25 @@ const styles = StyleSheet.create({
     flexGrow: 1, /* flex 1 0 0 в слоте */
     flexBasis: '0%',
   },
-  selected: {
-    backgroundColor: Colors.light.selection,
-    borderWidth: 1,
-    borderColor: Colors.light.accent,
-    borderRadius: 9999,
-  },
-  default: {
-    backgroundColor: Colors.light.cardSurface,
-    borderWidth: 1,
-    borderColor: Colors.light.borderControl,
-    borderRadius: 9999,
-  },
   label: {
     ...rnTextStyle(TEXT.label),
     fontFamily: FONT_FAMILY,
     textAlign: 'center',
   },
 });
+
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
+    selected: {
+      backgroundColor: palette.selection,
+      borderWidth: 1,
+      borderColor: palette.accent,
+      borderRadius: 9999,
+    },
+    default: {
+      backgroundColor: palette.cardSurface,
+      borderWidth: 1,
+      borderColor: palette.borderControl,
+      borderRadius: 9999,
+    },
+  });

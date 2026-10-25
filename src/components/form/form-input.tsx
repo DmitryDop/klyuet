@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { type Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /**
@@ -38,6 +39,8 @@ export default function FormInput({
   onFocus?: () => void;
   onBlur?: () => void;
 }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const resolvedHeight = height ?? (multiline ? 120 : 48);
   const [focused, setFocused] = useState(false);
 
@@ -46,16 +49,16 @@ export default function FormInput({
       style={[
         styles.control,
         { height: resolvedHeight },
-        multiline && styles.textarea,
+        multiline && staticStyles.textarea,
         !error && focused && styles.focus,
         error && styles.error,
       ]}>
       <TextInput
-        style={[styles.text, editable ? styles.textPrimary : styles.textSecondary]}
+        style={[staticStyles.text, editable ? styles.textPrimary : styles.textSecondary]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={Colors.light.textSecondary}
+        placeholderTextColor={palette.textSecondary}
         editable={editable}
         multiline={multiline}
         onFocus={() => {
@@ -72,40 +75,44 @@ export default function FormInput({
   );
 }
 
-const styles = StyleSheet.create({
-  control: {
-    backgroundColor: Colors.light.cardSurface, /* --color-surface-default */
-    borderRadius: 12,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: Colors.light.borderControl,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-  },
+const staticStyles = StyleSheet.create({
   textarea: {
     paddingTop: 12, /* Textarea 227:6353: py 12 */
     paddingBottom: 12,
     justifyContent: 'flex-start',
-  },
-  focus: {
-    /* K-DS State=Focus (165:32): 2px --color-focus-ring */
-    borderWidth: 2,
-    borderColor: Colors.light.focusRing,
-  },
-  error: {
-    /* State=Error (165:34; пример K 87:4152 — 2px): --color-danger-text */
-    borderWidth: 2,
-    borderColor: Colors.light.dangerText,
   },
   text: {
     ...rnTextStyle(TEXT.body),
     fontFamily: FONT_FAMILY,
     flex: 1,
   },
-  textPrimary: {
-    color: Colors.light.text,
-  },
-  textSecondary: {
-    color: Colors.light.textSecondary,
-  },
 });
+
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
+    control: {
+      backgroundColor: palette.cardSurface, /* --color-surface-default */
+      borderRadius: 12,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: palette.borderControl,
+      paddingHorizontal: 16,
+      justifyContent: 'center',
+    },
+    focus: {
+      /* K-DS State=Focus (165:32): 2px --color-focus-ring */
+      borderWidth: 2,
+      borderColor: palette.focusRing,
+    },
+    error: {
+      /* State=Error (165:34; пример K 87:4152 — 2px): --color-danger-text */
+      borderWidth: 2,
+      borderColor: palette.dangerText,
+    },
+    textPrimary: {
+      color: palette.text,
+    },
+    textSecondary: {
+      color: palette.textSecondary,
+    },
+  });

@@ -23,7 +23,8 @@ import {
   getPlaceCreateDraft,
   setPlaceCreateDraft,
 } from '@/data/place-create-store';
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /**
@@ -58,6 +59,8 @@ const ACCESS_OPTIONS: { name: string }[] = [
 export default function PlaceFormScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const scrollViewRef = useRef<ScrollViewInstance>(null);
   const nameFieldY = useRef(0);
   const nameFieldRef = useRef<ViewInstance>(null);
@@ -353,7 +356,7 @@ export default function PlaceFormScreen() {
             onPress={() => router.back()}
             style={styles.coordHeader}>
             <Svg width={20} height={20} viewBox="0 0 24 24">
-              <Path d={UI_ICONS.pen.d} fill={Colors.light.text} />
+              <Path d={UI_ICONS.pen.d} fill={palette.text} />
             </Svg>
             <Text style={styles.coordText} numberOfLines={1}>
               {/* при «Только я» те же точные координаты (решение Дмитрия 22.10) */}
@@ -526,11 +529,12 @@ type PlaceCreatePatch = {
   photos?: string[];
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
   container: {
     flex: 1,
     /* фон формы: --color-surface-default (K 68:1991 root bg) */
-    backgroundColor: Colors.light.cardSurface,
+    backgroundColor: palette.cardSurface,
   },
   toolbar: {
     /* Toolbar - Top - iPhone: кнопки top insets+8 (правило slice 4) */
@@ -556,7 +560,7 @@ const styles = StyleSheet.create({
   toolbarTitle: {
     ...rnTextStyle(TEXT.headline),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
     textAlign: 'center',
   },
   coordRowWrap: {
@@ -567,7 +571,7 @@ const styles = StyleSheet.create({
     /* header (76:3687): h 32, border-subtle, r12, gap 4 */
     height: 32,
     borderWidth: 1,
-    borderColor: Colors.light.borderSubtle,
+    borderColor: palette.borderSubtle,
     borderRadius: 12,
     borderCurve: 'continuous',
     paddingHorizontal: 16,
@@ -578,13 +582,13 @@ const styles = StyleSheet.create({
   coordText: {
     ...rnTextStyle(TEXT.bodyS),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
     flex: 1,
   },
   coordStep: {
     ...rnTextStyle(TEXT.bodyS),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
     marginLeft: 4,
   },
   chipRow: {
@@ -611,6 +615,6 @@ const styles = StyleSheet.create({
     right: 0,
     paddingTop: 16,
     paddingHorizontal: 16,
-    backgroundColor: Colors.light.cardSurface,
+    backgroundColor: palette.cardSurface,
   },
 });

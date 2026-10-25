@@ -14,7 +14,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 
 /**
  * Sheet — единый компонент K-DS (мастер 246:4642 «modal»): фон (overlay) +
@@ -53,6 +54,8 @@ export default function SheetModal({
   children: ReactNode;
 }) {
   const insets = useSafeAreaInsets();
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const { height: screenH } = useWindowDimensions();
   const [mounted, setMounted] = useState(visible);
   /* 0 — скрыта, 1 — открыта (translateY screenH → 0, скрим от 0) */
@@ -158,7 +161,8 @@ export default function SheetModal({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
   flex: {
     flex: 1,
   },
@@ -170,8 +174,8 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   scrim: {
-    /* bg/overlay — токен K-DS (Colors.light.scrim = #18201d66) */
-    backgroundColor: Colors.light.scrim,
+    /* bg/overlay — токен K-DS (light = #18201d66, dark = #10171466) */
+    backgroundColor: palette.scrim,
   },
   sheet: {
     /* modal (246:4642): bg surface-raised, top radius 24; спейсинг — контент
@@ -180,7 +184,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: Colors.light.surfaceRaised,
+    backgroundColor: palette.surfaceRaised,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderCurve: 'continuous',
@@ -197,6 +201,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 4,
     borderRadius: 9999,
-    backgroundColor: Colors.light.grabber,
+    backgroundColor: palette.grabber,
   },
 });

@@ -32,7 +32,8 @@ import { SPECIES_CATALOG, TACKLE_CATALOG } from '@/data/catalog';
 import { CURRENT_USER_ID, demoPlaceRepo } from '@/data/repo';
 import type { CatchStatus, Place } from '@/data/types';
 import { formatRuDate, isFutureDate, isoDate, isoDateShifted } from '@/logic/dates';
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
+import { useTheme, useThemeMode } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /* Форма отчёта — создание (K 206:9625 «Новый отчёт», 214:10364 «Без улова»,
@@ -94,6 +95,9 @@ export default function ReportFormScreen() {
   const isEdit = reportId != null;
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const palette = useTheme();
+  const themeMode = useThemeMode();
+  const styles = makeStyles(palette);
 
   const [place, setPlace] = useState<Place | null>(null);
   const [failedToLoad, setFailedToLoad] = useState(false);
@@ -714,9 +718,8 @@ export default function ReportFormScreen() {
             minimumDate={new Date(1900, 0, 1)}
             maximumDate={new Date()}
             display="spinner"
-            /* V1 — только светлая тема: нативный пикер наследует appearance
-               ОС; фиксируем светлый вариант виджета */
-            themeVariant="light"
+            /* системный пикер по теме (согласование Дмитрия 25.10) */
+            themeVariant={themeMode}
             style={styles.picker}
             onChange={(_, date) => {
               if (date != null && !isFutureDate(isoDate(date))) {
@@ -787,11 +790,12 @@ export default function ReportFormScreen() {
 
 /* (SDK 58: beforeRemove-гвард заменён usePreventRemove — тип события больше не нужен) */
 
-const styles = StyleSheet.create({
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
   container: {
     flex: 1,
     /* фон экрана формы: --color-surface-default (K 206:9625 root bg) */
-    backgroundColor: Colors.light.cardSurface,
+    backgroundColor: palette.cardSurface,
   },
   errorWrap: {
     alignItems: 'center',
@@ -802,7 +806,7 @@ const styles = StyleSheet.create({
   errorText: {
     ...rnTextStyle(TEXT.body),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
     textAlign: 'center',
   },
   toolbar: {
@@ -832,7 +836,7 @@ const styles = StyleSheet.create({
   toolbarTitle: {
     ...rnTextStyle(TEXT.headline),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
     textAlign: 'center',
   },
   titleBlock: {
@@ -843,12 +847,12 @@ const styles = StyleSheet.create({
   placeTitle: {
     ...rnTextStyle(TEXT.title3),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
   },
   placeSubtitle: {
     ...rnTextStyle(TEXT.caption),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
     marginTop: 4, /* заголовок → подзаголовок gap 4 (206:9629) */
   },
   chipRow: {
@@ -871,7 +875,7 @@ const styles = StyleSheet.create({
     right: 0,
     paddingTop: 16,
     paddingHorizontal: 16,
-    backgroundColor: Colors.light.cardSurface,
+    backgroundColor: palette.cardSurface,
   },
   hidden: {
     /* скрытие без выгрузки из дерева: кнопка возвращается мгновенно */
@@ -913,7 +917,7 @@ const styles = StyleSheet.create({
   sheetTitle: {
     ...rnTextStyle(TEXT.headline),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
     textAlign: 'center',
   },
   toolbarRow: {

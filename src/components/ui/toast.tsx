@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
+import { useTheme } from '@/data/theme-store';
 
 /**
  * Toast (K-DS 316:1799 в K 235:9776): плашка 54px, x 16, radius 12,
@@ -26,6 +27,8 @@ export function showToast(message: string): void {
 
 function ToastHost() {
   const insets = useSafeAreaInsets();
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -56,7 +59,8 @@ function ToastHost() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
   toast: {
     /* Toast: x 16, h 54, px 16, radius 12 (#235:9871) */
     position: 'absolute',
@@ -67,13 +71,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 12,
     borderCurve: 'continuous',
-    backgroundColor: Colors.light.accent,
+    backgroundColor: palette.accent,
     boxShadow: '0 4px 16px rgba(24, 29, 28, 0.2)',
   },
   text: {
     ...rnTextStyle(TEXT.body),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.accentIcon,
+    color: palette.accentIcon,
   },
 });
 

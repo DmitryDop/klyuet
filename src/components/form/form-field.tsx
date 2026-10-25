@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { type Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /**
@@ -23,9 +24,11 @@ export default function FormField({
   errorText?: string;
   children: React.ReactNode;
 }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   return (
-    <View style={styles.field}>
-      <View style={styles.labelRow}>
+    <View style={staticStyles.field}>
+      <View style={staticStyles.labelRow}>
         <Text style={styles.label}>{label}</Text>
         {required && <Text style={styles.required}>*</Text>}
       </View>
@@ -35,7 +38,7 @@ export default function FormField({
   );
 }
 
-const styles = StyleSheet.create({
+const staticStyles = StyleSheet.create({
   field: {
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -45,22 +48,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 4, /* 2xs: метка → «*» (206:9632) */
   },
-  label: {
-    ...rnTextStyle(TEXT.label),
-    fontFamily: FONT_FAMILY,
-    /* лейблы полей (Input/Select/Textarea): --color-text-secondary
-       (решение Дмитрия 22.10) */
-    color: Colors.light.textSecondary,
-  },
-  required: {
-    ...rnTextStyle(TEXT.label),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.dangerText,
-  },
-  errorText: {
-    /* Caption (K 87:4154/199:363): 12/16 · 500, --color-danger-text */
-    ...rnTextStyle(TEXT.caption),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.dangerText,
-  },
 });
+
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
+    label: {
+      ...rnTextStyle(TEXT.label),
+      fontFamily: FONT_FAMILY,
+      /* лейблы полей (Input/Select/Textarea): --color-text-secondary
+         (решение Дмитрия 22.10) */
+      color: palette.textSecondary,
+    },
+    required: {
+      ...rnTextStyle(TEXT.label),
+      fontFamily: FONT_FAMILY,
+      color: palette.dangerText,
+    },
+    errorText: {
+      /* Caption (K 87:4154/199:363): 12/16 · 500, --color-danger-text */
+      ...rnTextStyle(TEXT.caption),
+      fontFamily: FONT_FAMILY,
+      color: palette.dangerText,
+    },
+  });

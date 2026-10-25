@@ -1,8 +1,9 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { Colors } from '@/constants/theme';
-import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
+import { TEXT, FONT_FAMILY, rnTextStyle } from '@/constants/typography';
+import type { Palette } from '@/constants/theme';
 import Spinner from '@/components/ui/spinner';
+import { useTheme } from '@/data/theme-store';
 
 /* Кнопка K-DS (мастер 165:24 «Button», высота 48, radius/sm 12; пропсы
    обновлены K-DS 24.10: Mode × Apperance вместо variant'а, Negative добавлен).
@@ -17,7 +18,8 @@ import Spinner from '@/components/ui/spinner';
      у Primary, selection у Secondary; лейбл скрыт; повторы заблокированы).
    - Hover — только для указателя, в touch не применяется (описание
      компонента K-DS).
-   Лейбл — глобальный токен TEXT.labelL; локальных переопределений нет. */
+   Лейбл — глобальный токен TEXT.labelL; локальных переопределений нет.
+   Тёмная тема — те же роли коллекции «Klyot · Color», режим Dark (25.10). */
 export type ButtonMode = 'primary' | 'secondary';
 export type ButtonAppearance = 'accent' | 'negative' | 'outline' | 'dashed';
 
@@ -43,8 +45,10 @@ export default function Button({
   /** K-DS State=Loader: спиннер, лейбл скрыт, повторный тап заблокирован */
   loading?: boolean;
 }) {
+  const palette = useTheme();
   const secondary = mode === 'secondary';
   const inactive = disabled || loading;
+  const styles = makeStyles(palette);
   return (
     <Pressable
       accessibilityRole="button"
@@ -76,7 +80,7 @@ export default function Button({
         <Text
           style={[
             styles.label,
-            { color: secondary ? Colors.light.text : Colors.light.accentIcon },
+            { color: secondary ? palette.text : palette.accentIcon },
           ]}>
           {label}
         </Text>
@@ -85,57 +89,58 @@ export default function Button({
   );
 }
 
-const styles = StyleSheet.create({
-  base: {
-    height: 48,
-    borderRadius: 12,
-    borderCurve: 'continuous',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-  },
-  /* Primary (165:12): --color-action-default */
-  accent: {
-    backgroundColor: Colors.light.accent,
-  },
-  /* Primary (491:1022): --color-danger-default */
-  negative: {
-    backgroundColor: Colors.light.dangerDefault,
-  },
-  /* Secondary (194:136): bg surface-default + border-control */
-  outline: {
-    backgroundColor: Colors.light.cardSurface,
-    borderWidth: 1,
-    borderColor: Colors.light.borderControl,
-  },
-  /* Secondary (258:682): та же граница, dashed */
-  dashed: {
-    borderStyle: 'dashed',
-  },
-  /* Pressed Primary Accent (165:16): --color-action-pressed */
-  actionPressed: {
-    backgroundColor: Colors.light.actionPressed,
-  },
-  /* Pressed Primary Negative (491:1028): --danger/pressed */
-  dangerPressed: {
-    backgroundColor: Colors.light.dangerPressed,
-  },
-  /* Pressed/Loader Secondary (194:140/194:147): --color-selection-bg */
-  selectionPressed: {
-    backgroundColor: Colors.light.selection,
-  },
-  label: {
-    ...rnTextStyle(TEXT.labelL),
-    fontFamily: FONT_FAMILY,
-    textAlign: 'center',
-  },
-  flex: {
-    flexGrow: 1,
-    flexBasis: '0%',
-    flexShrink: 1,
-  },
-  inactive: {
-    /* Disabled (248:4949/491:1031): opacity 0.4 на кнопке целиком */
-    opacity: 0.4,
-  },
-});
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
+    base: {
+      height: 48,
+      borderRadius: 12,
+      borderCurve: 'continuous',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 16,
+    },
+    /* Primary (165:12): --color-action-default */
+    accent: {
+      backgroundColor: palette.accent,
+    },
+    /* Primary (491:1022): --color-danger-default */
+    negative: {
+      backgroundColor: palette.dangerDefault,
+    },
+    /* Secondary (194:136): bg surface-default + border-control */
+    outline: {
+      backgroundColor: palette.cardSurface,
+      borderWidth: 1,
+      borderColor: palette.borderControl,
+    },
+    /* Secondary (258:682): та же граница, dashed */
+    dashed: {
+      borderStyle: 'dashed',
+    },
+    /* Pressed Primary Accent (165:16): --color-action-pressed */
+    actionPressed: {
+      backgroundColor: palette.actionPressed,
+    },
+    /* Pressed Primary Negative (491:1028): --danger/pressed */
+    dangerPressed: {
+      backgroundColor: palette.dangerPressed,
+    },
+    /* Pressed/Loader Secondary (194:140/194:147): --color-selection-bg */
+    selectionPressed: {
+      backgroundColor: palette.selection,
+    },
+    label: {
+      ...rnTextStyle(TEXT.labelL),
+      fontFamily: FONT_FAMILY,
+      textAlign: 'center',
+    },
+    flex: {
+      flexGrow: 1,
+      flexBasis: '0%',
+      flexShrink: 1,
+    },
+    inactive: {
+      /* Disabled (248:4949/491:1031): opacity 0.4 на кнопке целиком */
+      opacity: 0.4,
+    },
+  });

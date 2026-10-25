@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
+import { useTheme } from '@/data/theme-store';
 import type { ClusterKind } from '@/data/types';
 
 /**
@@ -19,26 +20,26 @@ import type { ClusterKind } from '@/data/types';
 
 const CLUSTER_SIZE = 48;
 
-const VIEWS: Record<ClusterKind, { bg: string; digit: string; border: string; dashed: boolean }> = {
+const clusterViews = (palette: Palette): Record<ClusterKind, { bg: string; digit: string; border: string; dashed: boolean }> => ({
   exact: {
-    bg: Colors.light.accent,
-    digit: Colors.light.accentIcon,
-    border: Colors.light.markerHalo,
+    bg: palette.accent,
+    digit: palette.accentIcon,
+    border: palette.markerHalo,
     dashed: false,
   },
   approximate: {
-    bg: Colors.light.pointAlpha, // --color-overlay-point #176b5233 (привязка K-DS 321:1835)
-    digit: Colors.light.text,
-    border: Colors.light.accent,
+    bg: palette.pointAlpha, // --color-overlay-point #176b5233 (привязка K-DS 321:1835)
+    digit: palette.text,
+    border: palette.accent,
     dashed: true,
   },
   mixed: {
-    bg: Colors.light.accent,
-    digit: Colors.light.accentIcon,
-    border: Colors.light.accentIcon,
+    bg: palette.accent,
+    digit: palette.accentIcon,
+    border: palette.accentIcon,
     dashed: true,
   },
-};
+});
 
 export default function ClasterPoint({
   kind,
@@ -47,7 +48,8 @@ export default function ClasterPoint({
   kind: ClusterKind;
   count: number;
 }) {
-  const view = VIEWS[kind];
+  const palette = useTheme();
+  const view = clusterViews(palette)[kind];
   return (
     <View
       style={[

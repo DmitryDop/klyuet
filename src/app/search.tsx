@@ -27,7 +27,8 @@ import { setPendingSearchTarget } from '@/data/map-search-store';
 import { FAKE_USER_LOCATION } from '@/data/user-location';
 import { UI_ICONS } from '@/components/ui-icons';
 import ButtonIcon from '@/components/button-icon';
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /**
@@ -61,6 +62,8 @@ export default function SearchScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { height: screenH } = useWindowDimensions();
+  const palette = useTheme();
+  const styles = makeStyles(palette);
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<GeoSearchResult[]>([]);
@@ -192,7 +195,7 @@ export default function SearchScreen() {
                 focused ? styles.fieldFocus : styles.fieldIdle,
               ]}>
               <View style={styles.iconBox}>
-                <PathIcon name="magnifyingGlass" size={20} fill={Colors.light.text} />
+                <PathIcon name="magnifyingGlass" size={20} fill={palette.text} />
               </View>
               <TextInput
                 ref={inputRef}
@@ -213,7 +216,7 @@ export default function SearchScreen() {
               {query.length > 0 && (
                 <Pressable accessibilityLabel="Очистить поиск" onPress={handleClear}>
                   <View style={styles.iconBox}>
-                    <PathIcon name="circleXmark" size={20} fill={Colors.light.text} />
+                    <PathIcon name="circleXmark" size={20} fill={palette.text} />
                   </View>
                 </Pressable>
               )}
@@ -308,6 +311,8 @@ export default function SearchScreen() {
 
 /* Разделитель списка (K 426:9595): линия 1px в отступе 16, px16, rhythm 2/1 */
 function CellSeparator() {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   return <View style={styles.separator} />;
 }
 
@@ -321,10 +326,11 @@ function PathIcon({ name, size, fill }: { name: string; size: number; fill: stri
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: palette.background,
   },
   box: {
     /* Search_box (K 426:9610): p16 со всех сторон — 16 снизу отделяют панель
@@ -354,17 +360,17 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 12,
     borderCurve: 'continuous',
-    backgroundColor: Colors.light.cardSurface,
+    backgroundColor: palette.cardSurface,
   },
   fieldFocus: {
     /* State Focus: dimensions/stroke/2, --color-focus-ring (K 426:9612) */
     borderWidth: 2,
-    borderColor: Colors.light.focusRing,
+    borderColor: palette.focusRing,
   },
   fieldIdle: {
     /* без фокуса (K 432:11759): dimensions/stroke/1, --color-border-control */
     borderWidth: 1,
-    borderColor: Colors.light.borderControl,
+    borderColor: palette.borderControl,
   },
   iconBox: {
     width: 40,
@@ -374,12 +380,12 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: Colors.light.text,
+    color: palette.text,
     minHeight: 40,
     paddingVertical: 0,
   },
   surface: {
-    backgroundColor: Colors.light.cardSurface, /* --color-surface-default #f8f9f5 */
+    backgroundColor: palette.cardSurface, /* --color-surface-default #f8f9f5 */
   },
   tail: {
     /* фон вне панелей: тап закрывает клавиатуру (приёмка 23.10) */
@@ -410,10 +416,10 @@ const styles = StyleSheet.create({
     paddingVertical: CELL_INNER,
   },
   cellName: {
-    color: Colors.light.text, /* Body 16/22 · 450 */
+    color: palette.text, /* Body 16/22 · 450 */
   },
   cellRegion: {
-    color: Colors.light.textSecondary, /* Caption 12/16 · 500 */
+    color: palette.textSecondary, /* Caption 12/16 · 500 */
   },
   cellRight: {
     /* Right (447:674): px 8, py 12; расстояние — Body S 14/20 */
@@ -423,14 +429,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cellDistance: {
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   separator: {
     /* Spacing & Separator (426:9595): pt 2 / pb 1, линия во всю ширину минус 32 */
     marginTop: CELL_OUTER,
     marginBottom: 1,
     height: 1,
-    backgroundColor: Colors.light.borderSubtle,
+    backgroundColor: palette.borderSubtle,
     marginHorizontal: 16,
   },
   statusTextWrap: {
@@ -439,10 +445,10 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   statusText: {
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   retry: {
-    color: Colors.light.accent,
+    color: palette.accent,
     paddingVertical: 8,
     paddingHorizontal: 16,
   },

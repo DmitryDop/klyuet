@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { type Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /**
@@ -27,6 +28,8 @@ export default function JournalCard({
   onPress: () => void;
   accessibilityLabel: string;
 }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   return (
     <Pressable
       accessibilityRole="button"
@@ -41,7 +44,7 @@ export default function JournalCard({
         <Text style={[styles.subtitle, { fontFamily: FONT_FAMILY, ...rnTextStyle(TEXT.body) }]}>
           {subtitle}
         </Text>
-        <View style={styles.infoRow}>
+        <View style={staticStyles.infoRow}>
           <Text style={[styles.info, { fontFamily: FONT_FAMILY, ...rnTextStyle(TEXT.caption) }]} numberOfLines={1}>
             {info}
           </Text>
@@ -54,32 +57,36 @@ export default function JournalCard({
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.light.cardSurface, /* --color-surface-default */
-    borderRadius: 16, /* dimensions/radius/md (209:9799) */
-    borderCurve: 'continuous',
-    padding: 16,
-  },
-  title: {
-    color: Colors.light.text,
-  },
-  subtitle: {
-    color: Colors.light.text,
-    marginTop: 2, /* gap 3xs (298:1117) */
-  },
+const staticStyles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 4, /* spacing/2xs (298:1120) */
     paddingTop: 4,
   },
-  info: {
-    flex: 1,
-    color: Colors.light.textSecondary,
-  },
-  date: {
-    color: Colors.light.textSecondary,
-    flexShrink: 0,
-  },
 });
+
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: palette.cardSurface, /* --color-surface-default */
+      borderRadius: 16, /* dimensions/radius/md (209:9799) */
+      borderCurve: 'continuous',
+      padding: 16,
+    },
+    title: {
+      color: palette.text,
+    },
+    subtitle: {
+      color: palette.text,
+      marginTop: 2, /* gap 3xs (298:1117) */
+    },
+    info: {
+      flex: 1,
+      color: palette.textSecondary,
+    },
+    date: {
+      color: palette.textSecondary,
+      flexShrink: 0,
+    },
+  });

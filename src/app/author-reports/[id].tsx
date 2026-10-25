@@ -8,7 +8,8 @@ import ReportItem from '@/components/place/report-item';
 import { SkeletonCards } from '@/components/ui/skeleton';
 import { demoPlaceRepo, displayName } from '@/data/repo';
 import type { Report } from '@/data/types';
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /* «Отчеты рыбака» (slice 4) — K 210:9933.
@@ -32,6 +33,8 @@ export default function AuthorReportsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const [reports, setReports] = useState<Report[]>([]);
   const [placeNames, setPlaceNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -119,10 +122,11 @@ export default function AuthorReportsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: palette.background,
   },
   toolbar: {
     /* Toolbar - Top - iPhone (K 210:9935): py 8 px 16, кнопки 44; высота
@@ -154,13 +158,13 @@ const styles = StyleSheet.create({
   toolbarTitle: {
     ...rnTextStyle(TEXT.headline),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
     textAlign: 'center',
   },
   toolbarSubtitle: {
     ...rnTextStyle(TEXT.subheadline),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
     textAlign: 'center',
   },
 });

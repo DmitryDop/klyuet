@@ -5,8 +5,9 @@ import { BlurView } from 'expo-blur';
 
 import ButtonIcon from '@/components/button-icon';
 import { UI_ICONS } from '@/components/ui-icons';
-import { Colors, TabBarSurface } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
+import { useTheme, useThemeMode } from '@/data/theme-store';
 
 /* Управления главной карты — компоновка с актуального макета K (49:820/243:10201).
    Все кнопки — Button-Icon 44×44 (K-DS dimensions/size/2xl, коммит 31da2cd).
@@ -22,6 +23,9 @@ import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 export default function MapControls({ onFilterPress, filterBadge, onGeoPress, onSearchPress }: { onFilterPress?: () => void; filterBadge?: boolean; onGeoPress?: () => void; onSearchPress?: () => void }) {
   const insets = useSafeAreaInsets();
+  const palette = useTheme();
+  const themeMode = useThemeMode();
+  const styles = makeStyles(palette);
   const pin = UI_ICONS.locationPin;
 
   return (
@@ -48,11 +52,15 @@ export default function MapControls({ onFilterPress, filterBadge, onGeoPress, on
       {/* легенда точности (K 243:10201: top 714, высота 32, зазор к таб-бару 24;
           пилюля в коде выше на 4 → зазор 24 = insets.bottom + 4 + 48 + 24) */}
       <View pointerEvents="none" style={[styles.legend, { bottom: insets.bottom + 76 }]}>
-        <BlurView intensity={10} tint="light" style={styles.legendLayer} />
+        <BlurView
+          intensity={10}
+          tint={themeMode === 'dark' ? 'dark' : 'light'}
+          style={styles.legendLayer}
+        />
         <View style={[styles.legendLayer, styles.legendGlass]} />
         <View style={styles.legendPair}>
           <Svg width={16} height={16} viewBox="0 0 16 16">
-            <Path d={pin.d} fill={Colors.light.accent} />
+            <Path d={pin.d} fill={palette.accent} />
           </Svg>
           <Text style={styles.legendText}>Точно</Text>
         </View>
@@ -66,7 +74,7 @@ export default function MapControls({ onFilterPress, filterBadge, onGeoPress, on
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (palette: Palette) => StyleSheet.create({
   top: {
     position: 'absolute',
     right: 16,
@@ -99,7 +107,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   legendGlass: {
-    backgroundColor: TabBarSurface,
+    backgroundColor: palette.tabBarSurface,
   },
   legendPair: {
     flexDirection: 'row',
@@ -113,14 +121,14 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     /* заливка и пунктир круга «Примерно» — привязки инстанса легенды 49:842:
        заливка #176b5233, граница #176b52; толщина 0.5 (утверждение Дмитрия) */
-    backgroundColor: Colors.light.pointAlpha,
-    borderColor: Colors.light.accent,
+    backgroundColor: palette.pointAlpha,
+    borderColor: palette.accent,
     borderWidth: 0.5,
     borderStyle: 'dashed',
   },
   legendText: {
     ...rnTextStyle(TEXT.caption),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
   },
 });

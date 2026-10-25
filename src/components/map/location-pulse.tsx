@@ -1,12 +1,13 @@
 import { useEffect, useMemo } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 
 /**
  * Пульсирующая геоточка пользователя (ТЗ _x/25.md; K-DS main_location
  * 532:2218 — символ статичен, тайминг по ТЗ):
- * - точка 14×14 `--color-overlay-catch` (#d18a24 = Colors.light.catch,
+ * - точка 14×14 `--color-overlay-catch` (#d18a24, ключ палитры `catch`;
  *   Дмитрий 24.10 расширил с 12 по ТЗ) с белой обводкой 2 (по ТЗ;
  *   в экспорте K-DS — stroke 2 в 16-гриде) — статична, поверх кругов
  *   (z: баг K-DS «точка под фоном» исправлен Дмитрием 24.10);
@@ -29,6 +30,8 @@ const OFFSET = 1000;
 const BASE_OPACITY = 0.2;
 
 function PulseRing({ delay }: { delay: number }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const progress = useMemo(() => new Animated.Value(0), []);
 
   useEffect(() => {
@@ -71,6 +74,8 @@ function PulseRing({ delay }: { delay: number }) {
 }
 
 export default function LocationPulse() {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   return (
     <View style={styles.root}>
       <PulseRing delay={0} />
@@ -81,7 +86,8 @@ export default function LocationPulse() {
   );
 }
 
-const styles = StyleSheet.create({
+/* Цвета — палитра активной темы (Dark: catch = amber/040, accentIcon — тёмный) */
+const makeStyles = (palette: Palette) => StyleSheet.create({
   root: {
     width: END,
     height: END,
@@ -90,14 +96,14 @@ const styles = StyleSheet.create({
   },
   ring: {
     position: 'absolute',
-    backgroundColor: Colors.light.catch,
+    backgroundColor: palette.catch,
   },
   dot: {
     width: DOT,
     height: DOT,
     borderRadius: DOT / 2,
-    backgroundColor: Colors.light.catch,
-    borderColor: Colors.light.accentIcon /* белая обводка 2 (ТЗ §1) */,
+    backgroundColor: palette.catch,
+    borderColor: palette.accentIcon /* белая обводка 2 (ТЗ §1) */,
     borderWidth: 2,
   },
 });

@@ -11,7 +11,8 @@ import SelectSheet from '@/components/form/select-sheet';
 import { SPECIES_CATALOG } from '@/data/catalog';
 import { getAppliedMapFilter, setAppliedMapFilter } from '@/data/filter-store';
 import { DEFAULT_MAP_FILTER, RECENCY_OPTIONS, type MapFilter } from '@/logic/filter';
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /**
@@ -61,6 +62,8 @@ function recencyValue(label: string): MapFilter['recencyDays'] {
 export default function FilterScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   /* черновик: снимок применённых значений на момент открытия (§5) */
   const [draft, setDraft] = useState<MapFilter>(() => getAppliedMapFilter());
   const [speciesOpen, setSpeciesOpen] = useState(false);
@@ -205,6 +208,8 @@ function ChipGroup<Value extends string>({
   value: Value;
   onChange: (v: Value) => void;
 }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   return (
     <View style={styles.group}>
       <Text style={styles.groupLabel}>{label}</Text>
@@ -223,10 +228,11 @@ function ChipGroup<Value extends string>({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.cardSurface, /* surface-default (101:6980) */
+    backgroundColor: palette.cardSurface, /* surface-default (101:6980) */
   },
   toolbar: {
     /* Toolbar - Top - iPhone: как форма отчёта, кнопки top insets+8 */
@@ -252,7 +258,7 @@ const styles = StyleSheet.create({
   toolbarTitle: {
     ...rnTextStyle(TEXT.headline),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
     textAlign: 'center',
   },
   group: {
@@ -265,7 +271,7 @@ const styles = StyleSheet.create({
   groupLabel: {
     ...rnTextStyle(TEXT.label),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   chipRow: {
     flexDirection: 'row',
@@ -280,7 +286,7 @@ const styles = StyleSheet.create({
     paddingTop: 16, /* x/BtnGr (101:6996; 226:1190) */
     paddingHorizontal: 16,
     gap: 8,
-    backgroundColor: Colors.light.cardSurface,
+    backgroundColor: palette.cardSurface,
     flexDirection: 'row',
   },
 });

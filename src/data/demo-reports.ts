@@ -3,8 +3,9 @@ import type { Report } from './types';
 /**
  * Demo fixtures отчётов (linked к demoPlaces по placeId; reports.md §3).
  * authorId — ключ из AUTHOR_NAMES (repo.ts). Фотографии: единственная
- * подтверждённая демо-сцена — assets/demo/report-346.png (фото Дмитрия 21.10.2026);
- * маркер '346' в массиве. Повтор маркера в demo-report-1 — для сценария
+ * реальные снимки Дмитрия: assets/demo/1.png|2.png|3.png (маркеры '1'/'2'/'3',
+ * содержимое файлов заменяемо для теста); '346' — «новое фото» сценария
+ * добавления (photos.ts)
  * «2 фото» с точками-индикаторами галереи; реальных снимков больше нет.
  * Даты рыбалки: разрывы — для проверки форматов (Сегодня/Вчера/N дней/дд.мм.гггг).
  */
@@ -24,7 +25,7 @@ export const demoReports: Report[] = [
     fishingMethod: 'shore',
     tackle: 'Спиннинг',
     bait: 'Воблер',
-    photos: ['346', '346'],
+    photos: ['1', '2'],
   },
   {
     id: 'demo-report-2',
@@ -64,7 +65,7 @@ export const demoReports: Report[] = [
     fishingMethod: 'shore',
     tackle: 'Поплавочная снасть',
     bait: 'Опарыш',
-    photos: ['346'],
+    photos: ['3'],
   },
   {
     id: 'demo-report-4',

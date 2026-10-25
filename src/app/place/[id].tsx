@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   interpolate,
   runOnJS,
@@ -20,10 +20,13 @@ import InfoRow from '@/components/place/info-row';
 import ReportItem from '@/components/place/report-item';
 import Button from '@/components/button';
 import SheetModal from '@/components/ui/sheet-modal';
+import PhotoViewer from '@/components/ui/photo-viewer';
+import { photoSource } from '@/logic/photos';
 import ModalCard from '@/components/ui/modal-card';
 import { showToast } from '@/components/ui/toast';
 import { UI_ICONS } from '@/components/ui-icons';
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /* Карточка места (slice 3; K 135:6230 + анимация 328:3096):
@@ -53,6 +56,8 @@ export default function PlaceScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const [place, setPlace] = useState<Place | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -341,7 +346,7 @@ export default function PlaceScreen() {
           «Оставить»; первая — Outline, вторая Primary (K-DS ModalCard) */}
       <ModalCard
         visible={deleteModal}
-        icon="warn"
+        icon="delete" /* корзина (K 460:5224, мастер K-DS 490:1000) */
         title="Удалить место?"
         body={`«${place.name}» будет ${endingsByGender(place.name)} без возможности восстановления.`}
         actions={[
@@ -396,6 +401,8 @@ function PlaceActionsSheet({
 }) {
   /* шторка без нижних кнопок: отступ от домашней полосы (решение Дмитрия 24.10) */
   const insets = useSafeAreaInsets();
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   return (
     <SheetModal visible={visible} onClose={onClose} fullHeight={false}>
       {/* Slot pb 16 + safe bottom (решение Дмитрия 24.10, обновление
@@ -429,6 +436,8 @@ function PressableCell({
   onPress: () => void;
   accessibilityLabel: string;
 }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   return (
     <Pressable
       accessibilityRole="button"
@@ -437,7 +446,7 @@ function PressableCell({
       style={styles.actionCell}>
       <View style={styles.actionCellLeft}>
         <Svg width={24} height={24} viewBox="0 0 24 24">
-          <Path d={UI_ICONS[icon].d} fill={Colors.light.text} />
+          <Path d={UI_ICONS[icon].d} fill={palette.text} />
         </Svg>
       </View>
       <View style={styles.actionCellTextWrap}>
@@ -449,35 +458,51 @@ function PressableCell({
 
 function PhotoStubRow({ photos }: { photos: string[] }) {
   /* горизонтальный свайп: плитки 130×88 фиксированной ширины, третья частично
-     за правым краем блока (как в макете K 135:6258) */
+     за правым краем блока (как в макете K 135:6258); реальные снимки
+     (маркеры '1'/'2'/'3', photos.ts) вместо заглушек; тап — PhotoViewer */
+  const palette = useTheme();
+  const styles = makeStyles(palette);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.photoRow}
-      pagingEnabled={false}>
-      {photos.map((ph, i) => (
-        <View key={ph} style={styles.photoStub}>
-          {/* демо-заглушка как в прототипе: камера + «Демо-фото N»
-              (K-DS camera 258:727; реальные снимки — этап отчётов) */}
-          <Svg width={24} height={24} viewBox="0 0 24 24">
-            <Path d={UI_ICONS.camera.d} fill={Colors.light.textSecondary} />
-          </Svg>
-          <Text style={styles.photoText}>Демо-фото {i + 1}</Text>
-        </View>
-      ))}
-    </ScrollView>
+    <View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.photoRow}
+        pagingEnabled={false}>
+        {photos.map((ph, i) => (
+          <Pressable
+            key={ph}
+            accessibilityRole="imagebutton"
+            accessibilityLabel={`Фото ${i + 1} из ${photos.length}`}
+            onPress={() => setViewerIndex(i)}>
+            <View style={styles.photoStub}>
+              <Image source={photoSource(ph)} style={styles.photoReal} />
+            </View>
+          </Pressable>
+        ))}
+      </ScrollView>
+      {viewerIndex != null && (
+        <PhotoViewer
+          visible
+          photos={photos}
+          initialIndex={viewerIndex}
+          onClose={() => setViewerIndex(null)}
+        />
+      )}
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: palette.background,
   },
   stub: {},
   sheet: {
-    backgroundColor: Colors.light.background,
+    backgroundColor: palette.background,
     borderTopLeftRadius: 24, /* скругления 24 слева/справа (Дмитрий) */
     borderTopRightRadius: 24,
     borderCurve: 'continuous',
@@ -494,16 +519,16 @@ const styles = StyleSheet.create({
   title: {
     ...rnTextStyle(TEXT.title2),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
   },
   subtitle: {
     ...rnTextStyle(TEXT.caption),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
     marginTop: 4, /* название → подзаголовок: 4 (08.md §4) */
   },
   block: {
-    backgroundColor: Colors.light.cardSurface,
+    backgroundColor: palette.cardSurface,
     borderRadius: 16,
     borderCurve: 'continuous',
     marginTop: 8, /* gap-8px между блоками макета */
@@ -535,30 +560,36 @@ const styles = StyleSheet.create({
   blockLabel12: {
     ...rnTextStyle(TEXT.label),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
     marginBottom: 12, /* «Комментарий» → текст: 12 (mock: 30 − 18) */
   },
   blockLabel8: {
     ...rnTextStyle(TEXT.label),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
     marginBottom: 8, /* «Фото» → картинки: 8 (mock: 26 − 18) */
   },
   blockText: {
     ...rnTextStyle(TEXT.body),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
   },
   photoRow: {
     flexDirection: 'row',
     gap: 8,
+  },
+  photoReal: {
+    width: 130,
+    height: 88,
+    borderRadius: 12, /* плитка фото — как photoStub (K 135:6258) */
+    borderCurve: 'continuous',
   },
   photoStub: {
     width: 130,
     height: 88,
     borderRadius: 12,
     borderCurve: 'continuous',
-    backgroundColor: Colors.light.background,
+    backgroundColor: palette.background,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
@@ -566,7 +597,7 @@ const styles = StyleSheet.create({
   photoText: {
     ...rnTextStyle(TEXT.caption),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   ctaWrap: {
     /* контейнер кнопки «Все отчеты (N)»: слева/справа/снизу по 16
@@ -594,7 +625,7 @@ const styles = StyleSheet.create({
     top: 0,
     paddingBottom: 8, /* кнопка 44 + top 8 + низ 8 = 60 (отступ симметричный, Дмитрий 21.10) */
     paddingHorizontal: 16,
-    backgroundColor: Colors.light.background,
+    backgroundColor: palette.background,
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
@@ -618,7 +649,7 @@ const styles = StyleSheet.create({
   toolbarTitle: {
     ...rnTextStyle(TEXT.headline),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
     textAlign: 'center',
   },
   panel: {
@@ -628,7 +659,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     paddingTop: 16,
     paddingHorizontal: 16,
-    backgroundColor: Colors.light.background,
+    backgroundColor: palette.background,
     flexDirection: 'row',
     gap: 8,
   },
@@ -658,6 +689,6 @@ const styles = StyleSheet.create({
   actionCellText: {
     ...rnTextStyle(TEXT.body),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
   },
 });

@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { type Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /* Строка таблицы карточки места — K-DS Table list (299:1145), как использован
@@ -18,10 +19,12 @@ export default function InfoRow({
   value: string;
   separator?: boolean;
 }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   return (
     <View>
-      <View style={styles.row}>
-        <View style={styles.texts}>
+      <View style={staticStyles.row}>
+        <View style={staticStyles.texts}>
           <Text style={styles.label}>{label}</Text>
           <Text style={styles.value}>{value}</Text>
         </View>
@@ -31,7 +34,7 @@ export default function InfoRow({
   );
 }
 
-const styles = StyleSheet.create({
+const staticStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     paddingHorizontal: 16,
@@ -44,22 +47,26 @@ const styles = StyleSheet.create({
     flexShrink: 1, /* контейнер не должен растягиваться длинным контентом */
     gap: 4,
   },
-  label: {
-    ...rnTextStyle(TEXT.label),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
-  },
-  value: {
-    ...rnTextStyle(TEXT.bodyL),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: Colors.light.borderSubtle,
-    /* разделитель внутри px-зоны: 16 от краёв инфо-блока (SpacingSeparator
-       w-full у px-контейнера InfoRow, K 135:6246) */
-    marginHorizontal: 16,
-    marginVertical: 15,
-  },
 });
+
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
+    label: {
+      ...rnTextStyle(TEXT.label),
+      fontFamily: FONT_FAMILY,
+      color: palette.textSecondary,
+    },
+    value: {
+      ...rnTextStyle(TEXT.bodyL),
+      fontFamily: FONT_FAMILY,
+      color: palette.text,
+    },
+    separator: {
+      height: 1,
+      backgroundColor: palette.borderSubtle,
+      /* разделитель внутри px-зоны: 16 от краёв инфо-блока (SpacingSeparator
+         w-full у px-контейнера InfoRow, K 135:6246) */
+      marginHorizontal: 16,
+      marginVertical: 15,
+    },
+  });

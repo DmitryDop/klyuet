@@ -25,8 +25,9 @@ import {
   usePlaceCreateDraft,
 } from '@/data/place-create-store';
 import type { PlacePrivacy, PublicAccuracy } from '@/data/types';
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
+import { useTheme } from '@/data/theme-store';
 
 /**
  * Шторка шага 1 «Отметка места» (K 383:7080/7114/7152) — оверлей ПОВЕРХ карты
@@ -53,10 +54,11 @@ import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 /* Прицел «Точно» (K-DS exact location 413:15601, крест 109×109, stroke 2):
    цвет — токен акцента (Дмитрий 23.10: прицелу назначен цвет) */
 export function Crosshair() {
+  const palette = useTheme();
   return (
     <Svg width={109} height={109} viewBox="0 0 109 109">
-      <Line x1={54.495} y1={0} x2={54.495} y2={109} stroke={Colors.light.accent} strokeWidth={2} />
-      <Line x1={0} y1={54.495} x2={109} y2={54.495} stroke={Colors.light.accent} strokeWidth={2} />
+      <Line x1={54.495} y1={0} x2={54.495} y2={109} stroke={palette.accent} strokeWidth={2} />
+      <Line x1={0} y1={54.495} x2={109} y2={54.495} stroke={palette.accent} strokeWidth={2} />
     </Svg>
   );
 }
@@ -71,19 +73,20 @@ export function Crosshair() {
    прижатые к границе; тик 12 (параметры мастера K-DS 447:659). При зуме
    тики едут с границей круга и остаются вне его. */
 export function AreaSight({ diameter }: { diameter: number }) {
+  const palette = useTheme();
   const box = diameter + 28; /* 2 × (зазор 2 + тик 12) + 2 на stroke */
   const c = box / 2;
   const inner = diameter / 2 + 2;
   const outer = diameter / 2 + 14;
-  const tick = { stroke: Colors.light.accent, strokeWidth: 0.5 }; /* stroke/05 */
+  const tick = { stroke: palette.accent, strokeWidth: 0.5 }; /* stroke/05 */
   return (
     <Svg width={box} height={box} viewBox={`0 0 ${box} ${box}`}>
       <SvgCircle
         cx={c}
         cy={c}
         r={diameter / 2}
-        fill={Colors.light.pointAlpha} /* --color-overlay-point */
-        stroke={Colors.light.accent} /* --color-action-default, dashed */
+        fill={palette.pointAlpha} /* --color-overlay-point */
+        stroke={palette.accent} /* --color-action-default, dashed */
         strokeWidth={0.5}
         strokeDasharray="5 4"
       />
@@ -97,19 +100,20 @@ export function AreaSight({ diameter }: { diameter: number }) {
 
 /* sm-вариант: тики + мини-круг d20 (отмеченное — done_ — без тиков) */
 export function SightApprox() {
+  const palette = useTheme();
   return (
     <Svg width={49} height={49} viewBox="0 0 49 49">
       <Path
         d="M24.5 36.5V49M24.5 0V12.5M12.5 24.5H0M49 24.5H36.5"
-        stroke={Colors.light.accent}
+        stroke={palette.accent}
         strokeWidth={0.5} /* dimensions/stroke/05 */
       />
       <SvgCircle
         cx={24.5}
         cy={24.5}
         r={10}
-        fill={Colors.light.pointAlpha} /* --color-overlay-point */
-        stroke={Colors.light.accent} /* --color-action-default */
+        fill={palette.pointAlpha} /* --color-overlay-point */
+        stroke={palette.accent} /* --color-action-default */
         strokeWidth={0.5}
         strokeDasharray="5 4"
       />
@@ -145,6 +149,8 @@ export default function AddPlaceSheet({
 }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const [, setVersion] = useState(0);
   /* baseline на монтировании шторки: возврат со шага 2 не ремонтирует —
       dirty учитывает и ввод шага 2 (§3.3) */
@@ -375,6 +381,8 @@ function VisibilityCard({
   selected: boolean;
   onPress: () => void;
 }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   return (
     <Pressable
       accessibilityRole="button"
@@ -388,7 +396,8 @@ function VisibilityCard({
   );
 }
 
-const styles = StyleSheet.create({
+/* Цвета — палитра активной темы (ТЗ dark-theme; ключи зеркалят светлые токены) */
+const makeStyles = (palette: Palette) => StyleSheet.create({
   sheetInner: {
     /* Sheet (402:6525): оверлей низа карты (карта целиком под ним — свайп
         обнажает карту, серой зоны нет); r24 сверху */
@@ -396,7 +405,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: Colors.light.surfaceRaised,
+    backgroundColor: palette.surfaceRaised,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderCurve: 'continuous',
@@ -411,7 +420,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 4,
     borderRadius: 9999,
-    backgroundColor: Colors.light.grabber,
+    backgroundColor: palette.grabber,
   },
   content: {
     paddingHorizontal: 16,
@@ -425,25 +434,25 @@ const styles = StyleSheet.create({
   coordText: {
     ...rnTextStyle(TEXT.bodyS),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
     flex: 1,
   },
   coordStep: {
     ...rnTextStyle(TEXT.bodyS),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
     flexShrink: 0,
     textAlign: 'right',
   },
   headline: {
     ...rnTextStyle(TEXT.headline),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
   },
   hint: {
     ...rnTextStyle(TEXT.bodyS),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   cardsRow: {
     flexDirection: 'row',
@@ -467,25 +476,25 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
   },
   cardSelected: {
-    backgroundColor: Colors.light.selection,
+    backgroundColor: palette.selection,
     borderWidth: 1,
-    borderColor: Colors.light.actionPressed,
+    borderColor: palette.actionPressed,
   },
   cardDefault: {
-    backgroundColor: Colors.light.cardSurface,
+    backgroundColor: palette.cardSurface,
     borderWidth: 1,
-    borderColor: Colors.light.borderControl,
+    borderColor: palette.borderControl,
   },
   cardTitle: {
     ...rnTextStyle(TEXT.headline),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
     textAlign: 'center',
   },
   cardDesc: {
     ...rnTextStyle(TEXT.caption),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
     textAlign: 'center',
   },
   publishStretch: {

@@ -12,7 +12,8 @@ import Svg, { Path } from 'react-native-svg';
 
 import Button, { type ButtonAppearance, type ButtonMode } from '@/components/button';
 import { UI_ICONS } from '@/components/ui-icons';
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /**
@@ -28,7 +29,7 @@ import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
  *   (обновление K-DS 23.10, Дмитрий: title модалок = Title2),
  *   текст Body 16/22 secondary (pt 12), кнопки pt 24 (Outline + Primary).
  */
-export type ModalCardIcon = 'info' | 'warn';
+export type ModalCardIcon = 'info' | 'warn' | 'delete';
 
 /** Кнопки: левая/правая канонично Outline/Accent; вариант переопределяется
  *  mode/appearance (K-DS пропсы, 24.10) — например Negative для «Удалить». */
@@ -55,6 +56,8 @@ export default function ModalCard({
   actions: [ModalCardAction, ModalCardAction];
   onClose: () => void;
 }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const { height: screenH } = useWindowDimensions();
   const [mounted, setMounted] = useState(visible);
   const open = useSharedValue(0);
@@ -125,6 +128,8 @@ export default function ModalCard({
 
 /* крестик Button-Icon 44×44 (308:1379): absolute right/top 0 угла карточки */
 function ModalCardClose({ onClose }: { onClose: () => void }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   return (
     <Pressable
       accessibilityRole="button"
@@ -132,29 +137,45 @@ function ModalCardClose({ onClose }: { onClose: () => void }) {
       onPress={onClose}
       style={styles.close}>
       <Svg width={24} height={24} viewBox="0 0 24 24">
-        <Path d={UI_ICONS.close.d} fill={Colors.light.text} />
+        <Path d={UI_ICONS.close.d} fill={palette.text} />
       </Svg>
     </Pressable>
   );
 }
 
 function IconGlyph({ icon }: { icon: ModalCardIcon }) {
+  const palette = useTheme();
   return (
     <Svg
       width={56}
       height={56}
       viewBox="0 0 56 56"
-      style={styles.icon}>
-      {/* circle-info #376D7B / attention #D18A24 (svg K 224:6017, 225:6130) */}
+      style={staticStyles.icon}>
+      {/* circle-info #376D7B / attention #D18A24 (svg K 224:6017, 225:6130);
+          delete — корзина мастера K-DS 490:1000, заливка
+          --color-danger-default (свет #b84a42 / dark #dc6c64, K 460:5224) */}
       <Path
-        d={icon === 'info' ? UI_ICONS.circleInfo.d : UI_ICONS.attention.d}
-        fill={icon === 'info' ? '#376d7b' : '#d18a24'}
+        d={
+          icon === 'info'
+            ? UI_ICONS.circleInfo.d
+            : icon === 'delete'
+              ? UI_ICONS.deleteModal.d
+              : UI_ICONS.attention.d
+        }
+        fill={
+          icon === 'info'
+            ? '#376d7b'
+            : icon === 'delete'
+              ? palette.dangerDefault
+              : '#d18a24'
+        }
       />
     </Svg>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
   flex: {
     flex: 1,
   },
@@ -164,7 +185,7 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: Colors.light.scrim,
+    backgroundColor: palette.scrim,
   },
   card: {
     /* Card (308:1355 / K 224:6017): от края 16, под кнопками — ровно 16
@@ -174,7 +195,7 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
     bottom: 16,
-    backgroundColor: Colors.light.surfaceRaised,
+    backgroundColor: palette.surfaceRaised,
     borderRadius: 24,
     borderCurve: 'continuous',
     paddingTop: 24,
@@ -186,7 +207,7 @@ const styles = StyleSheet.create({
     /* Title2 24/30 · 700 (K-DS 308:1358, обновление 23.10 — было Title1 28/34) */
     ...rnTextStyle(TEXT.title2),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
     textAlign: 'center',
     marginTop: 8,
     alignSelf: 'center',
@@ -195,7 +216,7 @@ const styles = StyleSheet.create({
   body: {
     ...rnTextStyle(TEXT.body),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
     textAlign: 'center',
     marginTop: 12, /* Body pt 12 (308:1359) */
     alignSelf: 'stretch',
@@ -216,6 +237,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+});
+
+const staticStyles = StyleSheet.create({
   icon: {
     alignSelf: 'center',
   },

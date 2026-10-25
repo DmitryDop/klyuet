@@ -1,13 +1,15 @@
 import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DefaultTheme, DarkTheme, Stack, ThemeProvider } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 
-import { Colors } from '@/constants/theme';
 import ToastHost from '@/components/ui/toast';
+import { Colors } from '@/constants/theme';
 import { loadMapViewKind } from '@/data/map-settings-store';
+import { loadThemeMode, useThemeMode } from '@/data/theme-store';
 
 /* GestureHandlerRootView — свайп-закрытие шторок (граббер SheetModal;
    детектор жестов работает только внутри root view gesture-handler). */
@@ -18,32 +20,37 @@ void SplashScreen.preventAutoHideAsync().catch(() => {
   /* hide уже выполнен — ничего не делаем */
 });
 
-/* Светлая тема — единственная подтверждённая в V1.
-   Токены в src/constants/theme.ts; будущее переключение Системная/Светлая/Тёмная
-   (Профиль → Настройки) заменит эту фиксированную тему на провайдер выбора. */
-const LightNavTheme = {
-  ...DefaultTheme,
-  dark: false,
-  colors: {
-    ...DefaultTheme.colors,
-    primary: Colors.light.accent,
-    background: Colors.light.background,
-    card: Colors.light.background,
-    text: Colors.light.text,
-    border: Colors.light.markerHalo,
-    notification: Colors.light.accent,
-  },
-};
+/* Тема Light/Dark — палитра Colors (theme.ts), переключение «Профиль →
+   Тёмная тема» (theme-store, сохраняется между запусками). Нав-тема
+   expo-router обновляется на смену палитры без перезагрузки. */
 
 export default function RootLayout() {
   /* вариативный TTF: вес задается fontWeight (RN 0.86), один файл на все начертания */
   const [fontsLoaded] = useFonts({
     Onest: require('../../assets/fonts/Onest-Variable.ttf'),
   });
+  const themeMode = useThemeMode();
+  const theme = themeMode === 'dark' ? DarkTheme : DefaultTheme;
+  const palette = Colors[themeMode];
+
+  const navTheme = {
+    ...theme,
+    dark: themeMode === 'dark',
+    colors: {
+      ...theme.colors,
+      primary: palette.accent,
+      background: palette.background,
+      card: palette.background,
+      text: palette.text,
+      border: palette.markerHalo,
+      notification: palette.accent,
+    },
+  };
 
   useEffect(() => {
-    /* вид карты из прошлого запуска (ТЗ _x/24.md §5) */
+    /* вид карты из прошлого запуска (ТЗ _x/24.md §5) и тема (ТЗ dark-theme) */
     void loadMapViewKind();
+    void loadThemeMode();
   }, []);
 
   useEffect(() => {
@@ -60,7 +67,12 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={styles.flex}>
-      <ThemeProvider value={LightNavTheme}>
+      <ThemeProvider value={navTheme}>
+        {/* Status Bar по теме: тёмная тема — светлые системные символы */}
+        <StatusBar
+          style={themeMode === 'dark' ? 'light' : 'dark'}
+          animated
+        />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
         </Stack>

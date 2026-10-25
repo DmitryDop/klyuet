@@ -2,7 +2,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { fishingDateLabel } from '@/logic/dates';
 import { displayName } from '@/data/repo';
-import { Colors } from '@/constants/theme';
+import { type Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 import type { Report } from '@/data/types';
 
@@ -17,11 +18,10 @@ import type { Report } from '@/data/types';
      снасть·приманка·фото).
    Заголовок — виды рыбы («С уловом») или «Без улова», Onest/Headline 16/20;
    вторая строка — Onest/Body (450) 16/22; строка описания и дата — Onest/Caption
-   12/16, цвет — локальное значение макета #808080 (не переменная K-DS, помечено).
+   12/16, цвет — --color-text-secondary (согласование Дмитрия 25.10, было
+   локальное #808080; в Dark — stone/060 #aeb8b2).
    Дата — дата самой рыбалки (reports.md §7), свежая — относительной.
    Pressed-состояние макетами не передано — не выдумывается (правило проекта). */
-
-const INFO_GRAY = '#808080'; /* локальное значение макета (не токен) */
 
 export default function ReportItem({
   report,
@@ -38,6 +38,8 @@ export default function ReportItem({
   onPress?: () => void;
   separator?: boolean;
 }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const title =
     report.catchStatus === 'with_catch' && report.fishSpeciesIds.length > 0
       ? report.fishSpeciesIds.join(', ')
@@ -57,15 +59,15 @@ export default function ReportItem({
 
   const item = (
     <View style={[styles.item, variant === 'card' && styles.card]}>
-      <View style={styles.body}>
+      <View style={staticStyles.body}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.secondaryLine}>
           {variant === 'card' ? secondaryText : displayName(report.authorId)}
         </Text>
       </View>
-      <View style={styles.info}>
-        <Text style={[styles.infoText, styles.infoLeft]}>{infoParts.join(' · ')}</Text>
-        <Text style={[styles.infoText, styles.infoDate]}>
+      <View style={staticStyles.info}>
+        <Text style={[staticStyles.infoText, styles.infoLeft]}>{infoParts.join(' · ')}</Text>
+        <Text style={[staticStyles.infoText, styles.infoDate]}>
           {fishingDateLabel(report.fishingDate)}
         </Text>
       </View>
@@ -89,31 +91,10 @@ export default function ReportItem({
   );
 }
 
-const styles = StyleSheet.create({
-  item: {
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    borderCurve: 'continuous',
-  },
-  card: {
-    /* обёртка «Отчеты рыбака» (K 210:9937): блок #f8f9f5 p 16 radius 16 */
-    backgroundColor: Colors.light.cardSurface,
-    borderRadius: 16,
-    padding: 16,
-  },
+const staticStyles = StyleSheet.create({
   body: {
     gap: 2,
     alignItems: 'flex-start',
-  },
-  title: {
-    ...rnTextStyle(TEXT.headline),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
-  },
-  secondaryLine: {
-    ...rnTextStyle(TEXT.body),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
   },
   info: {
     flexDirection: 'row',
@@ -125,22 +106,48 @@ const styles = StyleSheet.create({
     ...rnTextStyle(TEXT.caption),
     fontFamily: FONT_FAMILY,
   },
-  infoLeft: {
-    flexGrow: 1,
-    flexBasis: '0%',
-    flexShrink: 1,
-    color: INFO_GRAY,
-  },
-  infoDate: {
-    color: INFO_GRAY,
-    textAlign: 'right',
-  },
-  separator: {
-    height: 1,
-    backgroundColor: Colors.light.borderSubtle,
-    /* разделитель внутри px-зоны: 16 от краёв report-блока (SpacingSeparator
-       w-full у px-контейнера report-item, K 135:6275) */
-    marginHorizontal: 16,
-    marginVertical: 15,
-  },
 });
+
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
+    item: {
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      borderCurve: 'continuous',
+    },
+    card: {
+      /* обёртка «Отчеты рыбака» (K 210:9937): блок #f8f9f5 p 16 radius 16 */
+      backgroundColor: palette.cardSurface,
+      borderRadius: 16,
+      padding: 16,
+    },
+    title: {
+      ...rnTextStyle(TEXT.headline),
+      fontFamily: FONT_FAMILY,
+      color: palette.text,
+    },
+    secondaryLine: {
+      ...rnTextStyle(TEXT.body),
+      fontFamily: FONT_FAMILY,
+      color: palette.text,
+    },
+    /* строка описания и дата (--color-text-secondary, согласование 25.10) */
+    infoLeft: {
+      flexGrow: 1,
+      flexBasis: '0%',
+      flexShrink: 1,
+      color: palette.textSecondary,
+    },
+    infoDate: {
+      color: palette.textSecondary,
+      textAlign: 'right' as const,
+    },
+    separator: {
+      height: 1,
+      backgroundColor: palette.borderSubtle,
+      /* разделитель внутри px-зоны: 16 от краёв report-блока (SpacingSeparator
+         w-full у px-контейнера report-item, K 135:6275) */
+      marginHorizontal: 16,
+      marginVertical: 15,
+    },
+  });

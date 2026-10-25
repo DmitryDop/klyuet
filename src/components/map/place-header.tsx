@@ -3,8 +3,9 @@ import MapView from 'react-native-maps';
 import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 
 import LocationDot from '@/components/map/location-dot';
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
+import { useTheme, useThemeMode } from '@/data/theme-store';
 import type { Place } from '@/data/types';
 
 /* Шапка карточки места (K 135:6230 / 125:5893; анимация 328:3096): подложка
@@ -33,6 +34,9 @@ export const SPAN_APPROX = (360 / 2 ** 12) * (393 / 256);
 export function PlaceHeader({ place, scrollY }: { place: Place; scrollY?: SharedValue<number> }) {
   /* плашка едет вместе с листом (translateY = −scrollY, K 328:3096);
      без scrollY — статичная шапка */
+  const palette = useTheme();
+  const themeMode = useThemeMode();
+  const styles = makeStyles(palette);
   const badgeAnim = useAnimatedStyle(() => {
     if (scrollY == null) return {};
     return { transform: [{ translateY: -scrollY.value }] };
@@ -45,7 +49,7 @@ export function PlaceHeader({ place, scrollY }: { place: Place; scrollY?: Shared
     <View style={styles.header}>
       <MapView
         pointerEvents="none"
-        userInterfaceStyle="light"
+        userInterfaceStyle={themeMode}
         style={styles.map}
         scrollEnabled={false}
         zoomEnabled={false}
@@ -79,10 +83,12 @@ export function PlaceHeader({ place, scrollY }: { place: Place; scrollY?: Shared
 /* Приблизительная область в шапке (K 310:3261): 105×105, заливка
    overlay-point (alpha), пунктирная граница 0.5 (stroke/05) */
 function ApproximateMarker() {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   return <View style={styles.approxMarker} />;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (palette: Palette) => StyleSheet.create({
   header: {
     height: HEADER_HEIGHT,
     backgroundColor: DIMMING_BACKDROP, /* «ovelay map» fill (K 330:5076) */
@@ -116,8 +122,8 @@ const styles = StyleSheet.create({
     height: 105,
     borderRadius: 52.5,
     borderCurve: 'continuous',
-    backgroundColor: Colors.light.pointAlpha,
-    borderColor: Colors.light.accent,
+    backgroundColor: palette.pointAlpha,
+    borderColor: palette.accent,
     borderWidth: 0.5,
     borderStyle: 'dashed',
   },
@@ -125,7 +131,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 48,
     alignSelf: 'center',
-    backgroundColor: Colors.light.surfaceRaised, /* --color-surface-raised */
+    backgroundColor: palette.surfaceRaised, /* --color-surface-raised */
     borderRadius: 8,
     borderCurve: 'continuous',
     paddingHorizontal: 8,
@@ -134,6 +140,6 @@ const styles = StyleSheet.create({
   badgeText: {
     ...rnTextStyle(TEXT.caption),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
   },
 });

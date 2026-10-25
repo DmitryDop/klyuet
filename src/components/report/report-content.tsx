@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,11 +11,13 @@ import {
 } from 'react-native';
 
 import InfoRow from '@/components/place/info-row';
+import PhotoViewer from '@/components/ui/photo-viewer';
 import { displayName } from '@/data/repo';
 import { photoSource } from '@/logic/photos';
 import type { Place, Report } from '@/data/types';
 import { fishingDateLabel } from '@/logic/dates';
-import { Colors } from '@/constants/theme';
+import { type Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /**
@@ -39,8 +42,12 @@ export default function ReportContent({
   report: Report;
   place: Place | null;
 }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [galleryWidth, setGalleryWidth] = useState(0);
+  /* просмотр: нативный PhotoViewer (тап по фото) */
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
   const speciesValue =
     report.catchStatus === 'with_catch' && report.fishSpeciesIds.length > 0
@@ -69,7 +76,7 @@ export default function ReportContent({
       {/* галерея — первый блок (K 157:8536) */}
       {report.photos.length > 0 && (
         <View
-          style={styles.gallery}
+          style={staticStyles.gallery}
           onLayout={(e) => setGalleryWidth(e.nativeEvent.layout.width)}>
           <ScrollView
             horizontal
@@ -80,17 +87,25 @@ export default function ReportContent({
             scrollEventThrottle={16}
             contentContainerStyle={{ gap: 8 }}>
             {report.photos.map((ph, i) => (
-              <Image
+              <Pressable
                 key={`${ph}-${i}`}
-                source={photoSource(ph)}
-                style={[styles.pagePhoto, galleryWidth > 0 && { width: galleryWidth }]}
-              />
+                accessibilityRole="imagebutton"
+                accessibilityLabel={`Фото ${i + 1} из ${report.photos.length}`}
+                onPress={() => setViewerIndex(i)}>
+                <Image
+                  source={photoSource(ph)}
+                  style={[styles.pagePhoto, galleryWidth > 0 && { width: galleryWidth }]}
+                />
+              </Pressable>
             ))}
           </ScrollView>
           {report.photos.length > 1 && (
-            <View style={styles.dots}>
+            <View style={staticStyles.dots}>
               {report.photos.map((ph, i) => (
-                <View key={`${ph}-${i}`} style={[styles.dot, i === photoIndex && styles.dotActive]} />
+                <View
+                  key={`${ph}-${i}`}
+                  style={[staticStyles.dot, styles.dot, i === photoIndex && styles.dotActive]}
+                />
               ))}
             </View>
           )}
@@ -98,9 +113,9 @@ export default function ReportContent({
       )}
 
       {/* блок place (K 206:9617); после галереи — 8 (K 157:8536) */}
-      <View style={[styles.placeBlock, report.photos.length > 0 && styles.placeBlockGap]}>
+      <View style={[styles.placeBlock, report.photos.length > 0 && staticStyles.placeBlockGap]}>
         <Text style={styles.placeName}>{place?.name ?? ''}</Text>
-        <View style={styles.metaRow}>
+        <View style={staticStyles.metaRow}>
           <Text style={styles.metaAuthor} numberOfLines={1}>
             {displayName(report.authorId)}
           </Text>
@@ -109,7 +124,7 @@ export default function ReportContent({
       </View>
 
       {/* блок about */}
-      <View style={[styles.block, styles.blockPadY]}>
+      <View style={[styles.block, staticStyles.blockPadY]}>
         {rows.map(([label, value], i) => (
           <InfoRow key={label} label={label} value={value} separator={i < rows.length - 1} />
         ))}
@@ -117,16 +132,25 @@ export default function ReportContent({
 
       {/* комментарий: пустая секция скрыта (§5) */}
       {report.comment != null && report.comment !== '' && (
-        <View style={[styles.block, styles.blockPad]}>
+        <View style={[styles.block, staticStyles.blockPad]}>
           <Text style={styles.blockLabel}>Комментарий</Text>
           <Text style={styles.blockText}>{report.comment}</Text>
         </View>
+      )}
+      {/* просмотр фото: нативный полноэкранный вьюер */}
+      {viewerIndex != null && (
+        <PhotoViewer
+          visible
+          photos={report.photos}
+          initialIndex={viewerIndex}
+          onClose={() => setViewerIndex(null)}
+        />
       )}
     </>
   );
 }
 
-const styles = StyleSheet.create({
+const staticStyles = StyleSheet.create({
   gallery: {
     alignSelf: 'stretch',
     gap: 8, /* фотография → точки (K 158:8650) */
@@ -134,14 +158,6 @@ const styles = StyleSheet.create({
   },
   placeBlockGap: {
     marginTop: 8, /* галерея → place (K 157:8536) */
-  },
-  pagePhoto: {
-    width: 361, /* до замера onLayout; см. решение по ширине галереи 21.10 */
-    aspectRatio: 361 / PHOTO_HEIGHT_BASE,
-    borderRadius: 12,
-    borderCurve: 'continuous',
-    backgroundColor: Colors.light.cardSurface,
-    resizeMode: 'cover',
   },
   dots: {
     flexDirection: 'row',
@@ -152,47 +168,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.light.borderSubtle /* --color-bg-secondary (158:8644) */,
-  },
-  dotActive: {
-    backgroundColor: Colors.light.accent /* --color-action-default (158:8644) */,
-  },
-  placeBlock: {
-    backgroundColor: Colors.light.cardSurface,
-    borderRadius: 16,
-    borderCurve: 'continuous',
-    paddingTop: 16,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  placeName: {
-    ...rnTextStyle(TEXT.title3),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
   },
   metaRow: {
     flexDirection: 'row',
     gap: 12, /* sm (K 206:9621) */
     marginTop: 2, /* название → автор/дата (K 206:9619) */
-  },
-  metaAuthor: {
-    ...rnTextStyle(TEXT.bodyS),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
-    flexGrow: 1,
-    flexShrink: 1,
-  },
-  metaDate: {
-    ...rnTextStyle(TEXT.bodyS),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
-    textAlign: 'right',
-  },
-  block: {
-    backgroundColor: Colors.light.cardSurface,
-    borderRadius: 16,
-    borderCurve: 'continuous',
-    marginTop: 8, /* gap-8px между блоками */
   },
   blockPad: {
     padding: 16,
@@ -201,15 +181,65 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 16,
   },
-  blockLabel: {
-    ...rnTextStyle(TEXT.label),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
-    marginBottom: 12, /* название → текст (pb-12, K 157:8526) */
-  },
-  blockText: {
-    ...rnTextStyle(TEXT.body),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
-  },
 });
+
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
+    pagePhoto: {
+      width: 361, /* до замера onLayout; см. решение по ширине галереи 21.10 */
+      aspectRatio: 361 / PHOTO_HEIGHT_BASE,
+      borderRadius: 12,
+      borderCurve: 'continuous',
+      backgroundColor: palette.cardSurface,
+      resizeMode: 'cover',
+    },
+    dot: {
+      backgroundColor: palette.borderSubtle /* --color-bg-secondary (158:8644) */,
+    },
+    dotActive: {
+      backgroundColor: palette.accent /* --color-action-default (158:8644) */,
+    },
+    placeBlock: {
+      backgroundColor: palette.cardSurface,
+      borderRadius: 16,
+      borderCurve: 'continuous',
+      paddingTop: 16,
+      paddingBottom: 16,
+      paddingHorizontal: 16,
+    },
+    placeName: {
+      ...rnTextStyle(TEXT.title3),
+      fontFamily: FONT_FAMILY,
+      color: palette.text,
+    },
+    metaAuthor: {
+      ...rnTextStyle(TEXT.bodyS),
+      fontFamily: FONT_FAMILY,
+      color: palette.textSecondary,
+      flexGrow: 1,
+      flexShrink: 1,
+    },
+    metaDate: {
+      ...rnTextStyle(TEXT.bodyS),
+      fontFamily: FONT_FAMILY,
+      color: palette.textSecondary,
+      textAlign: 'right',
+    },
+    block: {
+      backgroundColor: palette.cardSurface,
+      borderRadius: 16,
+      borderCurve: 'continuous',
+      marginTop: 8, /* gap-8px между блоками */
+    },
+    blockLabel: {
+      ...rnTextStyle(TEXT.label),
+      fontFamily: FONT_FAMILY,
+      color: palette.textSecondary,
+      marginBottom: 12, /* название → текст (pb-12, K 157:8526) */
+    },
+    blockText: {
+      ...rnTextStyle(TEXT.body),
+      fontFamily: FONT_FAMILY,
+      color: palette.text,
+    },
+  });

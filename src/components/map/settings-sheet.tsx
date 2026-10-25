@@ -9,8 +9,9 @@ import {
   useMapViewKind,
   type MapViewKind,
 } from '@/data/map-settings-store';
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
+import { useTheme } from '@/data/theme-store';
 
 /**
  * Шторка «Настройки карты» (ТЗ _x/24.md; K 484:16154 → Sheet 484:16223):
@@ -33,6 +34,8 @@ const VARIANTS: { kind: MapViewKind; label: string }[] = [
 ];
 
 export default function MapSettingsSheet({ visible }: { visible: boolean }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const kind = useMapViewKind();
   /* нижняя безопасная зона (обновление макета 24.10: Bottom Action 393×27
       пустой — шторки без нижних кнопок отступают от домашней полосы) */
@@ -79,6 +82,8 @@ export default function MapSettingsSheet({ visible }: { visible: boolean }) {
 }
 
 function Radio({ selected }: { selected: boolean }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   return (
     <View
       style={[
@@ -90,7 +95,8 @@ function Radio({ selected }: { selected: boolean }) {
   );
 }
 
-const styles = StyleSheet.create({
+/* Цвета — палитра активной темы (тёмный режим K-DS, аудит 25.10) */
+const makeStyles = (palette: Palette) => StyleSheet.create({
   flex: {
     flex: 1,
   },
@@ -123,7 +129,7 @@ const styles = StyleSheet.create({
     width: 255,
     ...rnTextStyle(TEXT.headline),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
     textAlign: 'center',
   },
   slot: {
@@ -145,7 +151,7 @@ const styles = StyleSheet.create({
   cellText: {
     ...rnTextStyle(TEXT.body),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
   },
   radioWrap: {
     /* x/Right: p 8 */
@@ -162,20 +168,20 @@ const styles = StyleSheet.create({
   radioSelected: {
     /* border 2 --color-action-default */
     borderWidth: 2,
-    borderColor: Colors.light.accent,
+    borderColor: palette.accent,
     /* content box 20: точка 10×10 на left/top 5 */
   },
   radioUnselected: {
     /* border 1 --color-border-control, фон --color-surface-default */
     borderWidth: 1,
-    borderColor: Colors.light.borderControl,
-    backgroundColor: Colors.light.cardSurface,
+    borderColor: palette.borderControl,
+    backgroundColor: palette.cardSurface,
   },
   radioDot: {
     width: 10,
     height: 10,
     borderRadius: 8,
     /* --color-action-on */
-    backgroundColor: Colors.light.accent,
+    backgroundColor: palette.accent,
   },
 });

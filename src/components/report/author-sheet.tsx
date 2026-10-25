@@ -9,7 +9,8 @@ import ReportContent from '@/components/report/report-content';
 import SheetModal from '@/components/ui/sheet-modal';
 import { demoPlaceRepo, displayName } from '@/data/repo';
 import type { Place, Report } from '@/data/types';
-import { Colors } from '@/constants/theme';
+import { type Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /**
@@ -56,6 +57,8 @@ function SheetBody({
   onClose: () => void;
   onGoToPlace: (placeId: string) => void;
 }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const insets = useSafeAreaInsets();
   const [reports, setReports] = useState<Report[]>([]);
   const [placeNames, setPlaceNames] = useState<Record<string, string>>({});
@@ -98,10 +101,10 @@ function SheetBody({
   const title = openReport != null ? 'Отчёт о рыбалке' : 'Отчеты рыбака';
 
   return (
-    <View style={[styles.flex, { paddingBottom: 8 + insets.bottom }]}>
+    <View style={[staticStyles.flex, { paddingBottom: 8 + insets.bottom }]}>
       {/* тулбар после граббера SheetModal: ряд 44 + pb 8 (K-DS 224:987) */}
-      <View style={styles.sheetToolbar}>
-        <View style={styles.toolbarRow}>
+      <View style={staticStyles.sheetToolbar}>
+        <View style={staticStyles.toolbarRow}>
           {/* назад — только в полном отчёте; X всегда справа.
               У листа Left-слот пуст (224:1005) */}
           {openReport != null ? (
@@ -112,13 +115,13 @@ function SheetBody({
               accessibilityLabel="Назад к списку"
             />
           ) : (
-            <View style={styles.leftSpacer} />
+            <View style={staticStyles.leftSpacer} />
           )}
-          <View style={styles.flex} />
+          <View style={staticStyles.flex} />
           <ButtonIcon icon="close" type="toolbar" onPress={onClose} accessibilityLabel="Закрыть" />
         </View>
-        <View style={styles.titleWrap} pointerEvents="none">
-          <View style={styles.titleBox}>
+        <View style={staticStyles.titleWrap} pointerEvents="none">
+          <View style={staticStyles.titleBox}>
             <Text style={styles.title} numberOfLines={1}>
               {title}
             </Text>
@@ -133,14 +136,14 @@ function SheetBody({
 
       {/* тело тулбар + body (список под полным отчётом): слой отчёта не
           должен перекрывать тулбар */}
-      <View style={styles.body}>
+      <View style={staticStyles.body}>
         {/* список отчётов автора — остаётся смонтированным под полным
             отчётом: возврат сохраняет прокрутку (навигация §4) */}
         <ScrollView
-          style={styles.flex}
+          style={staticStyles.flex}
           contentContainerStyle={{ paddingTop: 8, paddingHorizontal: 16 }}
           showsVerticalScrollIndicator={false}>
-          <View style={styles.tube}>
+          <View style={staticStyles.tube}>
             {reports.map((r) => (
               <ReportItem
                 key={r.id}
@@ -158,7 +161,7 @@ function SheetBody({
         {openReport != null && (
           <View style={styles.reportLayer}>
             <ScrollView
-              style={styles.flex}
+              style={staticStyles.flex}
               contentContainerStyle={{
                 paddingBottom: 16 + 48 + 16 + insets.bottom,
                 paddingHorizontal: 16,
@@ -180,7 +183,7 @@ function SheetBody({
   );
 }
 
-const styles = StyleSheet.create({
+const staticStyles = StyleSheet.create({
   flex: {
     flex: 1,
   },
@@ -215,40 +218,44 @@ const styles = StyleSheet.create({
     gap: 2,
     alignItems: 'center',
   },
-  title: {
-    ...rnTextStyle(TEXT.headline),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
-    textAlign: 'center',
-  },
-  subtitle: {
-    ...rnTextStyle(TEXT.subheadline),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
-    textAlign: 'center',
-  },
   body: {
     flex: 1, /* body тулбар → список/отчёт (246:4642) */
   },
   tube: {
     gap: 8, /* tube gap 8 (366:5051) */
   },
-  reportLayer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: Colors.light.surfaceRaised, /* непрозрачный слой */
-  },
-  panel: {
-    /* Bottom Action x/BtnGr: pt 16 px 16, pb 8 отдает insets зоны Sheet */
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingTop: 16,
-    paddingHorizontal: 16,
-    backgroundColor: Colors.light.surfaceRaised,
-  },
 });
+
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
+    title: {
+      ...rnTextStyle(TEXT.headline),
+      fontFamily: FONT_FAMILY,
+      color: palette.text,
+      textAlign: 'center',
+    },
+    subtitle: {
+      ...rnTextStyle(TEXT.subheadline),
+      fontFamily: FONT_FAMILY,
+      color: palette.textSecondary,
+      textAlign: 'center',
+    },
+    reportLayer: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
+      backgroundColor: palette.surfaceRaised, /* непрозрачный слой */
+    },
+    panel: {
+      /* Bottom Action x/BtnGr: pt 16 px 16, pb 8 отдает insets зоны Sheet */
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      paddingTop: 16,
+      paddingHorizontal: 16,
+      backgroundColor: palette.surfaceRaised,
+    },
+  });

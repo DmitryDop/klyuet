@@ -8,7 +8,8 @@ import Button from '@/components/button';
 import Chip from '@/components/form/chip';
 import SheetModal from '@/components/ui/sheet-modal';
 import { UI_ICONS } from '@/components/ui-icons';
-import { Colors } from '@/constants/theme';
+import { type Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /**
@@ -103,6 +104,8 @@ function SheetBody({
   fullHeight?: boolean;
   searchable?: boolean;
 }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState<string[]>(initial);
   const [category, setCategory] = useState<string>(categories?.[0] ?? '');
@@ -174,22 +177,22 @@ function SheetBody({
   return (
     <View
       style={[
-        styles.content,
+        staticStyles.content,
         /* content-режим: высота по наполнению (без flex-растяжения);
            список при переполнении капится maxHeight на самой шторке.
            Принцип панели отчёта (K 87:4145): при открытой клавиатуре
            safe-area-inset исключён — клавиатурай накрыта зона home-индикатора,
            нижний край = keyboardH + pb 8 кнопок */
-        !fullHeight && styles.contentWrap,
+        !fullHeight && staticStyles.contentWrap,
         { paddingBottom: keyboardH > 0 ? keyboardH : 8 + insets.bottom },
       ]}>
       {/* тулбар после граббера SheetModal: ряд 44 + pb 8 (K-DS 224:987) */}
-      <View style={styles.sheetToolbar}>
-        <View style={styles.toolbarRow}>
+      <View style={staticStyles.sheetToolbar}>
+        <View style={staticStyles.toolbarRow}>
           <ButtonIcon icon="close" type="toolbar" onPress={onClose} accessibilityLabel="Закрыть" />
         </View>
-        <View style={styles.sheetTitleWrap} pointerEvents="none">
-          <View style={styles.sheetTitleBox}>
+        <View style={staticStyles.sheetTitleWrap} pointerEvents="none">
+          <View style={staticStyles.sheetTitleBox}>
             <Text style={styles.sheetTitle} numberOfLines={1}>
               {title}
             </Text>
@@ -199,7 +202,7 @@ function SheetBody({
 
       {/* контент: чипсы-фильтры + список (Slot 238:3947) */}
       {categories != null && categories.length > 0 && (
-        <View style={styles.chipGroup}>
+        <View style={staticStyles.chipGroup}>
           {categories.map((c) => (
             <Chip
               key={c}
@@ -215,15 +218,15 @@ function SheetBody({
       {/* поиск (K 434:4402): K-DS Search row — px16 py8, поле 40; внешней
           кнопки в шторке нет (макет); border 2 focus / 1 default (434:4931) */}
       {searchable && (
-        <View style={styles.searchRow}>
+        <View style={staticStyles.searchRow}>
           <View
             style={[
               styles.searchField,
               searchFocused ? styles.searchFieldFocus : styles.searchFieldIdle,
             ]}>
-            <View style={styles.searchIconBox}>
+            <View style={staticStyles.searchIconBox}>
               <Svg width={20} height={20} viewBox="0 0 24 24">
-                <Path d={UI_ICONS.magnifyingGlass.d} fill={Colors.light.text} />
+                <Path d={UI_ICONS.magnifyingGlass.d} fill={palette.text} />
               </Svg>
             </View>
             <TextInput
@@ -242,9 +245,9 @@ function SheetBody({
               <Pressable
                 accessibilityLabel="Очистить поиск"
                 onPress={() => setQuery('')}
-                style={styles.searchIconBox}>
+                style={staticStyles.searchIconBox}>
                 <Svg width={20} height={20} viewBox="0 0 24 24">
-                  <Path d={UI_ICONS.circleXmark.d} fill={Colors.light.text} />
+                  <Path d={UI_ICONS.circleXmark.d} fill={palette.text} />
                 </Svg>
               </Pressable>
             )}
@@ -252,7 +255,7 @@ function SheetBody({
         </View>
       )}
       <ScrollView
-        style={[styles.list, !fullHeight && styles.listContent]}
+        style={[staticStyles.list, !fullHeight && staticStyles.listContent]}
         /* без резерва снизу: высоту клавиатуры съедает paddingBottom
            контейнера шторки — список ужат над клавиатурой, белого
            хвоста после последнего пункта нет (Дмитрий 23.10) */
@@ -261,7 +264,7 @@ function SheetBody({
         keyboardShouldPersistTaps="handled">
         {visibleItems.length === 0 && searchable ? (
           /* пустой поиск: K 434:5131 — px16 py16, Body S, по центру */
-          <View style={styles.emptyMessage}>
+          <View style={staticStyles.emptyMessage}>
             <Text style={[styles.emptyText, rnTextStyle(TEXT.bodyS), { fontFamily: FONT_FAMILY }]}>
               Ничего не найдено
             </Text>
@@ -276,19 +279,19 @@ function SheetBody({
                 accessibilityState={{ checked }}
                 accessibilityLabel={item.name}
                 onPress={() => toggle(item.name)}
-                style={styles.cell}>
+                style={staticStyles.cell}>
                 {/* Cell (K-DS 268:980): ряд без вертикали, py 8 — на колонках */}
-                <View style={styles.cellRow}>
-                  <View style={styles.cellTextWrap}>
+                <View style={staticStyles.cellRow}>
+                  <View style={staticStyles.cellTextWrap}>
                     <Text style={styles.cellText}>{item.name}</Text>
                   </View>
-                  <View style={styles.cellRight}>
+                  <View style={staticStyles.cellRight}>
                     {/* Checkbox (268:901/1024, multi) / Radio (268:969/1034, single) */}
                     <View
                       style={[
                         styles.checkbox,
                         checked && styles.checkboxChecked,
-                        mode === 'single' && styles.radio,
+                        mode === 'single' && staticStyles.radio,
                       ]}>
                       {checked &&
                         (mode === 'single' ? (
@@ -296,7 +299,7 @@ function SheetBody({
                           <View style={styles.radioDot} />
                         ) : (
                           <Svg width={18} height={18} viewBox="0 0 18 18">
-                            <Path d={UI_ICONS.check.d} fill="#176b52" />
+                            <Path d={UI_ICONS.check.d} fill={palette.accent} />
                           </Svg>
                         ))}
                     </View>
@@ -312,7 +315,7 @@ function SheetBody({
           (у снасти кнопок нет: тап закрывает, решение Дмитрия 22.10).
           Подъём над клавиатурой делает paddingBottom контейнера выше
           (keyboardH без inset — K 87:4145), уряд пб остаётся 8 */}
-      <View style={[styles.actions, mode === 'single' && styles.actionsHidden]}>
+      <View style={[staticStyles.actions, mode === 'single' && staticStyles.actionsHidden]}>
         <Button
           label="Очистить"
           mode="secondary" appearance="outline"
@@ -333,9 +336,12 @@ function SheetBody({
   );
 }
 
-const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
+const staticStyles = StyleSheet.create({
+  content: {
+    flex: 1, /* Full Height: контент занимает шторку (K-DS 238:3945) */
+  },
+  contentWrap: {
+    flex: 0, /* content-режим: высота по наполнению */
   },
   sheetToolbar: {
     paddingHorizontal: 16,
@@ -362,12 +368,6 @@ const styles = StyleSheet.create({
     width: 255, /* зона тайтла 255 (224:997) */
     alignItems: 'center',
   },
-  sheetTitle: {
-    ...rnTextStyle(TEXT.headline),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
-    textAlign: 'center',
-  },
   chipGroup: {
     flexDirection: 'row',
     gap: 8,
@@ -380,53 +380,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  searchField: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 40, /* dimensions/size/xl — K-DS Search (мастер 429:10650) */
-    borderRadius: 12,
-    borderCurve: 'continuous',
-    backgroundColor: Colors.light.cardSurface,
-  },
-  searchFieldFocus: {
-    /* State Focus: 2px --color-focus-ring (K 434:4931 → 223:941) */
-    borderWidth: 2,
-    borderColor: Colors.light.focusRing,
-  },
-  searchFieldIdle: {
-    /* без фокуса: 1px --color-border-control (K 432:11759, прецедент) */
-    borderWidth: 1,
-    borderColor: Colors.light.borderControl,
-  },
   searchIconBox: {
     width: 40,
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  searchInput: {
-    flex: 1,
-    color: Colors.light.text,
-    minHeight: 40,
-    paddingVertical: 0,
-  },
   emptyMessage: {
     /* message (K 434:5131): p (md, 16); Body S по центру */
     paddingHorizontal: 16,
     paddingVertical: 16,
   },
-  emptyText: {
-    color: Colors.light.textSecondary,
-    textAlign: 'center',
-  },
-  content: {
-    flex: 1, /* Full Height: контент занимает шторку (K-DS 238:3945) */
-  },
-  contentWrap: {
-    flex: 0, /* content-режим: высота по наполнению */
-  },
   list: {
-    flex: 1,
+    flex: 1, /* Full Height: контент занимает шторку (K-DS 238:3945) */
     paddingHorizontal: 16,
   },
   listContent: {
@@ -451,42 +417,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     alignItems: 'center',
   },
-  cellText: {
-    ...rnTextStyle(TEXT.body),
-    fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
-    alignSelf: 'stretch',
-    textAlign: 'left',
-  },
   cellRight: {
     padding: 8, /* x/Cell/Right: p 8 (268:1028) */
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 4, /* radius/2xs (227:6513) */
-    borderCurve: 'continuous',
-    backgroundColor: Colors.light.cardSurface,
-    borderWidth: 1,
-    borderColor: Colors.light.borderControl,
-  },
-  checkboxChecked: {
-    borderWidth: 2,
-    borderColor: Colors.light.accent,
-    /* 268:1024 */
   },
   radio: {
     /* Radio 268:969: круглый (radius/md = 16) */
     borderRadius: 16,
-  },
-  radioDot: {
-    /* Radio checked (429:200/268:1034): точка 10×10, r8, bg #176b52 */
-    width: 10,
-    height: 10,
-    borderRadius: 8,
-    backgroundColor: '#176b52',
   },
   actionsHidden: {
     /* single-режим: Bottom Action не рендерится (выбор тапом) */
@@ -500,3 +436,71 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 });
+
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
+    sheetTitle: {
+      ...rnTextStyle(TEXT.headline),
+      fontFamily: FONT_FAMILY,
+      color: palette.text,
+      textAlign: 'center',
+    },
+    searchField: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      height: 40, /* dimensions/size/xl — K-DS Search (мастер 429:10650) */
+      borderRadius: 12,
+      borderCurve: 'continuous',
+      backgroundColor: palette.cardSurface,
+    },
+    searchFieldFocus: {
+      /* State Focus: 2px --color-focus-ring (K 434:4931 → 223:941) */
+      borderWidth: 2,
+      borderColor: palette.focusRing,
+    },
+    searchFieldIdle: {
+      /* без фокуса: 1px --color-border-control (K 432:11759, прецедент) */
+      borderWidth: 1,
+      borderColor: palette.borderControl,
+    },
+    searchInput: {
+      flex: 1,
+      color: palette.text,
+      minHeight: 40,
+      paddingVertical: 0,
+    },
+    emptyText: {
+      color: palette.textSecondary,
+      textAlign: 'center',
+    },
+    cellText: {
+      ...rnTextStyle(TEXT.body),
+      fontFamily: FONT_FAMILY,
+      color: palette.text,
+      alignSelf: 'stretch',
+      textAlign: 'left',
+    },
+    checkbox: {
+      width: 24,
+      height: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 4, /* radius/2xs (227:6513) */
+      borderCurve: 'continuous',
+      backgroundColor: palette.cardSurface,
+      borderWidth: 1,
+      borderColor: palette.borderControl,
+    },
+    checkboxChecked: {
+      borderWidth: 2,
+      borderColor: palette.accent,
+      /* 268:1024 */
+    },
+    radioDot: {
+      /* Radio checked (429:200/268:1034): точка 10×10, r8, bg #176b52 */
+      width: 10,
+      height: 10,
+      borderRadius: 8,
+      backgroundColor: palette.accent,
+    },
+  });

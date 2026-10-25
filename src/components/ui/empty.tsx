@@ -2,9 +2,9 @@ import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import Button from '@/components/button';
-import { Colors } from '@/constants/theme';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 import { UI_ICONS } from '@/components/ui-icons';
+import { useTheme } from '@/data/theme-store';
 
 /**
  * Empty (K-DS 313:1710, инстанс K 230:9271 «Добавленных мест нет»;
@@ -23,6 +23,7 @@ export default function EmptyBlock({
   actionLabel?: string;
   onAction?: () => void;
 }) {
+  const palette = useTheme();
   return (
     <View style={styles.wrap}>
       <View style={styles.block}>
@@ -30,7 +31,7 @@ export default function EmptyBlock({
           <Svg width={56} height={56} viewBox="0 0 56 56">
             <Path d={UI_ICONS.file.d} fill="#376d7b" />
           </Svg>
-          <Text style={[styles.title, { fontFamily: FONT_FAMILY, ...rnTextStyle(TEXT.title2) }]}>
+          <Text style={[stylesTitle(palette.text), { fontFamily: FONT_FAMILY, ...rnTextStyle(TEXT.title2) }]}>
             {title}
           </Text>
         </View>
@@ -44,6 +45,12 @@ export default function EmptyBlock({
     </View>
   );
 }
+
+const stylesTitle = (color: string) => ({
+  color,
+  textAlign: 'center' as const,
+  alignSelf: 'stretch' as const,
+});
 
 const styles = StyleSheet.create({
   wrap: {
@@ -59,11 +66,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', /* Title (313:1691): column, gap 8, иконка + титул */
     gap: 8,
   },
-  title: {
-    color: Colors.light.text,
-    textAlign: 'center',
-    alignSelf: 'stretch',
-  },
+
   actionGroup: {
     alignSelf: 'stretch', /* BtnGr 313:1698: pt 24 — кнопка по ширине блока */
     paddingTop: 24,

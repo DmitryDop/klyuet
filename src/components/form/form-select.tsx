@@ -1,9 +1,9 @@
-
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { UI_ICONS } from '@/components/ui-icons';
-import { Colors } from '@/constants/theme';
+import { type Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /**
@@ -40,6 +40,8 @@ export default function FormSelect({
   /** K-DS State=Focus: граница 2px focus-ring */
   focused?: boolean;
 }) {
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const entry = UI_ICONS[icon];
   return (
     <Pressable
@@ -49,54 +51,33 @@ export default function FormSelect({
       onPress={disabled ? undefined : onPress}
       style={[
         styles.control,
-        disabled && styles.inactive,
+        disabled && staticStyles.inactive,
         !error && focused && styles.focus,
         error && styles.error,
       ]}>
       <Text
         style={[
-          styles.text,
-          { color: value != null && value !== '' ? Colors.light.text : Colors.light.textSecondary },
+          staticStyles.text,
+          { color: value != null && value !== '' ? palette.text : palette.textSecondary },
         ]}
         numberOfLines={1}>
         {value != null && value !== '' ? value : placeholder}
       </Text>
-      <View style={styles.detail}>
+      <View style={staticStyles.detail}>
         <Svg
           width={20}
           height={20}
           viewBox={`0 0 ${entry.viewBox ?? 20} ${entry.viewBox ?? 20}`}>
-          <Path d={entry.d} fill={Colors.light.text} />
+          <Path d={entry.d} fill={palette.text} />
         </Svg>
       </View>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  control: {
-    height: 48,
-    backgroundColor: Colors.light.cardSurface,
-    borderRadius: 12,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: Colors.light.borderControl,
-    paddingLeft: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+const staticStyles = StyleSheet.create({
   inactive: {
     opacity: 0.4, /* на время отправки — единое блокирующее состояние */
-  },
-  focus: {
-    /* K-DS Select State=Focus (209:131): 2px --color-focus-ring */
-    borderWidth: 2,
-    borderColor: Colors.light.focusRing,
-  },
-  error: {
-    /* K-DS Select State=Error (209:134): --color-danger-text */
-    borderWidth: 2,
-    borderColor: Colors.light.dangerText,
   },
   text: {
     ...rnTextStyle(TEXT.body),
@@ -111,3 +92,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
+    control: {
+      height: 48,
+      backgroundColor: palette.cardSurface,
+      borderRadius: 12,
+      borderCurve: 'continuous',
+      borderWidth: 1,
+      borderColor: palette.borderControl,
+      paddingLeft: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    focus: {
+      /* K-DS Select State=Focus (209:131): 2px --color-focus-ring */
+      borderWidth: 2,
+      borderColor: palette.focusRing,
+    },
+    error: {
+      /* K-DS Select State=Error (209:134): --color-danger-text */
+      borderWidth: 2,
+      borderColor: palette.dangerText,
+    },
+  });

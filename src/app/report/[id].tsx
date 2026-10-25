@@ -14,7 +14,8 @@ import ReportContent from '@/components/report/report-content';
 import { SkeletonReportDetails } from '@/components/ui/skeleton';
 import { CURRENT_USER_ID, demoPlaceRepo } from '@/data/repo';
 import type { Place, Report } from '@/data/types';
-import { Colors } from '@/constants/theme';
+import type { Palette } from '@/constants/theme';
+import { useTheme } from '@/data/theme-store';
 import { FONT_FAMILY, rnTextStyle, TEXT } from '@/constants/typography';
 
 /* Детали отчёта (slice 4 + шторка отчётов рыбака, navigation.md 22.10) —
@@ -35,6 +36,8 @@ export default function ReportScreen() {
   const router = useRouter();
   const navigation = useNavigation<{ getState(): { routes: { name: string; params?: Record<string, unknown> }[] } | undefined }>();
   const insets = useSafeAreaInsets();
+  const palette = useTheme();
+  const styles = makeStyles(palette);
   const [report, setReport] = useState<Report | null>(null);
   const [place, setPlace] = useState<Place | null>(null);
   const [authorCount, setAuthorCount] = useState(0);
@@ -211,10 +214,11 @@ export default function ReportScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: palette.background,
   },
   errorWrap: {
     alignItems: 'center',
@@ -225,7 +229,7 @@ const styles = StyleSheet.create({
   errorText: {
     ...rnTextStyle(TEXT.body),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.textSecondary,
+    color: palette.textSecondary,
     textAlign: 'center',
   },
   toolbar: {
@@ -260,7 +264,7 @@ const styles = StyleSheet.create({
   toolbarTitle: {
     ...rnTextStyle(TEXT.headline),
     fontFamily: FONT_FAMILY,
-    color: Colors.light.text,
+    color: palette.text,
     textAlign: 'center',
   },
   ctaWrap: {
@@ -273,6 +277,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     paddingTop: 16,
     paddingHorizontal: 16,
-    backgroundColor: Colors.light.background,
+    backgroundColor: palette.background,
   },
 });
