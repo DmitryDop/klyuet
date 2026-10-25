@@ -72,7 +72,8 @@ export type ExactPlace = PlaceBase & {
  */
 export type ApproximatePlaceView = {
   coordinate: GeoPoint;
-  /** Радиус публичной области в метрах. Спека §3.1: «порядка 1 км» — 1 000 м. */
+  /** Радиус публичной области в метрах: 500 (диаметр 1 км, канон Дмитрия
+   *  23.10; решение 25.10 — спекa §3.1 «порядка 1 км» = диаметр). */
   radiusMeters: number;
 };
 

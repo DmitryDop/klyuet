@@ -127,8 +127,10 @@ export const demoPlaces: Place[] = [
     description: i === 0 ? 'Область показывает берег, точный подъезд — по грунтовке.' : undefined,
     /* фото у приблизительных: 0/2 — проверка скрытия и показа (реальные снимки) */
     photos: i === 0 ? ['1', '3'] : [],
-    /* радиус области одинаков у всех демо-мест: «порядка 1 км» (спека §3.1) */
-    view: { coordinate: { latitude, longitude }, radiusMeters: 1000 },
+    /* радиус области одинаков у всех демо-мест: 500 м (диаметр 1 км,
+       канон Дмитрия 23.10 — как в createPlace; расхождение спека§3.1/
+       createPlace исправлено 25.10 решением Дмитрия) */
+    view: { coordinate: { latitude, longitude }, radiusMeters: 500 },
     createdAt: CREATED_AT[EXACT.length + i],
   })),
 ];
