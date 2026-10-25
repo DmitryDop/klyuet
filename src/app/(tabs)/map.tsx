@@ -549,7 +549,8 @@ export default function MapScreen() {
                   radius={o.place.view.radiusMeters}
                   fillColor={palette.pointAlpha}
                   strokeColor={palette.accent}
-                  strokeWidth={0.5} /* dimensions/stroke/05 (K-DS approximate location) */
+                  /* 1 (K-DS stroke/05 = 0.5 — заменено Дмитрием 25.10: тонкая линия «шумит» на карте) */
+                  strokeWidth={1}
                   lineDashPattern={DASH_PATTERN}
                 />
               );
