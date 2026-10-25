@@ -13,6 +13,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import ButtonIcon from '@/components/button-icon';
 import { CURRENT_USER_ID, demoPlaceRepo } from '@/data/repo';
+import { removeFromFavorites, toggleFavorite, useIsFavorite } from '@/data/favorites-store';
 import { requestAddPlaceStart } from '@/data/add-request-store';
 import type { Place, Report } from '@/data/types';
 import { PlaceHeader, DIMMING_BACKDROP } from '@/components/map/place-header';
@@ -67,6 +68,9 @@ export default function PlaceScreen() {
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteErrorModal, setDeleteErrorModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  /* избранное (ТЗ _x/30.md §2): единый стор; кнопка видна только у ЧУЖИХ
+     мест (Дмитрий 25.10 — свои не добавляются в избранное) */
+  const isFavorite = useIsFavorite(id);
   /* скролл-анимация K 328:3096 (Дмитрий 22.10, механика макета): подложка
      шапки «ovelay map» — сплошной #181D1C; на блоке шапки (dimming block:
      карта+маркер+плашка+кнопки) альфа-канал по кадрам 05/04/03 — перекрытие
@@ -121,6 +125,16 @@ export default function PlaceScreen() {
   const subtitle =
     place.placeType === 'wild' ? 'Дикое место · Бесплатно' : 'Платное место';
 
+  /* избранное (ТЗ §2): переключение в сторе; тосты на оба действия:
+     добавление / удаление (Дмитрий 25.10) */
+  const togglePlaceFavorite = () => {
+    if (toggleFavorite(place.id) === 'added') {
+      showToast('Место добавлено в избранное');
+    } else {
+      showToast('Место удалено из избранного');
+    }
+  };
+
   /* удаление (ТЗ _x/22.md §9): подтверждение уже принято; запрет при отчётах
       проверяет репо ('forbidden'); ошибка — остаёмся в карточке; успех —
       тост только после подтверждённого удаления, возврат на карту (камера
@@ -134,6 +148,8 @@ export default function PlaceScreen() {
       .deletePlace(id, CURRENT_USER_ID)
       .then((res) => {
         if (res === 'deleted') {
+          /* место удалено — не оставить его в избранном (ТЗ §5) */
+          removeFromFavorites(id);
           showToast('Место удалено');
           router.back();
         } else {
@@ -270,6 +286,19 @@ export default function PlaceScreen() {
               />
             </View>
           )}
+          {/* правый угол у ЧУЖИХ мест: bookmark 44×44 (K 499:11119) —
+              outline, залитый = в избранном (K 490:17054); у СВОИХ мест
+              кнопки нет (кнопка избранного не предусмотрена, решение
+              Дмитрия 25.10 — more остаётся как выше) */}
+          {place.ownerId !== CURRENT_USER_ID && (
+            <View style={[styles.headerButtonWrap, { top: insets.top + 8, right: 16 }]}>
+              <ButtonIcon
+                icon={isFavorite ? 'bookmarkFilled' : 'bookmark'}
+                accessibilityLabel={isFavorite ? 'Убрать из избранного' : 'В избранное'}
+                onPress={togglePlaceFavorite}
+              />
+            </View>
+          )}
         </Animated.View>
       )}
 
@@ -307,6 +336,18 @@ export default function PlaceScreen() {
                 type="toolbar"
                 accessibilityLabel="Действия по месту"
                 onPress={() => setActionsOpen(true)}
+              />
+            </View>
+          )}
+          {/* правая кнопка тулбара у ЧУЖИХ мест: bookmark доступен и после
+              скролла (решение Дмитрия 25.10 — макет тулбара не задан) */}
+          {place.ownerId !== CURRENT_USER_ID && (
+            <View style={[styles.toolbarButton, { top: insets.top + 8, right: 16 }]}>
+              <ButtonIcon
+                icon={isFavorite ? 'bookmarkFilled' : 'bookmark'}
+                type="toolbar"
+                accessibilityLabel={isFavorite ? 'Убрать из избранного' : 'В избранное'}
+                onPress={togglePlaceFavorite}
               />
             </View>
           )}

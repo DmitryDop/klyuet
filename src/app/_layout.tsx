@@ -8,6 +8,7 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import ToastHost from '@/components/ui/toast';
 import { Colors } from '@/constants/theme';
+import { loadFavorites } from '@/data/favorites-store';
 import { loadMapViewKind } from '@/data/map-settings-store';
 import { loadThemeMode, useThemeMode } from '@/data/theme-store';
 
@@ -48,9 +49,11 @@ export default function RootLayout() {
   };
 
   useEffect(() => {
-    /* вид карты из прошлого запуска (ТЗ _x/24.md §5) и тема (ТЗ dark-theme) */
+    /* вид карты из прошлого запуска (ТЗ _x/24.md §5), тема (ТЗ dark-theme)
+       и избранное (ТЗ _x/30.md §5) */
     void loadMapViewKind();
     void loadThemeMode();
+    void loadFavorites();
   }, []);
 
   useEffect(() => {
