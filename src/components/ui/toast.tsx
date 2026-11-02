@@ -7,12 +7,12 @@ import { useTheme } from '@/data/theme-store';
 import { useBottomReserve } from '@/data/bottom-reserve-store';
 
 /**
- * Toast (K-DS 316:1799 в K 235:9776): плашка 54px, x 16, radius 12,
- * bg --color-action-default, текст Body 16/22 --color-action-on;
+ * Toast (K-DS 315:1769): плашка 54px, x 16, radius 12,
+ * bg --action/thint, текст Body 16/22 --text&icon/primary;
  * тень 0 4 16 #181D1C33.
- * Кнопка-действие справа (K-DS 316:1799, FIX-07): текст «Вернуть»
- * --action/thint (ключ палитры `actionHint`), Body 16/22; необязательное —
- * без действия тост прежний (публикация отчёта и пр. не менялись).
+ * Кнопка-действие справа (K-DS 315:1769, FIX-07): текст «Вернуть»
+ * --color-selection-text (ключ палитры `selectionText`), Body 16/22;
+ * действие необязательное.
  * Позиция (FIX-07, решение Дмитрия 25.10): 8 px над нижним блоком
  * (резерв — bottom-reserve-store: TabBar/панели), минимум 16 от края.
  * Единый для приложения (reports.md §8): автоматически, ~3 секунды.
@@ -107,20 +107,20 @@ const makeStyles = (palette: Palette) =>
     justifyContent: 'space-between',
     borderRadius: 12,
     borderCurve: 'continuous',
-    backgroundColor: palette.accent,
+    backgroundColor: palette.actionHint,
     boxShadow: '0 4px 16px rgba(24, 29, 28, 0.2)',
   },
   text: {
     ...rnTextStyle(TEXT.body),
     fontFamily: FONT_FAMILY,
-    color: palette.accentIcon,
+    color: palette.text,
     flexShrink: 1,
   },
   actionText: {
-    /* K-DS 316:1799: «Вернуть» — Body 16/22, --action/thint, справа */
+    /* K-DS 315:1769: «Вернуть» — Body 16/22, --color-selection-text, справа */
     ...rnTextStyle(TEXT.body),
     fontFamily: FONT_FAMILY,
-    color: palette.actionHint,
+    color: palette.selectionText,
     textAlign: 'right',
   },
 });
