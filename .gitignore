@@ -46,3 +46,6 @@ example
 .figma_shots/
 remote-test/
 UX/.obsidian/
+
+# Brand assets stored in external cloud
+/brand_identity/
